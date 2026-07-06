@@ -5,15 +5,17 @@
 }
 
 form {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 24px;
-}
+  &.flight-path {
+    display: flex;
+    flex-direction: column;
 
-label {
-  display: grid;
-  gap: 4px;
+    .form-row {
+      display: flex;
+      flex-direction: row;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+  }
 }
 
 input,
@@ -26,4 +28,3 @@ pre {
   text-align: start;
   white-space: pre-wrap;
 }
-
