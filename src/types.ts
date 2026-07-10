@@ -58,11 +58,11 @@ export const codeHighlights: CodeHighlight[] = [
   },
   {
     value: "clouds",
-    regEx: /^(?:FEW|SCT|BKN|OVC|VV)\d{3}(?:CB|TCU)?$/
+    regEx: /^(?:(?:FEW|SCT|BKN|OVC)\d{3}(?:CB|TCU|\/\/\/)?|VV(?:\d{3}|\/\/\/))$/
   },
   {
     value: "ceiling",
-    regEx: /^(?:(?:BKN|OVC)\d{3}(?:CB|TCU)?|VV(?:\d{3}|\/\/\/)|NSC)$/
+    regEx: /^(?:(?:BKN|OVC)\d{3}(?:CB|TCU|\/\/\/)?|VV(?:\d{3}|\/\/\/)|NSC)$/
   },
   {
     value: "convective",
