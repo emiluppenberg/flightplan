@@ -1,15 +1,7 @@
-export type FlightPathFormValues = {
-  departureDate: string;
-  departureTime: string;
-  departureICAO: string;
-  destinationDate: string;
-  destinationTime: string;
-  destinationICAO: string;
-}
-
-export type FlightPathData = {
-  departureTAF: string;
-  destinationTAF: string;
+export type AirportFormValues = {
+  icaoId: string;
+  date: string;
+  time: string;
 }
 
 export type TAFJson = {
@@ -24,6 +16,14 @@ export type METARJson = {
   icaoId: string;
   receiptTime: string;
   rawOb: string;
+}
+
+export type AirportData = {
+  formValues: AirportFormValues;
+  TAF: TAFJson[];
+  METAR: METARJson[];
+  highlightsTAF: CodeHighlight[];
+  highlightsMETAR: CodeHighlight[];
 }
 
 export type CodeHighlight = {
