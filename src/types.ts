@@ -46,34 +46,34 @@ export const codeHighlights: CodeHighlight[] = [
     regEx: /^(?:CAVOK|P?6SM|(?:\d{1,2}\s)?M?\d\/\dSM|\d{1,2}SM|\d{4}|R\d{2}[LCR]?\/[MP]?\d{4}(?:FT)?[UDN]?)$/,
     variants: [
       {
-        // <400M
+        // <400M | M1/4SM
         report: "METAR",
         class: "metar-visibility-lowest",
         regEx: /^(?:M1\/4SM|0[0-3]\d{2}|R\d{2}[LCR]?\/[MP]?0[0-3]\d{2}[UDN]?)$/
       },
       {
-        // 400M-550M
+        // 400M-550M | 1/4SM
         report: "METAR",
         class: "metar-visibility-low",
         regEx: /^(?:1\/4SM|0(?:4\d{2}|5[0-4]\d)|R\d{2}[LCR]?\/[MP]?0(?:4\d{2}|5[0-4]\d)[UDN]?)$/
       },
       {
-        // 550M-800M
+        // 550M-800M | 1/2SM
         report: "METAR",
         class: "metar-visibility-medium",
-        regEx: /^(?:0(?:55\d|5[6-9]\d|[67]\d{2})|R\d{2}[LCR]?\/[MP]?0(?:55\d|5[6-9]\d|[67]\d{2})[UDN]?)$/
+        regEx: /^(?:1\/2SM|0(?:55\d|5[6-9]\d|[67]\d{2})|R\d{2}[LCR]?\/[MP]?0(?:55\d|5[6-9]\d|[67]\d{2})[UDN]?)$/
       },
       {
-        // 800M-1400M
+        // 800M-1400M | 3/4SM
         report: "METAR",
         class: "metar-visibility-high",
-        regEx: /^(?:(?:1\/2|3\/4)SM|0[89]\d{2}|1[0-3]\d{2}|1400|R\d{2}[LCR]?\/[MP]?(?:0[89]\d{2}|1[0-3]\d{2}|1400)[UDN]?)$/
+        regEx: /^(?:3\/4SM|0[89]\d{2}|1[0-3]\d{2}|1400|R\d{2}[LCR]?\/[MP]?(?:0[89]\d{2}|1[0-3]\d{2}|1400)[UDN]?)$/
       },
       {
-        // >1400M
+        // >1400M | 1SM
         report: "METAR",
         class: "metar-visibility-highest",
-        regEx: /^(?:P6SM|[1-9]\d?SM|14(?:0[1-9]|[1-9]\d)|1[5-9]\d{2}|[2-9]\d{3}|CAVOK|R\d{2}[LCR]?\/[MP]?(?:14(?:0[1-9]|[1-9]\d)|1[5-9]\d{2}|[2-9]\d{3})[UDN]?)$/
+        regEx: /^(?:P6SM|[1-9]\d?(?:\s\d\/\d)?SM|14(?:0[1-9]|[1-9]\d)|1[5-9]\d{2}|[2-9]\d{3}|CAVOK|R\d{2}[LCR]?\/[MP]?(?:14(?:0[1-9]|[1-9]\d)|1[5-9]\d{2}|[2-9]\d{3})[UDN]?)$/
       },
     ]
   },

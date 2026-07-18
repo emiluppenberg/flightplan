@@ -2,6 +2,7 @@ import { type CodeHighlight } from "../types";
 
 type ReportRenderProps = {
     airportIndex: number;
+    report: "TAF" | "METAR";
     codes: string[];
     highlights?: CodeHighlight[];
     isMostRecentMETAR?: boolean;
@@ -17,8 +18,14 @@ const ReportRender = (props: ReportRenderProps) => {
                 {props.codes.map((code, index) => {
                     if (index === 0 || index === 1) return;
 
-                    const match = props.highlights?.find(highlight => code.match(highlight.regEx))
-                    const variant = match?.variants?.find(variant => code.match(variant.regEx))
+                    const match = props.highlights?.find(highlight =>
+                        (highlight.report === props.report || highlight.report === "TAF/METAR") &&
+                        highlight.regEx.test(code)
+                    )
+                    const variant = match?.variants?.find(variant =>
+                        (variant.report === props.report || variant.report === "TAF/METAR") &&
+                        variant.regEx.test(code)
+                    )
                     const className = [
                         props.isMostRecentMETAR ? "most-recent" : "",
                         match ? match.class : "",
