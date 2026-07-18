@@ -3,7 +3,7 @@ import ReportRender from "./ReportRender";
 import { codeHighlights } from "../types";
 
 const visibilityRegEx = codeHighlights.find(
-    highlight => highlight.value === "visibility"
+    highlight => highlight.label === "visibility"
 )?.regEx;
 
 

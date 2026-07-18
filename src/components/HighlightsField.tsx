@@ -11,7 +11,7 @@ const HighlightsField = (props: HighlightsFieldProps) => {
     const handleSelect = (e: ChangeEvent<HTMLInputElement>, codeHighlight: CodeHighlight) => {
         const nextSelections = e.target.checked
             ? [...props.selections, codeHighlight]
-            : props.selections.filter((selection) => selection.value !== codeHighlight.value)
+            : props.selections.filter((selection) => selection.label !== codeHighlight.label)
 
         props.onSelected(nextSelections)
     }
@@ -21,11 +21,11 @@ const HighlightsField = (props: HighlightsFieldProps) => {
             <div className="title">{props.title}</div>
             <div className="options">
                 {codeHighlights.map((codeHighlight) => (
-                    <label key={`code-highlight-picker-${codeHighlight.value}`}>
-                        {codeHighlight.value}
+                    <label key={`code-highlight-picker-${codeHighlight.label}`}>
+                        {codeHighlight.label}
                         <input
                             type="checkbox"
-                            checked={props.selections.some((selection) => selection.value === codeHighlight.value)}
+                            checked={props.selections.some((selection) => selection.label === codeHighlight.label)}
                             onChange={(e) => handleSelect(e, codeHighlight)}
                         />
                     </label>

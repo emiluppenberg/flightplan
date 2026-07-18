@@ -4,6 +4,7 @@ import type { AirportData, AirportFormValues, CodeHighlight } from "./types"
 export type FlightPathState = {
     airports: AirportData[];
     handleSubmit: (values: AirportFormValues, airportIndex: number) => void;
+    handleSetFormValues: (newValues: AirportFormValues, airportIndex: number) => void;
     handleSetHighlightsTAF: (newHighlights: CodeHighlight[], airportIndex: number) => void;
     handleSetHighlightsMETAR: (newHighlights: CodeHighlight[], airportIndex: number) => void;
     handleAddAirport: () => void;
