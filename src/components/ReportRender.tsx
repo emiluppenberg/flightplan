@@ -17,10 +17,12 @@ const ReportRender = (props: ReportRenderProps) => {
                 {props.codes.map((code, index) => {
                     if (index === 0 || index === 1) return;
 
-                    const isMatch = props.highlights?.some(highlight => code.match(highlight.regEx))
+                    const match = props.highlights?.find(highlight => code.match(highlight.regEx))
+                    const variant = match?.variants?.find(variant => code.match(variant.regEx))
                     const className = [
                         props.isMostRecentMETAR ? "most-recent" : "",
-                        isMatch ? "code-highlight" : ""
+                        match ? match.class : "",
+                        variant ? variant.class : ""
                     ].filter(Boolean).join(" ")
 
                     return (
