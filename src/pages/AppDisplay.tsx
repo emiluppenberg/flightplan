@@ -7,10 +7,10 @@ const AppDisplay = () => {
   return (
     <div className="app-display">
       {context.isLoading && <p>Loading...</p>}
-      {context.error && <p>{context.error}</p>}
+      {context.error && <p style={({whiteSpace: "pre-line"})}>{context.error}</p>}
       {context.airports.map((airport, index) => (
         <AirportRender
-          key={`airport-render-${index}`}
+          key={`airport-render-${airport.id}`}
           airport={airport}
           airportIndex={index}
         />

@@ -21,34 +21,38 @@ const AppHeader = () => {
                     onClick={context.handleAddAirport}>
                     Add airport
                 </button>
-                {context.airports.map((airport, index) => {
-                    const className = [
-                        "app-header-button",
-                        index === openFormIndex ? "open" : ""
-                    ].join(" ")
+                <div className="airports-container">
+                    {context.airports.map((airport, index) => {
+                        const className = [
+                            "app-header-button",
+                            index === openFormIndex ? "open" : ""
+                        ].join(" ")
 
-                    return (
-                        <button
-                            key={`airport-form-button-${index}`}
-                            className={className}
-                            onClick={() => handleClickFormButton(index)}>
-                            {
-                                airport.formValues.icaoId.length > 0
-                                    ? airport.formValues.icaoId
-                                    : "ICAO"
-                            }
-                        </button>
-                    )
-                })}
+                        return (
+                            <button
+                                key={`airport-form-button-${airport.id}`}
+                                className={className}
+                                onClick={() => handleClickFormButton(index)}>
+                                {
+                                    airport.formValues.icaoId.length > 0
+                                        ? airport.formValues.icaoId
+                                        : "ICAO"
+                                }
+                            </button>
+                        )
+                    })}
+                </div>
             </div>
             {openFormIndex !== undefined &&
                 context.airports[openFormIndex] && (
                     <>
                         <AirportForm
-                            key={`airport-form-${openFormIndex}`}
+                            key={`airport-form-${context.airports[openFormIndex].id}`}
                             airport={context.airports[openFormIndex]}
+                            onSetFormValues={(newValues) => context.handleSetFormValues(newValues, openFormIndex)}
                             onSetHighlightsTAF={(newHighlights) => context.handleSetHighlightsTAF(newHighlights, openFormIndex)}
                             onSetHighlightsMETAR={(newHighlights) => context.handleSetHighlightsMETAR(newHighlights, openFormIndex)}
+                            onDelete={() => context.handleDeleteAirport(openFormIndex)}
                             onSubmit={(values) => context.handleSubmit(values, openFormIndex)}
                         />
                     </>

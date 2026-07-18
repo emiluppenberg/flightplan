@@ -3,7 +3,7 @@ import ReportRender from "./ReportRender";
 import { codeHighlights } from "../types";
 
 const visibilityRegEx = codeHighlights.find(
-    highlight => highlight.value === "visibility"
+    highlight => highlight.label === "visibility"
 )?.regEx;
 
 
@@ -42,6 +42,7 @@ const AirportRender = (props: AirportRenderProps) => {
                         <ReportRender
                             key={`airport-${props.airportIndex}-taf-${index}`}
                             airportIndex={props.airportIndex}
+                            report="TAF"
                             codes={formatRaw(taf.rawTAF)}
                             highlights={props.airport.highlightsTAF} />
                     ))}
@@ -49,6 +50,7 @@ const AirportRender = (props: AirportRenderProps) => {
                         <ReportRender
                             key={`airport-${props.airportIndex}-metar-${index}`}
                             airportIndex={props.airportIndex}
+                            report="METAR"
                             codes={formatRaw(metar.rawOb)}
                             highlights={props.airport.highlightsMETAR}
                             isMostRecentMETAR={index === 0} />
