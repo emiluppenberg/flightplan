@@ -1,0 +1,27 @@
+[
+  {
+    "icaoId": "0000",
+    "receiptTime": "2026-07-17T04:00:00Z",
+    "rawOb": "METAR 0000 170400Z 22008KT 0300 FG VV002 12/12 Q1008"
+  },
+  {
+    "icaoId": "0000",
+    "receiptTime": "2026-07-17T03:00:00Z",
+    "rawOb": "METAR 0000 170300Z 22008KT 0450 FG VV003 12/12 Q1008"
+  },
+  {
+    "icaoId": "0000",
+    "receiptTime": "2026-07-17T02:00:00Z",
+    "rawOb": "METAR 0000 170200Z 22008KT 0700 BR BKN004 12/12 Q1008"
+  },
+  {
+    "icaoId": "0000",
+    "receiptTime": "2026-07-17T01:00:00Z",
+    "rawOb": "METAR 0000 170100Z 22008KT 1000 BR BKN006 12/12 Q1008"
+  },
+  {
+    "icaoId": "0000",
+    "receiptTime": "2026-07-17T00:00:00Z",
+    "rawOb": "METAR 0000 170000Z 22008KT 1500 BR BKN010 12/08 Q1008"
+  }
+]

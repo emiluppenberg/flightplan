@@ -6,8 +6,12 @@ $color-secondary-border: #28285a;
 $color-ternary-border: #33335f;
 $color-selected: #51518a;
 $color-border-light: white;
-$color-most-recent: green;
-$color-highlight: yellow;
+$color-highlight: rgb(231, 231, 136);
+$color-metar-visibility-lowest: magenta;
+$color-metar-visibility-low: red;
+$color-metar-visibility-medium: orange;
+$color-metar-visibility-high: yellow;
+$color-metar-visibility-highest: green;
 
 .page {
   box-sizing: border-box;
@@ -200,12 +204,63 @@ form {
           text-align: start;
           white-space: pre-wrap;
 
-
-          .most-recent {
-            color: $color-most-recent;
+          .highlight-wind {
+            color: $color-highlight;
           }
 
-          .code-highlight {
+          .highlight-visibility {
+            color: $color-highlight;
+
+            &.metar-visibility-lowest {
+              color: $color-metar-visibility-lowest;
+            }
+
+            &.metar-visibility-low {
+              color: $color-metar-visibility-low;
+            }
+
+            &.metar-visibility-medium {
+              color: $color-metar-visibility-medium;
+            }
+
+            &.metar-visibility-high {
+              color: $color-metar-visibility-high;
+            }
+
+            &.metar-visibility-highest {
+              color: $color-metar-visibility-highest;
+            }
+          }
+
+          .highlight-weather {
+            color: $color-highlight;
+          }
+
+          .highlight-forecast-changes {
+            color: $color-highlight;
+          }
+
+          .highlight-temperature {
+            color: $color-highlight;
+          }
+
+          .highlight-altimeter {
+            color: $color-highlight;
+          }
+
+          .highlight-clouds {
+            color: $color-highlight;
+          }
+
+          .highlight-ceiling {
+            color: $color-highlight;
+          }
+
+          .highlight-convective {
+            color: $color-highlight;
+          }
+
+          .highlight-wind-shear {
             color: $color-highlight;
           }
         }
