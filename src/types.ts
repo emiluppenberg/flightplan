@@ -1,7 +1,8 @@
 export type AirportFormValues = {
   icaoId: string;
-  date: string;
-  time: string;
+  useDatetime: boolean;
+  date?: string;
+  time?: string;
 }
 
 export type TAFJson = {
@@ -17,11 +18,20 @@ export type METARJson = {
 
 export type AirportData = {
   id: string;
+  icaoId: string;
   formValues: AirportFormValues;
   TAF: TAFJson[];
   METAR: METARJson[];
   highlightsTAF: CodeHighlight[];
   highlightsMETAR: CodeHighlight[];
+}
+
+export type AirportRefresh = {
+  id: string;
+  TAF: TAFJson[];
+  METAR: METARJson[];
+  TAFMessage: string;
+  METARMessage: string;
 }
 
 export type CodeHighlight = {
@@ -47,7 +57,7 @@ export const codeHighlights: CodeHighlight[] = [
     regEx: /^(?:CAVOK|P?6SM|(?:\d{1,2}\s)?M?\d\/\dSM|\d{1,2}SM|\d{4}|R\d{2}[LCR]?\/[MP]?\d{4}(?:FT)?[UDN]?)$/,
     variants: [
       {
-        // <400M | M1/4SM
+        // <=400M | M1/4SM
         report: "METAR",
         class: "metar-visibility-lowest",
         regEx: /^(?:M1\/4SM|0[0-3]\d{2}|R\d{2}[LCR]?\/[MP]?0[0-3]\d{2}[UDN]?)$/
@@ -71,11 +81,35 @@ export const codeHighlights: CodeHighlight[] = [
         regEx: /^(?:3\/4SM|0[89]\d{2}|1[0-3]\d{2}|1400|R\d{2}[LCR]?\/[MP]?(?:0[89]\d{2}|1[0-3]\d{2}|1400)[UDN]?)$/
       },
       {
-        // >1400M | 1SM
+        // >=1400M | 1SM
         report: "METAR",
         class: "metar-visibility-highest",
         regEx: /^(?:P6SM|[1-9]\d?(?:\s\d\/\d)?SM|14(?:0[1-9]|[1-9]\d)|1[5-9]\d{2}|[2-9]\d{3}|CAVOK|R\d{2}[LCR]?\/[MP]?(?:14(?:0[1-9]|[1-9]\d)|1[5-9]\d{2}|[2-9]\d{3})[UDN]?)$/
       },
+      {
+        // <=550M | <=1/2SM
+        report: "TAF",
+        class: "taf-visibility-lowest",
+        regEx: /^(?:M1\/4SM|(?:0|1\/4|1\/2)SM|0(?:[0-4]\d{2}|5[0-4]\d|550))$/
+      },
+      {
+        // >550M-<1400M | >1/2SM-<1SM
+        report: "TAF",
+        class: "taf-visibility-low",
+        regEx: /^(?:3\/4SM|05(?:5[1-9]|[6-9]\d)|0[6-9]\d{2}|1[0-3]\d{2})$/
+      },
+      {
+        // 1400M-<2300M | 1SM-<1 1/2SM
+        report: "TAF",
+        class: "taf-visibility-medium",
+        regEx: /^(?:1(?:\s1\/4)?SM|1[4-9]\d{2}|2[0-2]\d{2})$/
+      },
+      {
+        // >=2300M | >=1 1/2SM
+        report: "TAF",
+        class: "taf-visibility-high",
+        regEx: /^(?:P6SM|1\s(?:1\/2|3\/4)SM|(?:[2-9]|[1-9]\d)(?:\s\d\/\d)?SM|CAVOK|2[3-9]\d{2}|[3-9]\d{3})$/
+      }
     ]
   },
   {
@@ -118,7 +152,62 @@ export const codeHighlights: CodeHighlight[] = [
     label: "ceiling",
     class: "highlight-ceiling",
     regEx: /^(?:(?:BKN|OVC)\d{3}(?:CB|TCU|\/\/\/)?|VV(?:\d{3}|\/\/\/)|NSC)$/,
-    variants: []
+    variants: [
+      {
+        // <=200
+        report: "METAR",
+        class: "metar-ceiling-lowest",
+        regEx: /^(?:(?:BKN|OVC)00[0-2](?:CB|TCU|\/\/\/)?|VV00[0-2])$/
+      },
+      {
+        // >200-<400
+        report: "METAR",
+        class: "metar-ceiling-low",
+        regEx: /^(?:(?:BKN|OVC)003(?:CB|TCU|\/\/\/)?|VV003)$/
+      },
+      {
+        // 400-<3000
+        report: "METAR",
+        class: "metar-ceiling-medium",
+        regEx: /^(?:(?:BKN|OVC)(?:00[4-9]|0[12]\d)(?:CB|TCU|\/\/\/)?|VV(?:00[4-9]|0[12]\d))$/
+      },
+      {
+        // >=3000
+        report: "METAR",
+        class: "metar-ceiling-high",
+        regEx: /^(?:(?:BKN|OVC)(?:0[3-9]\d|[1-9]\d{2})(?:CB|TCU|\/\/\/)?|VV(?:0[3-9]\d|[1-9]\d{2})|NSC)$/
+      },
+      {
+        // <=200
+        report: "TAF",
+        class: "taf-ceiling-lowest",
+        regEx: /^(?:(?:BKN|OVC)00[0-2](?:CB|TCU|\/\/\/)?|VV00[0-2])$/
+      },
+      {
+        // >200-<400
+        report: "TAF",
+        class: "taf-ceiling-low",
+        regEx: /^(?:(?:BKN|OVC)003(?:CB|TCU|\/\/\/)?|VV003)$/
+      },
+      {
+        // 400-<800
+        report: "TAF",
+        class: "taf-ceiling-medium",
+        regEx: /^(?:(?:BKN|OVC)00[4-7](?:CB|TCU|\/\/\/)?|VV00[4-7])$/
+      },
+      {
+        // 800-<2400
+        report: "TAF",
+        class: "taf-ceiling-high",
+        regEx: /^(?:(?:BKN|OVC)(?:00[89]|01\d|02[0-3])(?:CB|TCU|\/\/\/)?|VV(?:00[89]|01\d|02[0-3]))$/
+      },
+      {
+        // >=2400
+        report: "TAF",
+        class: "taf-ceiling-highest",
+        regEx: /^(?:(?:BKN|OVC)(?:02[4-9]|0[3-9]\d|[1-9]\d{2})(?:CB|TCU|\/\/\/)?|VV(?:02[4-9]|0[3-9]\d|[1-9]\d{2})|NSC)$/
+      }
+    ]
   },
   {
     report: "TAF/METAR",

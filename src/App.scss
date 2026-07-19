@@ -18,6 +18,19 @@ $color-metar-visibility-low: red;
 $color-metar-visibility-medium: orange;
 $color-metar-visibility-high: yellow;
 $color-metar-visibility-highest: green;
+$color-taf-visibility-lowest: magenta;
+$color-taf-visibility-low: red;
+$color-taf-visibility-medium: orange;
+$color-taf-visibility-high: green;
+$color-metar-ceiling-lowest: red;
+$color-metar-ceiling-low: orange;
+$color-metar-ceiling-medium: yellow;
+$color-metar-ceiling-high: green;
+$color-taf-ceiling-lowest: magenta;
+$color-taf-ceiling-low: red;
+$color-taf-ceiling-medium: orange;
+$color-taf-ceiling-high: yellow;
+$color-taf-ceiling-highest: green;
 
 .page {
   box-sizing: border-box;
@@ -61,6 +74,10 @@ fieldset {
     border-radius: 0.5rem;
     background: $color-second-border;
   }
+
+  &:disabled {
+    background: $color-third;
+  }
 }
 
 h4 {
@@ -90,7 +107,7 @@ h4 {
     min-width: 0;
     align-items: inherit;
     gap: 0.2rem;
-    overflow-x: auto;  
+    overflow-x: auto;
     margin-right: 1rem;
     padding: 0.2rem;
     background-color: $color-fourth;
@@ -102,8 +119,8 @@ h4 {
     }
   }
 
-  .app-header-row > .app-header-button,
-  .app-header-row > img {
+  .app-header-row>.app-header-button,
+  .app-header-row>img {
     flex: 0 0 auto;
   }
 
@@ -125,6 +142,27 @@ form {
       display: flex;
       flex-direction: row;
       gap: 0.5rem;
+
+      .airport-form-datetime {
+        display: inherit;
+        gap: inherit;
+        flex: 1 1 0;
+        align-items: center;
+        border: 1px solid $color-first-border;
+        border-radius: 0.3rem;
+        padding: 0.2rem;
+
+        &.enabled {
+          background: $color-first;
+        }
+
+        >* {
+          padding: 0 0.2rem;
+          flex: 1 1 0;
+          min-width: 0;
+          user-select: none;
+        }
+      }
 
       &.highlights-row {
         flex-direction: column;
@@ -267,6 +305,22 @@ form {
             &.metar-visibility-highest {
               color: $color-metar-visibility-highest;
             }
+
+            &.taf-visibility-lowest {
+              color: $color-taf-visibility-lowest;
+            }
+
+            &.taf-visibility-low {
+              color: $color-taf-visibility-low;
+            }
+
+            &.taf-visibility-medium {
+              color: $color-taf-visibility-medium;
+            }
+
+            &.taf-visibility-high {
+              color: $color-taf-visibility-high;
+            }
           }
 
           .highlight-weather {
@@ -291,6 +345,42 @@ form {
 
           .highlight-ceiling {
             color: $color-highlight;
+
+            &.metar-ceiling-lowest {
+              color: $color-metar-ceiling-lowest;
+            }
+
+            &.metar-ceiling-low {
+              color: $color-metar-ceiling-low;
+            }
+
+            &.metar-ceiling-medium {
+              color: $color-metar-ceiling-medium;
+            }
+
+            &.metar-ceiling-high {
+              color: $color-metar-ceiling-high;
+            }
+
+            &.taf-ceiling-lowest {
+              color: $color-taf-ceiling-lowest;
+            }
+
+            &.taf-ceiling-low {
+              color: $color-taf-ceiling-low;
+            }
+
+            &.taf-ceiling-medium {
+              color: $color-taf-ceiling-medium;
+            }
+
+            &.taf-ceiling-high {
+              color: $color-taf-ceiling-high;
+            }
+
+            &.taf-ceiling-highest {
+              color: $color-taf-ceiling-highest;
+            }
           }
 
           .highlight-convective {

@@ -26,26 +26,39 @@ const AirportForm = (props: AirportFormProps) => {
   return (
     <form className="airport-form" onSubmit={handleSubmit(props.onSubmit)}>
       <div className="airport-form-row">
-        <input
-          type="date"
-          defaultValue={props.airport.formValues.date}
-          {...register("date", {
-            required: false,
-            onChange: () => props.onSetFormValues(getValues())
-          })} />
-        <input
-          type="time"
-          defaultValue={props.airport.formValues.time}
-          {...register("time", {
-            required: false,
-            onChange: () => props.onSetFormValues(getValues())
-          })} />
+        <div className={`airport-form-datetime ${props.airport.formValues.useDatetime ? "enabled" : ""}`}>
+          <input
+            type="date"
+            disabled={!props.airport.formValues.useDatetime}
+            defaultValue={props.airport.formValues.date}
+            {...register("date", {
+              required: false,
+              onChange: () => props.onSetFormValues(getValues())
+            })} />
+          <input
+            type="time"
+            disabled={!props.airport.formValues.useDatetime}
+            defaultValue={props.airport.formValues.time}
+            {...register("time", {
+              required: false,
+              onChange: () => props.onSetFormValues(getValues())
+            })} />
+          <label>
+            Use datetime
+            <input
+              type="checkbox"
+              defaultChecked={props.airport.formValues.useDatetime}
+              {...register("useDatetime", {
+                onChange: () => props.onSetFormValues(getValues())
+              })} />
+          </label>
+        </div>
         <input
           type="text"
           defaultValue={props.airport.formValues.icaoId}
           {...register("icaoId", {
             required: true,
-            setValueAs: (value: string) => value.toUpperCase(),
+            setValueAs: (value: string) => value.trim().toUpperCase(),
             onChange: () => props.onSetFormValues(getValues())
           })} />
       </div>
