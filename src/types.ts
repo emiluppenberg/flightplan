@@ -1,7 +1,8 @@
 export type AirportFormValues = {
   icaoId: string;
-  date: string;
-  time: string;
+  useDatetime: boolean;
+  date?: string;
+  time?: string;
 }
 
 export type TAFJson = {
@@ -17,11 +18,20 @@ export type METARJson = {
 
 export type AirportData = {
   id: string;
+  icaoId: string;
   formValues: AirportFormValues;
   TAF: TAFJson[];
   METAR: METARJson[];
   highlightsTAF: CodeHighlight[];
   highlightsMETAR: CodeHighlight[];
+}
+
+export type AirportRefresh = {
+  id: string;
+  TAF: TAFJson[];
+  METAR: METARJson[];
+  TAFMessage: string;
+  METARMessage: string;
 }
 
 export type CodeHighlight = {

@@ -74,6 +74,10 @@ fieldset {
     border-radius: 0.5rem;
     background: $color-second-border;
   }
+
+  &:disabled {
+    background: $color-third;
+  }
 }
 
 h4 {
@@ -138,6 +142,27 @@ form {
       display: flex;
       flex-direction: row;
       gap: 0.5rem;
+
+      .airport-form-datetime {
+        display: inherit;
+        gap: inherit;
+        flex: 1 1 0;
+        align-items: center;
+        border: 1px solid $color-first-border;
+        border-radius: 0.3rem;
+        padding: 0.2rem;
+
+        &.enabled {
+          background: $color-first;
+        }
+
+        >* {
+          padding: 0 0.2rem;
+          flex: 1 1 0;
+          min-width: 0;
+          user-select: none;
+        }
+      }
 
       &.highlights-row {
         flex-direction: column;

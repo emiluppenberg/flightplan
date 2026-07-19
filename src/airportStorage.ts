@@ -51,8 +51,10 @@ export const loadStoredAirports = (): StoredAirportsState => {
 
             airports.push({
                 id: storedAirport.id,
+                icaoId: storedAirport.icaoId,
                 formValues: {
-                    icaoId: storedAirport.icaoId,
+                    icaoId: storedAirport.icaoId.trim().toUpperCase(),
+                    useDatetime: false,
                     date: "",
                     time: ""
                 },
