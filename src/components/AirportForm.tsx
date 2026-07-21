@@ -26,7 +26,7 @@ const AirportForm = (props: AirportFormProps) => {
   return (
     <form className="airport-form" onSubmit={handleSubmit(props.onSubmit)}>
       <div className="airport-form-row">
-        <div className={`airport-form-datetime ${props.airport.formValues.useDatetime ? "enabled" : ""}`}>
+        <div className={`airport-form-datetime ${props.airport.formValues.useDatetime ? "" : "disabled"}`}>
           <input
             type="date"
             disabled={!props.airport.formValues.useDatetime}
@@ -56,6 +56,7 @@ const AirportForm = (props: AirportFormProps) => {
         <input
           type="text"
           defaultValue={props.airport.formValues.icaoId}
+          placeholder="Enter ICAO"
           {...register("icaoId", {
             required: true,
             setValueAs: (value: string) => value.trim().toUpperCase(),
@@ -64,14 +65,14 @@ const AirportForm = (props: AirportFormProps) => {
       </div>
       <div className="airport-form-row highlights-row">
         <HighlightsField
-          title="TAF highlights"
-          selections={props.airport.highlightsTAF}
-          onSelected={(selections) => props.onSetHighlightsTAF(selections)}
-        />
-        <HighlightsField
           title="METAR highlights"
           selections={props.airport.highlightsMETAR}
           onSelected={(selections) => props.onSetHighlightsMETAR(selections)}
+        />
+        <HighlightsField
+          title="TAF highlights"
+          selections={props.airport.highlightsTAF}
+          onSelected={(selections) => props.onSetHighlightsTAF(selections)}
         />
       </div>
       <div className="airport-form-row">

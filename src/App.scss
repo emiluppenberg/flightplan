@@ -1,7 +1,9 @@
-$color-first: #101057;
+$color-first: #171736;
 $color-second: #131338;
-$color-third: #171736;
+$color-third: #101057;
 $color-fourth: #2b2b3f;
+$color-open: #303064;
+$color-disabled: #15151d;
 $color-danger: #943838;
 $color-success: #10571c;
 $color-first-border: #34346d;
@@ -46,6 +48,10 @@ $color-taf-ceiling-highest: green;
 }
 
 .app-display {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 1rem;
   overflow-y: auto;
 }
 
@@ -57,6 +63,10 @@ fieldset {
   background: $color-first;
   border: 1px solid $color-first-border;
   border-radius: 0.3rem;
+
+  &.open {
+    background: $color-open;
+  }
 
   &.btn-danger {
     font-weight: 700;
@@ -76,7 +86,7 @@ fieldset {
   }
 
   &:disabled {
-    background: $color-third;
+    background: $color-disabled;
   }
 }
 
@@ -94,39 +104,17 @@ h4 {
     display: flex;
     flex-direction: row;
     align-items: center;
+    justify-content: center;
     padding: 0.2rem;
-    gap: 1rem;
     width: 100%;
-    background: $color-second;
-    border-bottom: 1px solid $color-second-border;
+    background: $color-first;
+    border-bottom: 1px solid $color-first-border;
   }
 
-  .airports-container {
-    display: flex;
-    flex: 1 1 auto;
-    min-width: 0;
-    align-items: inherit;
-    gap: 0.2rem;
-    overflow-x: auto;
-    margin-right: 1rem;
-    padding: 0.2rem;
-    background-color: $color-fourth;
-    border: 1px solid $color-fourth-border;
-    border-radius: 0.3rem;
-
-    button {
-      padding: 0.2rem;
-    }
-  }
-
-  .app-header-row>.app-header-button,
   .app-header-row>img {
     flex: 0 0 auto;
   }
 
-  .app-header-button {
-    min-width: 4rem;
-  }
 }
 
 form {
@@ -136,7 +124,7 @@ form {
     flex: 1 1;
     padding: 0.5rem;
     gap: 0.5rem;
-    background: $color-third;
+    background: $color-first;
 
     .airport-form-row {
       display: flex;
@@ -152,8 +140,8 @@ form {
         border-radius: 0.3rem;
         padding: 0.2rem;
 
-        &.enabled {
-          background: $color-first;
+        &.disabled {
+          background: $color-disabled;
         }
 
         >* {
@@ -247,149 +235,208 @@ form {
 .airport-render-container {
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  border: 1px solid $color-border-light;
+  border-radius: 0.5rem;
+
+  .airport-header {
+    display: flex;
+    align-items: center;
+
+    * {
+      flex: 1 1 0;
+      border-radius: 0;
+      margin: 0;
+      text-align: center;
+      height: 100%;
+    }
+  }
+
+  .airport-form-container {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      grid-template-rows 250ms ease,
+      opacity 200ms ease,
+      visibility 0s 250ms;
+
+    &.open {
+      grid-template-rows: 1fr;
+      opacity: 1;
+      visibility: visible;
+      transition-delay: 0s;
+    }
+
+    .airport-form-content {
+      min-height: 0;
+      overflow: hidden;
+    }
+  }
 
   .airport-data-container {
-    border: 1px solid $color-border-light;
-    border-radius: 0.5rem;
     padding: 1rem;
 
-    .airport-report-container {
+    .airport-data-expand {
+      display: grid;
+      grid-template-rows: 0fr;
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        grid-template-rows 250ms ease,
+        opacity 200ms ease,
+        visibility 0s 250ms;
+
+      &.open {
+        grid-template-rows: 1fr;
+        opacity: 1;
+        visibility: visible;
+        transition-delay: 0s;
+      }
+
+      >* {
+        min-height: 0;
+        overflow: hidden;
+      }
+    }
+
+  }
+
+  .airport-report-container {
+    display: flex;
+    flex-direction: row;
+
+    .airport-report-type {
+      min-width: 4rem;
+      text-align: start;
+    }
+
+    .airport-report-icao {
+      min-width: 3rem;
+      text-align: start;
+    }
+
+    .airport-report-codes {
       display: flex;
       flex-direction: row;
+      flex-wrap: wrap;
 
-      .airport-report-type {
-        min-width: 4rem;
+      pre {
+        margin: 0;
+        font-size: 1rem;
         text-align: start;
-      }
+        white-space: pre-wrap;
 
-      .airport-report-icao {
-        min-width: 3rem;
-        text-align: start;
-      }
+        .highlight-wind {
+          color: $color-highlight;
+        }
 
-      .airport-report-codes {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
+        .highlight-visibility {
+          color: $color-highlight;
 
-        pre {
-          margin: 0;
-          font-size: 1rem;
-          text-align: start;
-          white-space: pre-wrap;
-
-          .highlight-wind {
-            color: $color-highlight;
+          &.metar-visibility-lowest {
+            color: $color-metar-visibility-lowest;
           }
 
-          .highlight-visibility {
-            color: $color-highlight;
-
-            &.metar-visibility-lowest {
-              color: $color-metar-visibility-lowest;
-            }
-
-            &.metar-visibility-low {
-              color: $color-metar-visibility-low;
-            }
-
-            &.metar-visibility-medium {
-              color: $color-metar-visibility-medium;
-            }
-
-            &.metar-visibility-high {
-              color: $color-metar-visibility-high;
-            }
-
-            &.metar-visibility-highest {
-              color: $color-metar-visibility-highest;
-            }
-
-            &.taf-visibility-lowest {
-              color: $color-taf-visibility-lowest;
-            }
-
-            &.taf-visibility-low {
-              color: $color-taf-visibility-low;
-            }
-
-            &.taf-visibility-medium {
-              color: $color-taf-visibility-medium;
-            }
-
-            &.taf-visibility-high {
-              color: $color-taf-visibility-high;
-            }
+          &.metar-visibility-low {
+            color: $color-metar-visibility-low;
           }
 
-          .highlight-weather {
-            color: $color-highlight;
+          &.metar-visibility-medium {
+            color: $color-metar-visibility-medium;
           }
 
-          .highlight-forecast-changes {
-            color: $color-highlight;
+          &.metar-visibility-high {
+            color: $color-metar-visibility-high;
           }
 
-          .highlight-temperature {
-            color: $color-highlight;
+          &.metar-visibility-highest {
+            color: $color-metar-visibility-highest;
           }
 
-          .highlight-altimeter {
-            color: $color-highlight;
+          &.taf-visibility-lowest {
+            color: $color-taf-visibility-lowest;
           }
 
-          .highlight-clouds {
-            color: $color-highlight;
+          &.taf-visibility-low {
+            color: $color-taf-visibility-low;
           }
 
-          .highlight-ceiling {
-            color: $color-highlight;
-
-            &.metar-ceiling-lowest {
-              color: $color-metar-ceiling-lowest;
-            }
-
-            &.metar-ceiling-low {
-              color: $color-metar-ceiling-low;
-            }
-
-            &.metar-ceiling-medium {
-              color: $color-metar-ceiling-medium;
-            }
-
-            &.metar-ceiling-high {
-              color: $color-metar-ceiling-high;
-            }
-
-            &.taf-ceiling-lowest {
-              color: $color-taf-ceiling-lowest;
-            }
-
-            &.taf-ceiling-low {
-              color: $color-taf-ceiling-low;
-            }
-
-            &.taf-ceiling-medium {
-              color: $color-taf-ceiling-medium;
-            }
-
-            &.taf-ceiling-high {
-              color: $color-taf-ceiling-high;
-            }
-
-            &.taf-ceiling-highest {
-              color: $color-taf-ceiling-highest;
-            }
+          &.taf-visibility-medium {
+            color: $color-taf-visibility-medium;
           }
 
-          .highlight-convective {
-            color: $color-highlight;
+          &.taf-visibility-high {
+            color: $color-taf-visibility-high;
+          }
+        }
+
+        .highlight-weather {
+          color: $color-highlight;
+        }
+
+        .highlight-forecast-changes {
+          color: $color-highlight;
+        }
+
+        .highlight-temperature {
+          color: $color-highlight;
+        }
+
+        .highlight-altimeter {
+          color: $color-highlight;
+        }
+
+        .highlight-clouds {
+          color: $color-highlight;
+        }
+
+        .highlight-ceiling {
+          color: $color-highlight;
+
+          &.metar-ceiling-lowest {
+            color: $color-metar-ceiling-lowest;
           }
 
-          .highlight-wind-shear {
-            color: $color-highlight;
+          &.metar-ceiling-low {
+            color: $color-metar-ceiling-low;
           }
+
+          &.metar-ceiling-medium {
+            color: $color-metar-ceiling-medium;
+          }
+
+          &.metar-ceiling-high {
+            color: $color-metar-ceiling-high;
+          }
+
+          &.taf-ceiling-lowest {
+            color: $color-taf-ceiling-lowest;
+          }
+
+          &.taf-ceiling-low {
+            color: $color-taf-ceiling-low;
+          }
+
+          &.taf-ceiling-medium {
+            color: $color-taf-ceiling-medium;
+          }
+
+          &.taf-ceiling-high {
+            color: $color-taf-ceiling-high;
+          }
+
+          &.taf-ceiling-highest {
+            color: $color-taf-ceiling-highest;
+          }
+        }
+
+        .highlight-convective {
+          color: $color-highlight;
+        }
+
+        .highlight-wind-shear {
+          color: $color-highlight;
         }
       }
     }
