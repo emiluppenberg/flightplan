@@ -8,7 +8,7 @@ const AppHeader = () => {
             <div className="app-header-row">
                 <AppLogo />
             </div>
-            <div className="app-header-row control">
+            <div className="app-header-row control-highlights">
                 <Highlights />
             </div>
         </div>

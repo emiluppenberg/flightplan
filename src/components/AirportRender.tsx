@@ -2,13 +2,15 @@ import type { AirportData } from "../types";
 import ReportRender from "./ReportRender";
 import { codeHighlights } from "../types";
 import { useFlightPathContext } from "../Context";
-import AirportForm from "./AirportForm";
 import { useState } from "react";
+import AirportDatetimeForm from "./AirportDatetimeForm";
+import { FormProvider, useForm } from "react-hook-form";
+import type { AirportFormValues } from "../types";
+import AirportHeaderButtons from "./AirportHeaderButtons";
 
 const visibilityRegEx = codeHighlights.find(
     highlight => highlight.label === "visibility"
 )?.regEx;
-
 
 type AirportRenderProps = {
     airport: AirportData;
@@ -17,8 +19,10 @@ type AirportRenderProps = {
 
 const AirportRender = (props: AirportRenderProps) => {
     const context = useFlightPathContext()
-    const [formOpen, setFormOpen] = useState(false)
     const [airportOpen, setAirportOpen] = useState(false)
+    const form = useForm<AirportFormValues>({
+        defaultValues: props.airport.formValues
+    })
 
     const formatRaw = (raw: string) => {
         const codes = raw.trim().split(/\s+/);
@@ -61,36 +65,24 @@ const AirportRender = (props: AirportRenderProps) => {
     ];
 
     return (
-        <div className="airport-render-container">
-            <div className="airport-header">
-                <button
-                    type="button"
-                    className={`${airportOpen ? "open" : ""}`}
-                    onClick={() => setAirportOpen(value => !value)}
-                >
-                    <h4>{props.airport.icaoId.length > 0 ? props.airport.icaoId.toUpperCase() : "New ICAO"}</h4>
-                </button>
-                <button
-                    type="button"
-                    className={`${formOpen ? "open" : ""}`}
-                    onClick={() => setFormOpen(value => !value)}>
-                    Controls
-                </button>
-            </div>
-            <div className={`airport-form-container ${formOpen ? "open" : ""}`}>
-                <div className="airport-form-content">
-                    <AirportForm
+        <FormProvider {...form}>
+            <div className="airport-render-container">
+                <div className="airport-header-container">
+                    <AirportHeaderButtons
                         airport={props.airport}
-                        onSetFormValues={(newValues) => context.handleSetFormValues(newValues, props.airportIndex)}
-                        onSetHighlightsTAF={(newHighlights) => context.handleSetHighlightsTAF(newHighlights, props.airportIndex)}
-                        onSetHighlightsMETAR={(newHighlights) => context.handleSetHighlightsMETAR(newHighlights, props.airportIndex)}
-                        onDelete={() => context.handleDeleteAirport(props.airportIndex)}
-                        onSubmit={(values) => context.handleSubmit(values, props.airportIndex)}
+                        airportIndex={props.airportIndex}
+                        airportOpen={airportOpen}
+                        setAirportOpen={setAirportOpen}
                     />
+                    <div className={`airport-header-expand ${airportOpen ? "open" : ""}`}>
+                        <div className="airport-header-datetime">
+                            <AirportDatetimeForm
+                                airportIndex={props.airportIndex}
+                            />
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div className="airport-data-container">
-                <div className="airport-data-content">
+                <div className="airport-data-container">
                     {reports[0]}
                     <div className={`airport-data-expand ${airportOpen ? "open" : ""}`}>
                         <div>
@@ -99,7 +91,7 @@ const AirportRender = (props: AirportRenderProps) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </FormProvider>
     )
 }
 

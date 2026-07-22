@@ -1,6 +1,5 @@
 import { useForm } from "react-hook-form"
 import { type CodeHighlight, type AirportFormValues, type AirportData } from "../types"
-import HighlightsField from "./HighlightsField";
 
 type AirportFormProps = {
   airport: AirportData;

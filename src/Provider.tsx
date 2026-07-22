@@ -107,7 +107,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         }
     }
 
-    const handleSetFormValues = (values: AirportFormValues, airportIndex: number) => {
+    const handleSetFormValues = (values: AirportFormValues, airportIndex?: number) => {
         setAirports(current => current.map((airport, index) => {
             if (index !== airportIndex) return airport;
 
