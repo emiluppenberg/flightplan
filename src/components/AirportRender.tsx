@@ -7,6 +7,7 @@ import AirportDatetimeForm from "./AirportDatetimeForm";
 import { FormProvider, useForm } from "react-hook-form";
 import type { AirportFormValues } from "../types";
 import AirportHeaderButtons from "./AirportHeaderButtons";
+import upIcon from "/ui/arrow-ios-upward-outline-svgrepo-com.svg?url";
 
 const visibilityRegEx = codeHighlights.find(
     highlight => highlight.label === "visibility"
@@ -88,6 +89,11 @@ const AirportRender = (props: AirportRenderProps) => {
                         <div>
                             {reports.slice(1)}
                         </div>
+                        <button
+                            className="airport-collapse"
+                            onClick={() => setAirportOpen(value => !value)}>
+                            <img src={upIcon} width="20" />
+                        </button>
                     </div>
                 </div>
             </div>

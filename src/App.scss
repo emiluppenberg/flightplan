@@ -233,43 +233,23 @@ h4 {
 }
 
 .airport-render-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   border: 1px solid $color-border-light;
   border-radius: 0.5rem;
-
-  .airport-form-container {
-    display: grid;
-    grid-template-rows: 0fr;
-    opacity: 0;
-    visibility: hidden;
-    transition:
-      grid-template-rows 250ms ease,
-      opacity 200ms ease,
-      visibility 0s 250ms;
-
-    &.open {
-      grid-template-rows: 1fr;
-      opacity: 1;
-      visibility: visible;
-      transition-delay: 0s;
-    }
-
-    .airport-form-content {
-      min-height: 0;
-      overflow: hidden;
-    }
-  }
+  overflow: clip;
 
   .airport-header-container {
+    position: sticky;
+    top: -1rem;
     display: flex;
     flex-direction: column;
 
     .airport-header-buttons {
       display: flex;
       border-bottom: 1px solid $color-first-border;
-      border-top-left-radius: 0.5rem;
-      border-top-right-radius: 0.5rem;
+      border-radius: 0;
 
       .icao {
         flex: 1 1 0;
@@ -311,16 +291,13 @@ h4 {
     .airport-header-expand {
       display: grid;
       grid-template-rows: 0fr;
-      opacity: 0;
       visibility: hidden;
       transition:
         grid-template-rows 250ms ease,
-        opacity 200ms ease,
         visibility 0s 250ms;
 
       &.open {
         grid-template-rows: 1fr;
-        opacity: 1;
         visibility: visible;
         transition-delay: 0s;
       }
@@ -333,21 +310,16 @@ h4 {
   }
 
   .airport-data-container {
-    padding: 1rem;
-
     .airport-data-expand {
       display: grid;
       grid-template-rows: 0fr;
-      opacity: 0;
       visibility: hidden;
       transition:
         grid-template-rows 250ms ease,
-        opacity 200ms ease,
         visibility 0s 250ms;
 
       &.open {
-        grid-template-rows: 1fr;
-        opacity: 1;
+        grid-template-rows: 2fr;
         visibility: visible;
         transition-delay: 0s;
       }
@@ -356,13 +328,24 @@ h4 {
         min-height: 0;
         overflow: hidden;
       }
-    }
 
+      .airport-collapse {
+        position: sticky;
+        bottom: -1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: $color-first;
+        border-radius: 0;
+        height: 2rem;
+      }
+    }
   }
 
   .airport-report-container {
     display: flex;
     flex-direction: row;
+    padding: 0.5rem 1rem 0.5rem 1rem;
 
     .airport-report-type {
       min-width: 4rem;
