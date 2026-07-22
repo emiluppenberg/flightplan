@@ -1,6 +1,8 @@
 import type { Dispatch, SetStateAction } from "react"
 import type { AirportData } from "../types";
 import { useFlightPathContext } from "../Context";
+import deleteIcon from "/ui/close-lg-svgrepo-com.svg?url";
+import reloadIcon from "/ui/reload-svgrepo-com.svg?url";
 
 type AirportHeaderButtonsProps = {
     airport: AirportData;
@@ -25,7 +27,7 @@ const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
                 className="delete"
                 onClick={handleDelete}
             >
-                X
+                <img src={deleteIcon} width="20" />
             </button>
             <button
                 type="button"
@@ -39,7 +41,7 @@ const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
                 className="refetch"
                 onClick={() => context.handleSubmit(props.airport.formValues, props.airportIndex)}
             >
-                O
+                <img src={reloadIcon} width="20" />
             </button>
         </div>
     )

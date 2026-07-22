@@ -265,32 +265,46 @@ h4 {
     display: flex;
     flex-direction: column;
 
-    
     .airport-header-buttons {
       display: flex;
+      border-bottom: 1px solid $color-first-border;
+      border-top-left-radius: 0.5rem;
+      border-top-right-radius: 0.5rem;
 
       .icao {
         flex: 1 1 0;
-  
+        border: 0;
+        border-radius: 0;
+
         h4 {
           flex: 1 1 100%;
-          border-radius: 0;
           margin: 0;
           text-align: center;
           height: 100%;
         }
       }
 
-      .delete {
+      .delete,
+      .refetch {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
         border-radius: 0;
-        background: $color-danger;
         width: 2rem;
       }
 
+      .delete {
+        border-top-left-radius: 0.5rem;
+      }
+
       .refetch {
-        border-radius: 0;
-        background: $color-success;
-        width: 2rem;
+        border-top-right-radius: 0.5rem;
+      }
+
+      .icao,
+      .refetch {
+        border-left: 1px solid $color-first-border;
       }
     }
 
