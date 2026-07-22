@@ -16,6 +16,8 @@ import {
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [loadedState] = useState(loadStoredAirports)
     const [airports, setAirports] = useState<AirportData[]>(loadedState.airports)
+    const [highlightsTAF, setHighlightsTAF] = useState<CodeHighlight[]>([])
+    const [highlightsMETAR, setHighlightsMETAR] = useState<CodeHighlight[]>([])
     const [isLoading, setIsLoading] = useState(
         loadedState.airports.some(airport => airport.formValues.icaoId.trim().length > 0)
     )
@@ -117,26 +119,12 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         }))
     }
 
-    const handleSetHighlightsTAF = (newHighlights: CodeHighlight[], airportIndex: number) => {
-        setAirports(current => current.map((airport, index) => {
-            if (index !== airportIndex) return airport;
-
-            return {
-                ...airport,
-                highlightsTAF: newHighlights
-            }
-        }))
+    const handleSetHighlightsTAF = (newHighlights: CodeHighlight[]) => {
+        setHighlightsTAF(newHighlights)
     }
 
-    const handleSetHighlightsMETAR = (newHighlights: CodeHighlight[], airportIndex: number) => {
-        setAirports(current => current.map((airport, index) => {
-            if (index !== airportIndex) return airport;
-
-            return {
-                ...airport,
-                highlightsMETAR: newHighlights
-            }
-        }))
+    const handleSetHighlightsMETAR = (newHighlights: CodeHighlight[]) => {
+        setHighlightsMETAR(newHighlights)
     }
 
     const handleAddAirport = () => {
@@ -163,6 +151,8 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         <FlightPathContext
             value={{
                 airports,
+                highlightsTAF,
+                highlightsMETAR,
                 handleSubmit,
                 handleSetFormValues,
                 handleSetHighlightsTAF,

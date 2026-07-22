@@ -24,9 +24,9 @@ const AirportForm = (props: AirportFormProps) => {
   }
 
   return (
-    <form className="airport-form" onSubmit={handleSubmit(props.onSubmit)}>
-      <div className="airport-form-row">
-        <div className={`airport-form-datetime ${props.airport.formValues.useDatetime ? "" : "disabled"}`}>
+    <form className="form" onSubmit={handleSubmit(props.onSubmit)}>
+      <div className="form-row">
+        <div className={`form-datetime ${props.airport.formValues.useDatetime ? "" : "disabled"}`}>
           <input
             type="date"
             disabled={!props.airport.formValues.useDatetime}
@@ -63,19 +63,7 @@ const AirportForm = (props: AirportFormProps) => {
             onChange: () => props.onSetFormValues(getValues())
           })} />
       </div>
-      <div className="airport-form-row highlights-row">
-        <HighlightsField
-          title="METAR highlights"
-          selections={props.airport.highlightsMETAR}
-          onSelected={(selections) => props.onSetHighlightsMETAR(selections)}
-        />
-        <HighlightsField
-          title="TAF highlights"
-          selections={props.airport.highlightsTAF}
-          onSelected={(selections) => props.onSetHighlightsTAF(selections)}
-        />
-      </div>
-      <div className="airport-form-row">
+      <div className="form-row">
         <button className="btn-danger" type="button" onClick={handleDelete}>Delete</button>
         <button className="btn-success" type="submit">Fetch</button>
       </div>

@@ -47,7 +47,7 @@ const AirportRender = (props: AirportRenderProps) => {
                 airportIndex={props.airportIndex}
                 report="METAR"
                 codes={formatRaw(metar.rawOb)}
-                highlights={props.airport.highlightsMETAR}
+                highlights={context.highlightsMETAR}
                 isMostRecentMETAR={index === 0} />
         )),
         ...props.airport.TAF.map((taf, index) => (
@@ -56,7 +56,7 @@ const AirportRender = (props: AirportRenderProps) => {
                 airportIndex={props.airportIndex}
                 report="TAF"
                 codes={formatRaw(taf.rawTAF)}
-                highlights={props.airport.highlightsTAF} />
+                highlights={context.highlightsTAF} />
         ))
     ];
 
