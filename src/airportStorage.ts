@@ -1,12 +1,10 @@
-import { codeHighlights, type AirportData } from "./types";
+import { type AirportData } from "./types";
 
 export const AIRPORT_STORAGE_KEY = "flygvader";
 
 type StoredAirport = {
     id: string;
     icaoId: string;
-    highlightTAFClasses: string[];
-    highlightMETARClasses: string[];
 }
 
 export type StoredAirportsState = {
@@ -14,25 +12,12 @@ export type StoredAirportsState = {
     error?: string;
 }
 
-export const createAirportId = () =>
-    globalThis.crypto?.randomUUID?.() ??
-    `airport-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-const isStringArray = (value: unknown): value is string[] =>
-    Array.isArray(value) && value.every(item => typeof item === "string");
-
 const isStoredAirport = (value: unknown): value is StoredAirport => {
     if (!value || typeof value !== "object") return false;
 
     const airport = value as Record<string, unknown>;
-    return typeof airport.id === "string" &&
-        typeof airport.icaoId === "string" &&
-        isStringArray(airport.highlightTAFClasses) &&
-        isStringArray(airport.highlightMETARClasses);
+    return typeof airport.id === "string" && typeof airport.icaoId === "string"
 }
-
-const resolveHighlights = (classes: string[]) =>
-    codeHighlights.filter(highlight => classes.includes(highlight.class));
 
 export const loadStoredAirports = (): StoredAirportsState => {
     const rawState = localStorage.getItem(AIRPORT_STORAGE_KEY);
@@ -59,9 +44,7 @@ export const loadStoredAirports = (): StoredAirportsState => {
                     time: ""
                 },
                 TAF: [],
-                METAR: [],
-                highlightsTAF: resolveHighlights(storedAirport.highlightTAFClasses),
-                highlightsMETAR: resolveHighlights(storedAirport.highlightMETARClasses)
+                METAR: []
             })
         }
 
@@ -84,9 +67,7 @@ export const loadStoredAirports = (): StoredAirportsState => {
 export const saveStoredAirports = (airports: AirportData[]): string | undefined => {
     const newState: StoredAirport[] = airports.map(airport => ({
         id: airport.id,
-        icaoId: airport.formValues.icaoId,
-        highlightTAFClasses: airport.highlightsTAF.map(highlight => highlight.class),
-        highlightMETARClasses: airport.highlightsMETAR.map(highlight => highlight.class)
+        icaoId: airport.formValues.icaoId
     }))
 
     try {

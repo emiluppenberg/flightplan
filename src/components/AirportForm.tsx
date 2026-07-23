@@ -54,7 +54,7 @@ const AirportForm = (props: AirportFormProps) => {
         </div>
         <input
           type="text"
-          defaultValue={props.airport.formValues.icaoId}
+          value={props.airport.formValues.icaoId}
           placeholder="Enter ICAO"
           {...register("icaoId", {
             required: true,

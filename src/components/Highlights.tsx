@@ -8,12 +8,12 @@ const Highlights = () => {
         <div className="form">
             <div className="form-row highlights-row">
                 <HighlightsField
-                    title="METAR highlights"
+                    title="METAR"
                     selections={context.highlightsMETAR}
                     onSelected={(selections) => context.handleSetHighlightsMETAR(selections)}
                 />
                 <HighlightsField
-                    title="TAF highlights"
+                    title="TAF"
                     selections={context.highlightsTAF}
                     onSelected={(selections) => context.handleSetHighlightsTAF(selections)}
                 />

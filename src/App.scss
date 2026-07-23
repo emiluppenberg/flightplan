@@ -14,7 +14,7 @@ $color-danger-border: #6d3434;
 $color-success-border: #346d3c;
 $color-selected: #51518a;
 $color-border-light: white;
-$color-highlight: rgb(231, 231, 136);
+$color-highlight: #83ff89;
 $color-metar-visibility-lowest: magenta;
 $color-metar-visibility-low: red;
 $color-metar-visibility-medium: orange;
@@ -33,6 +33,8 @@ $color-taf-ceiling-low: red;
 $color-taf-ceiling-medium: orange;
 $color-taf-ceiling-high: yellow;
 $color-taf-ceiling-highest: green;
+$color-background: #090913;
+$color-search: #d3d368;
 
 .page {
   box-sizing: border-box;
@@ -41,18 +43,50 @@ $color-taf-ceiling-highest: green;
   height: 100svh;
   overflow: hidden;
   width: 100%;
+  background: $color-background;
 
   * {
     box-sizing: border-box;
   }
 }
 
-.app-display {
+.app-display,
+.renders-container {
+  position: relative;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
-  gap: 1rem;
   overflow-y: auto;
+  padding: 1rem 0;
+}
+
+.renders-container {
+  margin: 1rem 0 0 0;
+  padding: 0 1rem 1rem 1rem;
+  gap: 1rem;
+}
+
+.search-dialog[open] {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: transparent;
+
+  h2 {
+    margin-bottom: 1rem;
+  }
+
+  .search-dialog-content {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  &::backdrop {
+    background: rgba(black, 0.72);
+    backdrop-filter: blur(2px);
+  }
 }
 
 input,
@@ -68,16 +102,14 @@ fieldset {
     background: $color-open;
   }
 
-  &.btn-danger {
-    font-weight: 700;
-    color: $color-danger;
-    border-color: $color-danger-border;
-  }
-
-  &.btn-success {
-    font-weight: 700;
-    color: $color-success;
-    border-color: $color-success-border;
+  &.btn-highlight,
+  &.btn-delete,
+  &.btn-refetch,
+  &.btn-search {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
   }
 
   &:hover {
@@ -94,6 +126,11 @@ h4 {
   text-align: start;
 }
 
+h2 {
+  font-style: italic;
+  margin: 0;
+}
+
 .app-header {
   display: flex;
   flex-direction: column;
@@ -103,22 +140,34 @@ h4 {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
     padding: 0.2rem;
     width: 100%;
     background: $color-first;
-    border-bottom: 1px solid $color-first-border;
+    border-bottom: 2px solid $color-first-border;
 
-    &.control-highlights {
-      background: $color-second;
+    &.top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+
+      .top-buttons {
+        display: flex;
+        padding: 0 0.5rem;
+        gap: 0.5rem;
+        width: 100%;
+      }
+    }
+
+    &.search,
+    &.highlights {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      overflow-y: auto;
+      background: $color-background;
       padding: 0.5rem;
+      max-height: 50vh;
     }
   }
-
-  .app-header-row>img {
-    flex: 0 0 auto;
-  }
-
 }
 
 .form {
@@ -177,6 +226,7 @@ h4 {
       .title {
         display: flex;
         align-items: center;
+        justify-content: center;
       }
 
       .options {
@@ -232,29 +282,63 @@ h4 {
   }
 }
 
+.expand {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows 250ms ease,
+    visibility 0s 250ms;
+
+  &.open {
+    grid-template-rows: var(--expand-rows);
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  >.expand-content {
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
 .airport-render-container {
   position: relative;
   display: flex;
   flex-direction: column;
   border: 1px solid $color-border-light;
+  border-top: 0;
   border-radius: 0.5rem;
   overflow: clip;
+  background: $color-background;
+  width: 100%;
+
+  &.search {
+    border-color: $color-search;
+    border-bottom: 0;
+  }
 
   .airport-header-container {
     position: sticky;
-    top: -1rem;
+    top: 0;
     display: flex;
     flex-direction: column;
+    border-top: 1px solid $color-border-light;
+
+    &.search {
+      border-color: $color-search;
+    }
 
     .airport-header-buttons {
       display: flex;
       border-bottom: 1px solid $color-first-border;
       border-radius: 0;
 
-      .icao {
+      .btn-icao {
         flex: 1 1 0;
         border: 0;
         border-radius: 0;
+        text-align: center;
 
         h4 {
           flex: 1 1 100%;
@@ -264,81 +348,41 @@ h4 {
         }
       }
 
-      .delete,
-      .refetch {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      .btn-delete,
+      .btn-refetch,
+      .btn-search {
         border: 0;
         border-radius: 0;
-        width: 2rem;
       }
 
-      .delete {
+      .btn-delete {
         border-top-left-radius: 0.5rem;
       }
 
-      .refetch {
+      .btn-refetch {
         border-top-right-radius: 0.5rem;
       }
 
-      .icao,
-      .refetch {
+      .btn-icao,
+      .btn-refetch,
+      .btn-search {
         border-left: 1px solid $color-first-border;
-      }
-    }
-
-    .airport-header-expand {
-      display: grid;
-      grid-template-rows: 0fr;
-      visibility: hidden;
-      transition:
-        grid-template-rows 250ms ease,
-        visibility 0s 250ms;
-
-      &.open {
-        grid-template-rows: 1fr;
-        visibility: visible;
-        transition-delay: 0s;
-      }
-
-      >* {
-        min-height: 0;
-        overflow: hidden;
       }
     }
   }
 
   .airport-data-container {
-    .airport-data-expand {
-      display: grid;
-      grid-template-rows: 0fr;
-      visibility: hidden;
-      transition:
-        grid-template-rows 250ms ease,
-        visibility 0s 250ms;
-
-      &.open {
-        grid-template-rows: 2fr;
-        visibility: visible;
-        transition-delay: 0s;
-      }
-
-      >* {
-        min-height: 0;
-        overflow: hidden;
-      }
-
-      .airport-collapse {
-        position: sticky;
-        bottom: -1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: $color-first;
-        border-radius: 0;
-        height: 2rem;
-      }
+    .airport-add {
+      position: sticky;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: $color-first;
+      border-radius: 0;
+      border-bottom: 1px solid $color-search;
+      height: 2rem;
+      width: 100%;
     }
   }
 

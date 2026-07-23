@@ -24,21 +24,21 @@ const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
         <div className="airport-header-buttons">
             <button
                 type="button"
-                className="delete"
+                className="btn-delete"
                 onClick={handleDelete}
             >
                 <img src={deleteIcon} width="20" />
             </button>
             <button
                 type="button"
-                className={`icao ${props.airportOpen ? "open" : ""}`}
+                className={`btn-icao ${props.airportOpen ? "open" : ""}`}
                 onClick={() => props.setAirportOpen(value => !value)}
             >
                 <h4>{props.airport.icaoId.length > 0 ? props.airport.icaoId.toUpperCase() : "New ICAO"}</h4>
             </button>
             <button
                 type="button"
-                className="refetch"
+                className="btn-refetch"
                 onClick={() => context.handleSubmit(props.airport.formValues, props.airportIndex)}
             >
                 <img src={reloadIcon} width="20" />
