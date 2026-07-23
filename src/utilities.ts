@@ -1,7 +1,8 @@
-import type { TAFJson, METARJson, AirportFormValues } from "./types"
+import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, codeHighlights } from "./types"
 
 export const API_PATH_TAF = '/api/data/taf'
 export const API_PATH_METAR = '/api/data/metar'
+export const searchAirportIndex = 999;
 
 export const fetchTAF = async (values: AirportFormValues): Promise<[TAFJson[], string]> => {
   const params = new URLSearchParams({
@@ -54,3 +55,52 @@ export const fetchMETAR = async (values: AirportFormValues): Promise<[METARJson[
 
   return [await response.json(), ""]
 }
+export const createAirportId = () =>
+  globalThis.crypto?.randomUUID?.() ??
+  `airport-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+export const createAirport = (icaoId?: string): AirportData => {
+  return {
+    id: createAirportId(),
+    icaoId: icaoId ? icaoId : "",
+    formValues: {
+      icaoId: icaoId ? icaoId : "",
+      useDatetime: false,
+      date: "",
+      time: ""
+    },
+    TAF: [],
+    METAR: [],
+    messages: ""
+  }
+}
+
+export const resolveHighlights = (classes: string[]) =>
+  codeHighlights.filter(highlight => classes.includes(highlight.class));
+
+export const isStringArray = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every(item => typeof item === "string");
+
+export const formatRawCodes = (raw: string) => {
+  const visibilityRegEx = codeHighlights.find(
+    highlight => highlight.label === "visibility"
+  )?.regEx;
+
+  const codes = raw.trim().split(/\s+/);
+  const formatted: string[] = [];
+
+  for (let index = 0; index < codes.length; index++) {
+    const nextCode = codes[index + 1];
+    const combined = nextCode ? `${codes[index]} ${nextCode}` : "";
+    const isCombinedCode = visibilityRegEx?.test(combined) ?? false;
+
+    if (isCombinedCode) {
+      formatted.push(combined);
+      index++;
+    } else {
+      formatted.push(codes[index]);
+    }
+  }
+
+  return formatted;
+};

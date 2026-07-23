@@ -6,9 +6,8 @@ import type {
     CodeHighlight,
 } from "./types";
 import { FlightPathContext } from "./Context";
-import { fetchTAF, fetchMETAR } from "./utilities";
+import { fetchTAF, fetchMETAR, createAirport, searchAirportIndex } from "./utilities";
 import {
-    createAirportId,
     loadStoredAirports,
     saveStoredAirports
 } from "./airportStorage";
@@ -16,6 +15,9 @@ import {
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [loadedState] = useState(loadStoredAirports)
     const [airports, setAirports] = useState<AirportData[]>(loadedState.airports)
+    const [searchAirport, setSearchAirport] = useState<AirportData>(createAirport())
+    const [highlightsTAF, setHighlightsTAF] = useState<CodeHighlight[]>([])
+    const [highlightsMETAR, setHighlightsMETAR] = useState<CodeHighlight[]>([])
     const [isLoading, setIsLoading] = useState(
         loadedState.airports.some(airport => airport.formValues.icaoId.trim().length > 0)
     )
@@ -67,14 +69,10 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 return {
                     ...airport,
                     TAF: result.TAF,
-                    METAR: result.METAR
+                    METAR: result.METAR,
+                    messages: result.TAFMessage + result.METARMessage
                 }
             }))
-
-            setError(results
-                .flatMap(result => [result?.TAFMessage, result?.METARMessage])
-                .filter((message): message is string => Boolean(message))
-                .join(""))
 
             setIsLoading(false)
         }
@@ -92,20 +90,28 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
             METAR.sort((a, b) => Date.parse(b.receiptTime) - Date.parse(a.receiptTime))
 
-            setAirports(current => current.map((airport, index) =>
-                index === airportIndex
-                    ? { ...airport, icaoId: values.icaoId, formValues: values, TAF, METAR }
-                    : airport))
+            if (airportIndex === searchAirportIndex) {
+                setSearchAirport(current => ({ ...current, formValues: values, icaoId: values.icaoId, TAF, METAR, messages: TAFMessage + METARMessage }))
+            } else {
+                setAirports(current => current.map((airport, index) =>
+                    index === airportIndex
+                        ? { ...airport, icaoId: values.icaoId, formValues: values, TAF, METAR, messages: TAFMessage + METARMessage }
+                        : airport))
+            }
 
-            setError(TAFMessage + METARMessage)
         } catch (error) {
-            setError(error instanceof Error ? error.message : 'Failed to fetch TAF and/or METAR data.')
+            setError(error instanceof Error ? error.message : 'There was an unexpected error')
         } finally {
             setIsLoading(false)
         }
     }
 
     const handleSetFormValues = (values: AirportFormValues, airportIndex: number) => {
+        if (airportIndex === searchAirportIndex) {
+            setSearchAirport({ ...searchAirport, icaoId: values.icaoId, formValues: values })
+            return;
+        }
+
         setAirports(current => current.map((airport, index) => {
             if (index !== airportIndex) return airport;
 
@@ -117,43 +123,23 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         }))
     }
 
-    const handleSetHighlightsTAF = (newHighlights: CodeHighlight[], airportIndex: number) => {
-        setAirports(current => current.map((airport, index) => {
-            if (index !== airportIndex) return airport;
-
-            return {
-                ...airport,
-                highlightsTAF: newHighlights
-            }
-        }))
+    const handleSetHighlightsTAF = (newHighlights: CodeHighlight[]) => {
+        setHighlightsTAF(newHighlights)
     }
 
-    const handleSetHighlightsMETAR = (newHighlights: CodeHighlight[], airportIndex: number) => {
-        setAirports(current => current.map((airport, index) => {
-            if (index !== airportIndex) return airport;
-
-            return {
-                ...airport,
-                highlightsMETAR: newHighlights
-            }
-        }))
+    const handleSetHighlightsMETAR = (newHighlights: CodeHighlight[]) => {
+        setHighlightsMETAR(newHighlights)
     }
 
     const handleAddAirport = () => {
-        setAirports(current => [...current, {
-            id: createAirportId(),
-            icaoId: "",
-            formValues: {
-                icaoId: "",
-                useDatetime: false,
-                date: "",
-                time: ""
-            },
-            TAF: [],
-            METAR: [],
-            highlightsTAF: [],
-            highlightsMETAR: []
-        }])
+        const isDuplicate = airports.some(airport => airport.icaoId === searchAirport.icaoId);
+
+        if (isDuplicate) {
+            window.alert(`You have already saved ${searchAirport.icaoId}`)
+            return;
+        }
+
+        setAirports(current => [...current, createAirport(searchAirport.icaoId)])
     }
 
     const handleDeleteAirport = (airportIndex: number) => {
@@ -163,6 +149,9 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         <FlightPathContext
             value={{
                 airports,
+                searchAirport,
+                highlightsTAF,
+                highlightsMETAR,
                 handleSubmit,
                 handleSetFormValues,
                 handleSetHighlightsTAF,
