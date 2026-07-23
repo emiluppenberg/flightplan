@@ -62,6 +62,9 @@ const AirportRender = (props: AirportRenderProps) => {
                     </Expand>
                 </div>
                 <div className="airport-data-container">
+                    {props.airport.messages.length > 0 && (
+                        <p className="message">{props.airport.messages}</p>
+                    )}
                     {reports[0]}
                     <Expand
                         isOpen={airportOpen}

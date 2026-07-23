@@ -70,7 +70,8 @@ export const createAirport = (icaoId?: string): AirportData => {
       time: ""
     },
     TAF: [],
-    METAR: []
+    METAR: [],
+    messages: ""
   }
 }
 

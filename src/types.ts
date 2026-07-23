@@ -22,6 +22,7 @@ export type AirportData = {
   formValues: AirportFormValues;
   TAF: TAFJson[];
   METAR: METARJson[];
+  messages: string;
 }
 
 export type AirportRefresh = {

@@ -6,7 +6,7 @@ import type {
     CodeHighlight,
 } from "./types";
 import { FlightPathContext } from "./Context";
-import { fetchTAF, fetchMETAR, createAirportId, createAirport, searchAirportIndex } from "./utilities";
+import { fetchTAF, fetchMETAR, createAirport, searchAirportIndex } from "./utilities";
 import {
     loadStoredAirports,
     saveStoredAirports
@@ -69,14 +69,10 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 return {
                     ...airport,
                     TAF: result.TAF,
-                    METAR: result.METAR
+                    METAR: result.METAR,
+                    messages: result.TAFMessage + result.METARMessage
                 }
             }))
-
-            setError(results
-                .flatMap(result => [result?.TAFMessage, result?.METARMessage])
-                .filter((message): message is string => Boolean(message))
-                .join(""))
 
             setIsLoading(false)
         }
@@ -95,17 +91,16 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             METAR.sort((a, b) => Date.parse(b.receiptTime) - Date.parse(a.receiptTime))
 
             if (airportIndex === searchAirportIndex) {
-                setSearchAirport(current => ({ ...current, formValues: values, icaoId: values.icaoId, TAF, METAR }))
+                setSearchAirport(current => ({ ...current, formValues: values, icaoId: values.icaoId, TAF, METAR, messages: TAFMessage + METARMessage }))
             } else {
                 setAirports(current => current.map((airport, index) =>
                     index === airportIndex
-                        ? { ...airport, icaoId: values.icaoId, formValues: values, TAF, METAR }
+                        ? { ...airport, icaoId: values.icaoId, formValues: values, TAF, METAR, messages: TAFMessage + METARMessage }
                         : airport))
             }
 
-            setError(TAFMessage + METARMessage)
         } catch (error) {
-            setError(error instanceof Error ? error.message : 'Failed to fetch TAF and/or METAR data.')
+            setError(error instanceof Error ? error.message : 'There was an unexpected error')
         } finally {
             setIsLoading(false)
         }

@@ -6,7 +6,7 @@ import { formatRawCodes, searchAirportIndex } from "../utilities"
 import AirportDatetimeForm from "./AirportDatetimeForm"
 import searchIcon from "/ui/browse-svgrepo-com.svg?url";
 import deleteIcon from "/ui/close-lg-svgrepo-com.svg?url";
-import { useRef } from "react"
+import { useRef, type MouseEvent } from "react"
 
 
 const SearchAirportDialog = () => {
@@ -14,7 +14,7 @@ const SearchAirportDialog = () => {
     const form = useForm<AirportFormValues>({
         defaultValues: context.searchAirport.formValues
     })
-    const { register, getValues } = form;
+    const { register, getValues, setFocus } = form;
     const hasData = context.searchAirport.TAF.length > 0 || context.searchAirport.METAR.length > 0;
     const dialogRef = useRef<HTMLDialogElement>(null)
 
@@ -42,12 +42,38 @@ const SearchAirportDialog = () => {
         context.handleSetFormValues(getValues(), searchAirportIndex)
     }
 
+    const handleOpenDialog = () => {
+        dialogRef.current?.showModal();
+        setFocus("icaoId");
+    }
+
+    const handleCloseDialog = () => {
+        dialogRef.current?.close();
+    }
+
+    const handleDialogClick = (event: MouseEvent<HTMLDialogElement>) => {
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const clickedOutside =
+            event.clientX < bounds.left ||
+            event.clientX > bounds.right ||
+            event.clientY < bounds.top ||
+            event.clientY > bounds.bottom;
+
+        if (clickedOutside) {
+            handleCloseDialog();
+        }
+    }
+
     return (
         <>
-            <button className="btn-search" onClick={() => dialogRef.current?.showModal()}>
+            <button className="btn-search" onClick={handleOpenDialog}>
                 <img src={searchIcon} width="20" />
             </button>
-            <dialog className="search-dialog" ref={dialogRef}>
+            <dialog
+                className="search-dialog"
+                ref={dialogRef}
+                onClick={handleDialogClick}
+            >
                 <h2>Search</h2>
                 <div className="search-dialog-content">
                     <FormProvider {...form}>
@@ -57,7 +83,7 @@ const SearchAirportDialog = () => {
                                     <button
                                         type="button"
                                         className="btn-delete"
-                                        onClick={() => dialogRef.current?.close()}
+                                        onClick={handleCloseDialog}
                                     >
                                         <img src={deleteIcon} width="20" />
                                     </button>
@@ -89,6 +115,9 @@ const SearchAirportDialog = () => {
                             <div className="airport-data-container">
                                 <div className="airport-data-expand open">
                                     <div>
+                                        {context.searchAirport.messages.length > 0 && (
+                                            <p className="message">{context.searchAirport.messages}</p>
+                                        )}
                                         {reports}
                                     </div>
                                     <button

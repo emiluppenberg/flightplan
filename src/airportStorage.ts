@@ -44,7 +44,8 @@ export const loadStoredAirports = (): StoredAirportsState => {
                     time: ""
                 },
                 TAF: [],
-                METAR: []
+                METAR: [],
+                messages: ""
             })
         }
 

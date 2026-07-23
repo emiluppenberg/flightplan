@@ -50,6 +50,12 @@ $color-search: #d3d368;
   }
 }
 
+.message {
+  white-space: pre-line;
+  font-style: italic;
+  font-weight: 600;
+}
+
 .app-display,
 .renders-container {
   position: relative;
@@ -73,7 +79,8 @@ $color-search: #d3d368;
   padding: 0;
   border: 0;
   background: transparent;
-
+  width: 100%;
+  
   h2 {
     margin-bottom: 1rem;
   }

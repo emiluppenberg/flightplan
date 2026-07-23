@@ -8,15 +8,15 @@ const AppDisplay = () => {
     <div className="app-display">
       <h2>Airports</h2>
       {context.isLoading && <p>Loading...</p>}
-      {context.error && <p style={({ whiteSpace: "pre-line" })}>{context.error}</p>}
+      {context.error && <p className="message">{context.error}</p>}
       <div className="renders-container">
-      {context.airports.map((airport, index) => (
-        <AirportRender
-        key={`airport-render-${airport.id}`}
-        airport={airport}
-        airportIndex={index}
-        />
-      ))}
+        {context.airports.map((airport, index) => (
+          <AirportRender
+            key={`airport-render-${airport.id}`}
+            airport={airport}
+            airportIndex={index}
+          />
+        ))}
       </div>
     </div>
   )
