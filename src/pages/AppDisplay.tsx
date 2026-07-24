@@ -12,7 +12,7 @@ const AppDisplay = () => {
       <div className="renders-container">
         {context.airports.map((airport, index) => (
           <AirportRender
-            key={`airport-render-${airport.id}`}
+            key={`airport-render-${index}`}
             airport={airport}
             airportIndex={index}
           />
