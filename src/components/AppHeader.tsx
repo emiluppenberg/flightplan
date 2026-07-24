@@ -5,6 +5,7 @@ import SearchAirportForm, { type SearchAirportFormHandle } from "./SearchAirport
 import Expand from "./Expand";
 import { SVG_URLS } from "../utilities";
 import Dialog from "./Dialog";
+import SignUpForm from "./SignUpForm";
 
 const AppHeader = () => {
     const [showHighlights, setShowHighlights] = useState(false)
@@ -36,6 +37,13 @@ const AppHeader = () => {
                 </div>
                 <AppLogo />
                 <div className="top-buttons right">
+                    <Dialog
+                        title="Sign Up"
+                        buttonInlineElement="Sign Up">
+                        {(closeDialog) => (
+                            <SignUpForm onClose={closeDialog} />
+                        )}
+                    </Dialog>
                 </div>
             </div>
             <Expand

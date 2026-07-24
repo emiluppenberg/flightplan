@@ -223,3 +223,8 @@ export const codeHighlights: CodeHighlight[] = [
     variants: []
   }
 ]
+
+export type SignUpFormValues = {
+    email: string;
+    password: string;
+}
