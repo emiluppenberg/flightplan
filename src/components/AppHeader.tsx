@@ -3,7 +3,7 @@ import AppLogo from "./AppLogo"
 import Highlights from "./Highlights";
 import SearchAirportDialog from "./SearchAirportDialog";
 import Expand from "./Expand";
-import highlightIcon from "/ui/underline-text-editor-svgrepo-com.svg?url"
+import { SVG_URLS } from "../utilities";
 
 const AppHeader = () => {
     const [showHighlights, setShowHighlights] = useState(false)
@@ -17,7 +17,7 @@ const AppHeader = () => {
                         className={`btn-highlight ${showHighlights ? "open" : ""}`}
                         onClick={() => setShowHighlights(value => !value)}
                     >
-                        <img src={highlightIcon} width="20" />
+                        <img src={SVG_URLS.highlight} width="20" />
                     </button>
                     <SearchAirportDialog />
                 </div>

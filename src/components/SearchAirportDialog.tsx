@@ -2,10 +2,8 @@ import { FormProvider, useForm } from "react-hook-form"
 import { useFlightPathContext } from "../Context"
 import type { AirportFormValues } from "../types"
 import ReportRender from "./ReportRender"
-import { formatRawCodes, searchAirportIndex } from "../utilities"
+import { formatRawCodes, searchAirportIndex, SVG_URLS } from "../utilities"
 import AirportDatetimeForm from "./AirportDatetimeForm"
-import searchIcon from "/ui/browse-svgrepo-com.svg?url";
-import deleteIcon from "/ui/close-lg-svgrepo-com.svg?url";
 import { useRef, type MouseEvent } from "react"
 
 
@@ -67,7 +65,7 @@ const SearchAirportDialog = () => {
     return (
         <>
             <button className="btn-search" onClick={handleOpenDialog}>
-                <img src={searchIcon} width="20" />
+                <img src={SVG_URLS.search} width="20" />
             </button>
             <dialog
                 className="search-dialog"
@@ -85,7 +83,7 @@ const SearchAirportDialog = () => {
                                         className="btn-delete"
                                         onClick={handleCloseDialog}
                                     >
-                                        <img src={deleteIcon} width="20" />
+                                        <img src={SVG_URLS.close} width="20" />
                                     </button>
                                     <input
                                         type="text"
@@ -103,7 +101,7 @@ const SearchAirportDialog = () => {
                                         className="btn-search"
                                         onClick={() => context.handleSubmit(context.searchAirport.formValues, searchAirportIndex)}
                                     >
-                                        <img src={searchIcon} width="20" />
+                                        <img src={SVG_URLS.search} width="20" />
                                     </button>
                                 </div>
                                 <div className="airport-header-expand open">

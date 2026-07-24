@@ -2,6 +2,13 @@ import { type TAFJson, type METARJson, type AirportFormValues, type AirportData,
 
 export const API_PATH_TAF = '/api/data/taf'
 export const API_PATH_METAR = '/api/data/metar'
+export const SVG_URLS = {
+  logo: '/flygvader-logo.svg',
+  highlight: '/ui/underline-text-editor-svgrepo-com.svg',
+  search: '/ui/browse-svgrepo-com.svg',
+  close: '/ui/close-lg-svgrepo-com.svg',
+  reload: '/ui/reload-svgrepo-com.svg',
+} as const;
 export const searchAirportIndex = 999;
 
 export const fetchTAF = async (values: AirportFormValues): Promise<[TAFJson[], string]> => {
