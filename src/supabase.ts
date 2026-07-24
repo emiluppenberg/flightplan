@@ -7,19 +7,19 @@ const supabase = createClient<Database>(
     import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
-export const signUpUser = async (values: UserFormValues): Promise<AppUser | undefined> => {
+export const signUpUser = async (values: UserFormValues): Promise<string> => {
     const response = await supabase.auth.signUp({
         email: values.email,
         password: values.password
     })
 
+    console.log(response)
+
     if (response.error) {
         throw new Error(response.error.message)
     }
 
-    return response.data.user && response.data.session
-        ? { user: response.data.user, session: response.data.session }
-        : undefined
+    return `A confirmation email has been sent to ${values.email}`
 }
 
 export const signInUser = async (values: UserFormValues): Promise<AppUser> => {

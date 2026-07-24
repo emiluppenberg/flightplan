@@ -3,7 +3,7 @@ import type { UserFormValues } from "../types";
 
 type UserFormProps = {
     onClose: () => void;
-    onSubmit: (values: UserFormValues) => void;
+    onSubmit: (values: UserFormValues) => void | Promise<void>;
     submitText: string;
 }
 
@@ -11,9 +11,14 @@ const UserForm = (props: UserFormProps) => {
     const form = useForm<UserFormValues>()
     const { register, handleSubmit } = form;
 
+    const handleFormSubmit = handleSubmit(async values => {
+        await props.onSubmit(values)
+        props.onClose()
+    })
+
     return (
         <FormProvider {...form}>
-            <form onSubmit={handleSubmit(props.onSubmit)}>
+            <form onSubmit={handleFormSubmit}>
                 <div className="form">
                     <div className="form-row">
                         <input

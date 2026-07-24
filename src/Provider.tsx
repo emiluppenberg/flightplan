@@ -16,12 +16,12 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [highlightsTAF, setHighlightsTAF] = useState<CodeHighlight[]>([])
     const [highlightsMETAR, setHighlightsMETAR] = useState<CodeHighlight[]>([])
     const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState("")
+    const [message, setMessage] = useState("")
     const [user, setUser] = useState<AppUser>()
 
     const handleSubmit = async (values: AirportFormValues, airportIndex: number) => {
         setIsLoading(true)
-        setError('')
+        setMessage('')
 
         try {
             const [TAF, TAFMessage] = await fetchTAF(values)
@@ -39,7 +39,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             }
 
         } catch (error) {
-            setError(error instanceof Error ? error.message : 'There was an unexpected error')
+            setMessage(error instanceof Error ? error.message : 'There was an unexpected error')
         } finally {
             setIsLoading(false)
         }
@@ -65,12 +65,12 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         try {
             if (user) {
                 setIsLoading(true)
-                setError('')
+                setMessage('')
 
                 await upsertHighlightsTAF(newHighlights)
             }
         } catch (error) {
-            setError(error instanceof Error ? error.message : "")
+            setMessage(error instanceof Error ? error.message : "")
         } finally {
             setHighlightsTAF(newHighlights)
             setIsLoading(false)
@@ -81,12 +81,12 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         try {
             if (user) {
                 setIsLoading(true)
-                setError('')
+                setMessage('')
 
                 await upsertHighlightsMETAR(newHighlights)
             }
         } catch (error) {
-            setError(error instanceof Error ? error.message : "")
+            setMessage(error instanceof Error ? error.message : "")
         } finally {
             setHighlightsMETAR(newHighlights)
             setIsLoading(false)
@@ -103,29 +103,34 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
         if (user) {
             setIsLoading(true)
-            setError('')
+            setMessage('')
 
             try {
                 await insertAirport(searchAirport.icaoId)
             } catch (error) {
-                setError(error instanceof Error ? error.message : "")
+                setMessage(error instanceof Error ? error.message : "")
             } finally {
                 setIsLoading(false)
             }
         }
 
-        setAirports(current => [...current, createAirport(searchAirport.icaoId)])
+        setAirports(current => [...current, {
+            ...searchAirport,
+            formValues: { ...searchAirport.formValues },
+            METAR: [...searchAirport.METAR],
+            TAF: [...searchAirport.TAF]
+        }])
     }
 
     const handleDeleteAirport = async (airportIndex: number) => {
         if (user) {
             setIsLoading(true)
-            setError('')
+            setMessage('')
 
             try {
                 await deleteAirport(searchAirport.icaoId)
             } catch (error) {
-                setError(error instanceof Error ? error.message : "")
+                setMessage(error instanceof Error ? error.message : "")
             } finally {
                 setIsLoading(false)
             }
@@ -136,10 +141,15 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
     const handleSignIn = async (values: UserFormValues) => {
         setIsLoading(true)
-        setError('')
+        setMessage('')
 
         try {
             const user = await signInUser(values);
+
+            if (user && !user.user.email_confirmed_at) {
+                throw new Error(`Please follow the link in the confirmation email sent to ${values.email} before logging in`)
+            }
+
             setUser(user)
 
             const airportIcaoIds = await selectAllAirports()
@@ -152,7 +162,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             const highlightsMETAR = await selectHighlightsMETAR()
             setHighlightsMETAR(resolveHighlights(highlightsMETAR))
         } catch (error) {
-            setError(error instanceof Error ? error.message : "")
+            setMessage(error instanceof Error ? error.message : "")
         } finally {
             setIsLoading(false)
         }
@@ -160,7 +170,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
     const handleSignOut = async () => {
         setIsLoading(true)
-        setError('')
+        setMessage('')
 
         try {
             await signOutUser()
@@ -169,7 +179,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             setHighlightsTAF([])
             setHighlightsMETAR([])
         } catch (error) {
-            setError(error instanceof Error ? error.message : "")
+            setMessage(error instanceof Error ? error.message : "")
         } finally {
             setIsLoading(false)
         }
@@ -177,13 +187,13 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
     const handleSignUp = async (values: UserFormValues) => {
         setIsLoading(true)
-        setError('')
+        setMessage('')
 
         try {
-            const user = await signUpUser(values);
-            setUser(user)
+            const responseMessage = await signUpUser(values);
+            setMessage(responseMessage)
         } catch (error) {
-            setError(error instanceof Error ? error.message : "")
+            setMessage(error instanceof Error ? error.message : "")
         } finally {
             setIsLoading(false)
         }
@@ -206,7 +216,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 handleSignOut,
                 handleSignUp,
                 isLoading,
-                error,
+                message,
                 user
             }}>
             {children}

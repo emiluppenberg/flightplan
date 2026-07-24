@@ -16,7 +16,7 @@ export type FlightPathState = {
     handleSignOut: () => void;
     handleSignUp: (values: UserFormValues) => void;
     isLoading: boolean;
-    error: string;
+    message: string;
     user: AppUser | undefined;
 }
 

@@ -100,7 +100,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
                             className="airport-add"
                             disabled={!hasData}
                             onClick={context.handleAddAirport}>
-                            Save airport
+                            Add to my airports
                         </button>
                     </div>
                 </div>
