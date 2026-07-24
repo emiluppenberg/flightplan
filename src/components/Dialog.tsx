@@ -2,7 +2,7 @@ import { useRef, type MouseEvent, type ReactNode } from "react";
 
 type DialogProps = {
     title: string;
-    buttonClassName: string;
+    buttonClassName?: string;
     buttonInlineElement: ReactNode;
     onOpen?: () => void;
     children: (closeDialog: () => void) => ReactNode;

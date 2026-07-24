@@ -34,6 +34,7 @@ $color-taf-ceiling-medium: orange;
 $color-taf-ceiling-high: yellow;
 $color-taf-ceiling-highest: green;
 $color-background: #090913;
+$color-header: #080829;
 $color-search: #d3d368;
 
 .page {
@@ -103,7 +104,7 @@ button,
 fieldset {
   font: inherit;
   padding: 0.5rem;
-  background: $color-first;
+  background: $color-second;
   border: 1px solid $color-first-border;
   border-radius: 0.3rem;
 
@@ -153,6 +154,7 @@ h2 {
     width: 100%;
     background: $color-first;
     border-bottom: 2px solid $color-first-border;
+    background: $color-header;
 
     &.top {
       display: grid;
@@ -174,15 +176,17 @@ h2 {
       }
     }
 
-    &.search,
     &.highlights {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
       overflow-y: auto;
-      background: $color-background;
       padding: 0.5rem;
       max-height: 50vh;
+
+      fieldset {
+        background: $color-second;
+      }
     }
   }
 }
@@ -395,7 +399,6 @@ h2 {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: $color-first;
       border-radius: 0;
       border-bottom: 1px solid $color-search;
       height: 2rem;

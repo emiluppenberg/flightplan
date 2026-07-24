@@ -6,13 +6,20 @@ const AppDisplay = () => {
 
   return (
     <div className="app-display">
-      <h2>Airports</h2>
-      {context.isLoading && <p>Loading...</p>}
-      {context.error && <p className="message">{context.error}</p>}
+      <h2>My Airports</h2>
+      {context.isLoading && (
+        <p className="message">Loading...</p>
+      )}
+      {context.message && (
+        <p className="message">{context.message}</p>
+        )}
+      {context.airports.length === 0 && (
+        <p className="message">You have not added any airports</p>
+      )}
       <div className="renders-container">
         {context.airports.map((airport, index) => (
           <AirportRender
-            key={`airport-render-${airport.id}`}
+            key={`airport-render-${index}`}
             airport={airport}
             airportIndex={index}
           />

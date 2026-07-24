@@ -1,3 +1,5 @@
+import type { Session, User } from "@supabase/supabase-js";
+
 export type AirportFormValues = {
   icaoId: string;
   useDatetime: boolean;
@@ -17,20 +19,11 @@ export type METARJson = {
 }
 
 export type AirportData = {
-  id: string;
   icaoId: string;
   formValues: AirportFormValues;
   TAF: TAFJson[];
   METAR: METARJson[];
   messages: string;
-}
-
-export type AirportRefresh = {
-  id: string;
-  TAF: TAFJson[];
-  METAR: METARJson[];
-  TAFMessage: string;
-  METARMessage: string;
 }
 
 export type CodeHighlight = {
@@ -223,3 +216,13 @@ export const codeHighlights: CodeHighlight[] = [
     variants: []
   }
 ]
+
+export type UserFormValues = {
+    email: string;
+    password: string;
+}
+
+export type AppUser = {
+  user: User;
+  session: Session;
+}
