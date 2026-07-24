@@ -5,9 +5,11 @@ import SearchAirportForm, { type SearchAirportFormHandle } from "./SearchAirport
 import Expand from "./Expand";
 import { SVG_URLS } from "../utilities";
 import Dialog from "./Dialog";
-import SignUpForm from "./SignUpForm";
+import UserForm from "./UserForm";
+import { useFlightPathContext } from "../Context";
 
 const AppHeader = () => {
+    const context = useFlightPathContext()
     const [showHighlights, setShowHighlights] = useState(false)
     const searchFormRef = useRef<SearchAirportFormHandle>(null)
 
@@ -37,13 +39,27 @@ const AppHeader = () => {
                 </div>
                 <AppLogo />
                 <div className="top-buttons right">
-                    <Dialog
-                        title="Sign Up"
-                        buttonInlineElement="Sign Up">
-                        {(closeDialog) => (
-                            <SignUpForm onClose={closeDialog} />
-                        )}
-                    </Dialog>
+                    {!context.user && (
+                        <>
+                            <Dialog
+                                title="Sign Up"
+                                buttonInlineElement="Sign Up">
+                                {(closeDialog) => (
+                                    <UserForm onClose={closeDialog} onSubmit={context.handleSignUp} />
+                                )}
+                            </Dialog>
+                            <Dialog
+                                title="Log In"
+                                buttonInlineElement="Log In">
+                                {(closeDialog) => (
+                                    <UserForm onClose={closeDialog} onSubmit={context.handleSignIn} />
+                                )}
+                            </Dialog>
+                        </>
+                    )}
+                    {context.user && (
+                        <button type="button" onClick={context.handleSignOut}>Log Out</button>
+                    )}
                 </div>
             </div>
             <Expand

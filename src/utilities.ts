@@ -62,13 +62,31 @@ export const fetchMETAR = async (values: AirportFormValues): Promise<[METARJson[
 
   return [await response.json(), ""]
 }
-export const createAirportId = () =>
-  globalThis.crypto?.randomUUID?.() ??
-  `airport-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+export const refreshAirports = async (icaoIds: string[]): Promise<AirportData[]> => {
+  return await Promise.all(icaoIds.map(async icaoId => {
+    const formValues: AirportFormValues = {
+      icaoId: icaoId,
+      useDatetime: false
+    }
+
+    const [TAF, TAFMessage] = await fetchTAF(formValues)
+    const [METAR, METARMessage] = await fetchMETAR(formValues)
+
+    METAR.sort((a, b) => Date.parse(b.receiptTime) - Date.parse(a.receiptTime))
+
+    return {
+      icaoId: icaoId,
+      formValues: formValues,
+      TAF,
+      METAR,
+      messages: TAFMessage + METARMessage
+    }
+  }))
+}
 
 export const createAirport = (icaoId?: string): AirportData => {
   return {
-    id: createAirportId(),
     icaoId: icaoId ? icaoId : "",
     formValues: {
       icaoId: icaoId ? icaoId : "",

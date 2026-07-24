@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { AirportData, AirportFormValues, CodeHighlight } from "./types"
+import type { AirportData, AirportFormValues, AppUser, CodeHighlight, UserFormValues } from "./types"
 
 export type FlightPathState = {
     airports: AirportData[];
@@ -12,8 +12,12 @@ export type FlightPathState = {
     handleSetHighlightsMETAR: (newHighlights: CodeHighlight[]) => void;
     handleAddAirport: () => void;
     handleDeleteAirport: (airportIndex: number) => void;
+    handleSignIn: (values: UserFormValues) => void;
+    handleSignOut: () => void;
+    handleSignUp: (values: UserFormValues) => void;
     isLoading: boolean;
     error: string;
+    user: AppUser | undefined;
 }
 
 export const FlightPathContext = createContext<FlightPathState | undefined>(undefined)

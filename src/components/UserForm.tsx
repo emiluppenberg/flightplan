@@ -1,25 +1,18 @@
-import { FormProvider, useForm, type SubmitHandler } from "react-hook-form";
-import type { SignUpFormValues } from "../types";
-import { signUpUser } from "../supabase";
+import { FormProvider, useForm } from "react-hook-form";
+import type { UserFormValues } from "../types";
 
-type SignUpFormProps = {
+type UserFormProps = {
     onClose: () => void;
+    onSubmit: (values: UserFormValues) => void;
 }
 
-const SignUpForm = (props: SignUpFormProps) => {
-    const form = useForm<SignUpFormValues>()
+const UserForm = (props: UserFormProps) => {
+    const form = useForm<UserFormValues>()
     const { register, handleSubmit } = form;
-
-    const handleSignUp: SubmitHandler<SignUpFormValues> = async (values) => {
-        const authResponse = await signUpUser(values);
-
-        console.log(authResponse.data)
-        console.log(authResponse.error)
-    }
 
     return (
         <FormProvider {...form}>
-            <form onSubmit={handleSubmit(handleSignUp)}>
+            <form onSubmit={handleSubmit(props.onSubmit)}>
                 <div className="form">
                     <div className="form-row">
                         <input
@@ -49,4 +42,4 @@ const SignUpForm = (props: SignUpFormProps) => {
     )
 }
 
-export default SignUpForm;
+export default UserForm;

@@ -1,84 +1,23 @@
-import { useEffect, useRef, useState, type PropsWithChildren } from "react";
+import { useState, type PropsWithChildren } from "react";
 import type {
     AirportData,
     AirportFormValues,
-    AirportRefresh,
+    AppUser,
     CodeHighlight,
+    UserFormValues,
 } from "./types";
 import { FlightPathContext } from "./Context";
-import { fetchTAF, fetchMETAR, createAirport, searchAirportIndex } from "./utilities";
-import {
-    loadStoredAirports,
-    saveStoredAirports
-} from "./airportStorage";
+import { fetchTAF, fetchMETAR, createAirport, searchAirportIndex, refreshAirports, resolveHighlights } from "./utilities";
+import { deleteAirport, insertAirport, selectAllAirports, selectHighlightsMETAR, selectHighlightsTAF, signInUser, signOutUser, signUpUser, upsertHighlightsMETAR, upsertHighlightsTAF } from "./supabase";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
-    const [loadedState] = useState(loadStoredAirports)
-    const [airports, setAirports] = useState<AirportData[]>(loadedState.airports)
+    const [airports, setAirports] = useState<AirportData[]>([])
     const [searchAirport, setSearchAirport] = useState<AirportData>(createAirport())
     const [highlightsTAF, setHighlightsTAF] = useState<CodeHighlight[]>([])
     const [highlightsMETAR, setHighlightsMETAR] = useState<CodeHighlight[]>([])
-    const [isLoading, setIsLoading] = useState(
-        loadedState.airports.some(airport => airport.formValues.icaoId.trim().length > 0)
-    )
-    const [error, setError] = useState(loadedState.error ?? "")
-    const hasInitalizedState = useRef(false)
-
-    useEffect(() => {
-        const storageError = saveStoredAirports(airports)
-        if (!storageError) return;
-
-        const errorTimeout = window.setTimeout(() => setError(storageError), 0)
-        return () => window.clearTimeout(errorTimeout)
-    }, [airports])
-
-    useEffect(() => {
-        if (hasInitalizedState.current) return;
-        hasInitalizedState.current = true;
-
-        const refreshAirports = async () => {
-            const results = await Promise.all(loadedState.airports.map(async airport => {
-                try {
-                    const [TAF, TAFMessage] = await fetchTAF(airport.formValues)
-                    const [METAR, METARMessage] = await fetchMETAR(airport.formValues)
-
-                    METAR.sort((a, b) => Date.parse(b.receiptTime) - Date.parse(a.receiptTime))
-
-                    return {
-                        id: airport.id,
-                        TAF,
-                        METAR,
-                        TAFMessage,
-                        METARMessage
-                    }
-                } catch (error) {
-                    setError(error instanceof Error ? error.message : 'Failed to fetch TAF and/or METAR data.')
-                }
-            }))
-
-            const resultsMap = new Map<string, AirportRefresh>()
-
-            results.forEach(result => {
-                result && resultsMap.set(result.id, result)
-            })
-
-            setAirports(current => current.map(airport => {
-                const result = resultsMap.get(airport.id)
-                if (!result) return airport;
-
-                return {
-                    ...airport,
-                    TAF: result.TAF,
-                    METAR: result.METAR,
-                    messages: result.TAFMessage + result.METARMessage
-                }
-            }))
-
-            setIsLoading(false)
-        }
-
-        void refreshAirports()
-    }, [])
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState("")
+    const [user, setUser] = useState<AppUser>()
 
     const handleSubmit = async (values: AirportFormValues, airportIndex: number) => {
         setIsLoading(true)
@@ -117,21 +56,44 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
             return {
                 ...airport,
-                icaoId: values.icaoId,
                 formValues: values
             }
         }))
     }
 
-    const handleSetHighlightsTAF = (newHighlights: CodeHighlight[]) => {
-        setHighlightsTAF(newHighlights)
+    const handleSetHighlightsTAF = async (newHighlights: CodeHighlight[]) => {
+        try {
+            if (user) {
+                setIsLoading(true)
+                setError('')
+
+                await upsertHighlightsTAF(newHighlights)
+            }
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "")
+        } finally {
+            setHighlightsTAF(newHighlights)
+            setIsLoading(false)
+        }
     }
 
-    const handleSetHighlightsMETAR = (newHighlights: CodeHighlight[]) => {
-        setHighlightsMETAR(newHighlights)
+    const handleSetHighlightsMETAR = async (newHighlights: CodeHighlight[]) => {
+        try {
+            if (user) {
+                setIsLoading(true)
+                setError('')
+
+                await upsertHighlightsMETAR(newHighlights)
+            }
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "")
+        } finally {
+            setHighlightsMETAR(newHighlights)
+            setIsLoading(false)
+        }
     }
 
-    const handleAddAirport = () => {
+    const handleAddAirport = async () => {
         const isDuplicate = airports.some(airport => airport.icaoId === searchAirport.icaoId);
 
         if (isDuplicate) {
@@ -139,12 +101,94 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             return;
         }
 
+        if (user) {
+            setIsLoading(true)
+            setError('')
+
+            try {
+                await insertAirport(searchAirport.icaoId)
+            } catch (error) {
+                setError(error instanceof Error ? error.message : "")
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
         setAirports(current => [...current, createAirport(searchAirport.icaoId)])
     }
 
-    const handleDeleteAirport = (airportIndex: number) => {
+    const handleDeleteAirport = async (airportIndex: number) => {
+        if (user) {
+            setIsLoading(true)
+            setError('')
+
+            try {
+                await deleteAirport(searchAirport.icaoId)
+            } catch (error) {
+                setError(error instanceof Error ? error.message : "")
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
         setAirports(current => current.filter((_, index) => index !== airportIndex))
     }
+
+    const handleSignIn = async (values: UserFormValues) => {
+        setIsLoading(true)
+        setError('')
+
+        try {
+            const user = await signInUser(values);
+            setUser(user)
+
+            const airportIcaoIds = await selectAllAirports()
+            const airports = await refreshAirports(airportIcaoIds)
+            setAirports(airports)
+
+            const highlightsTAF = await selectHighlightsTAF()
+            setHighlightsTAF(resolveHighlights(highlightsTAF))
+
+            const highlightsMETAR = await selectHighlightsMETAR()
+            setHighlightsMETAR(resolveHighlights(highlightsMETAR))
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "")
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleSignOut = async () => {
+        setIsLoading(true)
+        setError('')
+
+        try {
+            await signOutUser()
+            setUser(undefined)
+            setAirports([])
+            setHighlightsTAF([])
+            setHighlightsMETAR([])
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "")
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleSignUp = async (values: UserFormValues) => {
+        setIsLoading(true)
+        setError('')
+
+        try {
+            const user = await signUpUser(values);
+            setUser(user)
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "")
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
     return (
         <FlightPathContext
             value={{
@@ -158,8 +202,12 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 handleSetHighlightsMETAR,
                 handleAddAirport,
                 handleDeleteAirport,
+                handleSignIn,
+                handleSignOut,
+                handleSignUp,
                 isLoading,
-                error
+                error,
+                user
             }}>
             {children}
         </FlightPathContext>
