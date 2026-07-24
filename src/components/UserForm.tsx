@@ -4,6 +4,7 @@ import type { UserFormValues } from "../types";
 type UserFormProps = {
     onClose: () => void;
     onSubmit: (values: UserFormValues) => void;
+    submitText: string;
 }
 
 const UserForm = (props: UserFormProps) => {
@@ -33,7 +34,7 @@ const UserForm = (props: UserFormProps) => {
                         />
                     </div>
                     <div className="form-row">
-                        <button type="submit">Submit</button>
+                        <button type="submit">{props.submitText}</button>
                         <button type="button" onClick={props.onClose}>Cancel</button>
                     </div>
                 </div>

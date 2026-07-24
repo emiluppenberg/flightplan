@@ -45,14 +45,20 @@ const AppHeader = () => {
                                 title="Sign Up"
                                 buttonInlineElement="Sign Up">
                                 {(closeDialog) => (
-                                    <UserForm onClose={closeDialog} onSubmit={context.handleSignUp} />
+                                    <UserForm
+                                        onClose={closeDialog}
+                                        onSubmit={context.handleSignUp}
+                                        submitText="Sign Up" />
                                 )}
                             </Dialog>
                             <Dialog
                                 title="Log In"
                                 buttonInlineElement="Log In">
                                 {(closeDialog) => (
-                                    <UserForm onClose={closeDialog} onSubmit={context.handleSignIn} />
+                                    <UserForm
+                                        onClose={closeDialog}
+                                        onSubmit={context.handleSignIn}
+                                        submitText="Log In" />
                                 )}
                             </Dialog>
                         </>
