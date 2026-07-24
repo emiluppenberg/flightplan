@@ -1,17 +1,19 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import AppLogo from "./AppLogo"
 import Highlights from "./Highlights";
-import SearchAirportDialog from "./SearchAirportDialog";
+import SearchAirportForm, { type SearchAirportFormHandle } from "./SearchAirportForm";
 import Expand from "./Expand";
 import { SVG_URLS } from "../utilities";
+import Dialog from "./Dialog";
 
 const AppHeader = () => {
     const [showHighlights, setShowHighlights] = useState(false)
+    const searchFormRef = useRef<SearchAirportFormHandle>(null)
 
     return (
         <div className="app-header">
             <div className="app-header-row top">
-                <div className="top-buttons">
+                <div className="top-buttons left">
                     <button
                         type="button"
                         className={`btn-highlight ${showHighlights ? "open" : ""}`}
@@ -19,9 +21,22 @@ const AppHeader = () => {
                     >
                         <img src={SVG_URLS.highlight} width="20" />
                     </button>
-                    <SearchAirportDialog />
+                    <Dialog
+                        title="Search"
+                        buttonClassName="btn-search"
+                        buttonInlineElement={<img src={SVG_URLS.search} width="20" />}
+                        onOpen={() => searchFormRef.current?.onOpen()}>
+                        {(closeDialog) => (
+                            <SearchAirportForm
+                                ref={searchFormRef}
+                                onClose={closeDialog}
+                            />
+                        )}
+                    </Dialog>
                 </div>
                 <AppLogo />
+                <div className="top-buttons right">
+                </div>
             </div>
             <Expand
                 isOpen={showHighlights}

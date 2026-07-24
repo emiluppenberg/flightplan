@@ -71,28 +71,30 @@ $color-search: #d3d368;
   gap: 1rem;
 }
 
-.search-dialog[open] {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  width: 100%;
-  
-  h2 {
-    margin-bottom: 1rem;
-  }
+dialog {
+  &[open] {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    width: 100%;
 
-  .search-dialog-content {
-    min-height: 0;
-    overflow-y: auto;
-  }
+    h2 {
+      margin-bottom: 1rem;
+    }
 
-  &::backdrop {
-    background: rgba(black, 0.72);
-    backdrop-filter: blur(2px);
+    .dialog-content {
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    &::backdrop {
+      background: rgba(black, 0.72);
+      backdrop-filter: blur(2px);
+    }
   }
 }
 
@@ -161,6 +163,14 @@ h2 {
         padding: 0 0.5rem;
         gap: 0.5rem;
         width: 100%;
+
+        &.left {
+          justify-content: flex-start;
+        }
+
+        &.right {
+          justify-content: flex-end;
+        }
       }
     }
 
