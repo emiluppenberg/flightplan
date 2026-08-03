@@ -25,6 +25,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
         const restoreSession = async () => {
             try {
+                setIsLoading(true)
                 const user = await initializeAppUser()
                 setUser(user)
                 await loadUserData();
@@ -32,6 +33,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 setMessage(error instanceof Error ? error.message : "There was an unexpected error when checking your authentication token")
             } finally {
                 setInitialized(true);
+                setIsLoading(false)
             }
         }
 

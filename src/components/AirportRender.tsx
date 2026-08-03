@@ -21,7 +21,7 @@ const AirportRender = (props: AirportRenderProps) => {
         defaultValues: props.airport.formValues
     })
 
-    const reports = [
+    const metarReports = [
         ...props.airport.METAR.map((metar, index) => (
             <ReportRender
                 key={`airport-${props.airportIndex}-metar-${index}`}
@@ -31,6 +31,8 @@ const AirportRender = (props: AirportRenderProps) => {
                 highlights={context.highlightsMETAR}
                 isMostRecentMETAR={index === 0} />
         )),
+    ];
+    const tafReports = [
         ...props.airport.TAF.map((taf, index) => (
             <ReportRender
                 key={`airport-${props.airportIndex}-taf-${index}`}
@@ -39,7 +41,7 @@ const AirportRender = (props: AirportRenderProps) => {
                 codes={formatRawCodes(taf.rawTAF)}
                 highlights={context.highlightsTAF} />
         ))
-    ];
+    ]
 
     return (
         <FormProvider {...form}>
@@ -65,13 +67,15 @@ const AirportRender = (props: AirportRenderProps) => {
                     {props.airport.messages.length > 0 && (
                         <p className="message">{props.airport.messages}</p>
                     )}
-                    {reports[0]}
+                    {metarReports[0]}
+                    {!airportOpen && tafReports[0]}
                     <Expand
                         isOpen={airportOpen}
                         rows={2}
                     >
                         <div>
-                            {reports.slice(1)}
+                            {metarReports.slice(1)}
+                            {tafReports}
                         </div>
                     </Expand>
                 </div>
