@@ -1,4 +1,4 @@
-import { useState, type PropsWithChildren } from "react";
+import { useEffect, useState, type PropsWithChildren } from "react";
 import type {
     AirportData,
     AirportFormValues,
@@ -8,7 +8,7 @@ import type {
 } from "./types";
 import { FlightPathContext } from "./Context";
 import { fetchTAF, fetchMETAR, createAirport, searchAirportIndex, refreshAirports, resolveHighlights } from "./utilities";
-import { deleteAirport, insertAirport, selectAllAirports, selectHighlightsMETAR, selectHighlightsTAF, signInUser, signOutUser, signUpUser, upsertHighlightsMETAR, upsertHighlightsTAF } from "./supabase";
+import { deleteAirport, initializeAppUser, insertAirport, selectAllAirports, selectHighlightsMETAR, selectHighlightsTAF, signInUser, signOutUser, signUpUser, upsertHighlightsMETAR, upsertHighlightsTAF } from "./supabase";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [airports, setAirports] = useState<AirportData[]>([])
@@ -18,6 +18,37 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [isLoading, setIsLoading] = useState(false)
     const [message, setMessage] = useState("")
     const [user, setUser] = useState<AppUser>()
+    const [initialized, setInitialized] = useState(false);
+
+    useEffect(() => {
+        if (initialized) return;
+
+        const restoreSession = async () => {
+            try {
+                const user = await initializeAppUser()
+                setUser(user)
+                await loadUserData();
+            } catch (error) {
+                setMessage(error instanceof Error ? error.message : "There was an unexpected error when checking your authentication token")
+            } finally {
+                setInitialized(true);
+            }
+        }
+
+        void restoreSession();
+    }, [])
+
+    const loadUserData = async () => {
+        const airportIcaoIds = await selectAllAirports()
+        const airports = await refreshAirports(airportIcaoIds)
+        setAirports(airports)
+
+        const highlightsTAF = await selectHighlightsTAF()
+        setHighlightsTAF(resolveHighlights(highlightsTAF))
+
+        const highlightsMETAR = await selectHighlightsMETAR()
+        setHighlightsMETAR(resolveHighlights(highlightsMETAR))
+    }
 
     const handleSubmit = async (values: AirportFormValues, airportIndex: number) => {
         setIsLoading(true)
@@ -149,18 +180,12 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             if (user && !user.user.email_confirmed_at) {
                 throw new Error(`Please follow the link in the confirmation email sent to ${values.email} before logging in`)
             }
+            if (!user) {
+                throw new Error(`No user exists with email ${values.email} and your provided password`)
+            }
 
             setUser(user)
-
-            const airportIcaoIds = await selectAllAirports()
-            const airports = await refreshAirports(airportIcaoIds)
-            setAirports(airports)
-
-            const highlightsTAF = await selectHighlightsTAF()
-            setHighlightsTAF(resolveHighlights(highlightsTAF))
-
-            const highlightsMETAR = await selectHighlightsMETAR()
-            setHighlightsMETAR(resolveHighlights(highlightsMETAR))
+            await loadUserData();
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "")
         } finally {

@@ -7,6 +7,22 @@ const supabase = createClient<Database>(
     import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
+export const initializeAppUser = async (): Promise<AppUser | undefined> => {
+    const { data, error } = await supabase.auth.refreshSession();
+
+    if (error && error.name !== "AuthSessionMissingError") {
+        throw new Error(error.message)
+    }
+    if (!data.session || !data.user) {
+        return undefined
+    }
+
+    return {
+        session: data.session,
+        user: data.user
+    }
+}
+
 export const signUpUser = async (values: UserFormValues): Promise<string> => {
     const response = await supabase.auth.signUp({
         email: values.email,
