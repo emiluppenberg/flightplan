@@ -23,14 +23,14 @@ export const fetchTAF = async (values: AirportFormValues): Promise<[TAFJson[], s
   if (response.status === 204) {
     return [
       [],
-      `No TAF available for ${values.icaoId} at ${values.date} ${values.time}\n`
+      `No TAF available for ${values.icaoId}${values.date && values.time ? ` at ${values.date} ${values.time}` : ""}\n`
     ]
   }
 
   if (!response.ok) {
     return [
       [],
-      `TAF request for ${values.icaoId} at ${values.date} ${values.time} failed with status ${response.status}\n`
+      `TAF request for ${values.icaoId}${values.date && values.time ? ` at ${values.date} ${values.time} ` : ""} failed with status ${response.status}\n`
     ]
   }
 
