@@ -1,4 +1,4 @@
-import type { ChangeEvent } from "react";
+import { useMemo, type ChangeEvent } from "react";
 import { codeHighlights, type CodeHighlight } from "../types";
 
 type HighlightsFieldProps = {
@@ -8,6 +8,8 @@ type HighlightsFieldProps = {
 }
 
 const HighlightsField = (props: HighlightsFieldProps) => {
+    const isToggled = useMemo(() => props.selections.length === codeHighlights.length, [props.selections])
+
     const handleSelect = (e: ChangeEvent<HTMLInputElement>, codeHighlight: CodeHighlight) => {
         const nextSelections = e.target.checked
             ? [...props.selections, codeHighlight]
@@ -16,10 +18,26 @@ const HighlightsField = (props: HighlightsFieldProps) => {
         props.onSelected(nextSelections)
     }
 
+    const handleToggleAll = () => {
+        const nextSelections = isToggled
+            ? []
+            : codeHighlights
+
+        props.onSelected(nextSelections)
+    }
+
     return (
         <fieldset>
             <div className="title">{props.title}</div>
             <div className="options">
+                <label className="toggle-all">
+                    Select all
+                    <input
+                        type="checkbox"
+                        checked={isToggled}
+                        onChange={handleToggleAll}
+                    />
+                </label>
                 {codeHighlights.map((codeHighlight) => (
                     <label key={`code-highlight-picker-${codeHighlight.label}`}>
                         {codeHighlight.label}

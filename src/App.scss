@@ -260,6 +260,10 @@ h2 {
           padding: 0 1rem 0 1rem;
           border-right: 1px solid $color-first-border;
 
+          &.toggle-all {
+            font-weight: 800;
+          }
+
           &:hover {
             background: $color-second-border;
           }
