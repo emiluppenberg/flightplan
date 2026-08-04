@@ -20,7 +20,6 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
         defaultValues: context.searchAirport.formValues
     })
     const { register, getValues, setFocus } = form;
-    const hasData = context.searchAirport.TAF.length > 0 || context.searchAirport.METAR.length > 0;
 
     const reports = [
         ...context.searchAirport.METAR.map((metar, index) => (
@@ -98,7 +97,6 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
                         </div>
                         <button
                             className="airport-add"
-                            disabled={!hasData}
                             onClick={context.handleAddAirport}>
                             Add to my airports
                         </button>
