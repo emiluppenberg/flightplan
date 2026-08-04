@@ -161,7 +161,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             setMessage('')
 
             try {
-                await deleteAirport(searchAirport.icaoId)
+                await deleteAirport(airports[airportIndex].icaoId)
             } catch (error) {
                 setMessage(error instanceof Error ? error.message : "")
             } finally {
