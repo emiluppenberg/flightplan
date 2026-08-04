@@ -33,6 +33,8 @@ $color-taf-ceiling-low: red;
 $color-taf-ceiling-medium: orange;
 $color-taf-ceiling-high: yellow;
 $color-taf-ceiling-highest: green;
+$color-convective-warning: yellow;
+$color-convective-danger: red;
 $color-background: #090913;
 $color-header: #080829;
 $color-search: #d3d368;
@@ -542,6 +544,14 @@ h2 {
 
         .highlight-convective {
           color: $color-highlight;
+
+          &.convective-warning {
+            color: $color-convective-warning;
+          }
+
+          &.convective-danger {
+            color: $color-convective-danger;
+          }
         }
 
         .highlight-wind-shear {

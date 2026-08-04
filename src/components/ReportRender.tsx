@@ -18,14 +18,18 @@ const ReportRender = (props: ReportRenderProps) => {
                 {props.codes.map((code, index) => {
                     if (index === 0 || index === 1) return;
 
-                    const match = props.highlights?.find(highlight =>
+                    const matches = props.highlights?.filter(highlight =>
                         (highlight.report === props.report || highlight.report === "TAF/METAR") &&
                         highlight.regEx.test(code)
                     )
-                    const variant = match?.variants?.find(variant =>
+                    const match = matches?.sort((a, b) => b.priority - a.priority)[0]
+
+                    const variants = match?.variants?.filter(variant =>
                         (variant.report === props.report || variant.report === "TAF/METAR") &&
                         variant.regEx.test(code)
                     )
+                    const variant = variants?.sort((a, b) => b.priority - a.priority)[0]
+
                     const className = [
                         props.isMostRecentMETAR ? "most-recent" : "",
                         match ? match.class : "",
