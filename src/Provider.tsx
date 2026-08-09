@@ -7,7 +7,7 @@ import type {
     UserFormValues,
 } from "./types";
 import { FlightPathContext } from "./Context";
-import { fetchTAF, fetchMETAR, createAirport, searchAirportIndex, refreshAirports, resolveHighlights } from "./utilities";
+import { fetchTAF, fetchMETAR, createAirport, searchAirportIndex, refreshAirports, resolveHighlights, fetchNOTAMs } from "./utilities";
 import { deleteAirport, initializeAppUser, insertAirport, selectAllAirports, selectHighlightsMETAR, selectHighlightsTAF, signInUser, signOutUser, signUpUser, upsertHighlightsMETAR, upsertHighlightsTAF } from "./supabase";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
@@ -59,18 +59,34 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         try {
             const [TAF, TAFMessage] = await fetchTAF(values)
             const [METAR, METARMessage] = await fetchMETAR(values)
+            const [NOTAMs, NOTAMsMessage] = await fetchNOTAMs(values)
 
             METAR.sort((a, b) => Date.parse(b.receiptTime) - Date.parse(a.receiptTime))
 
             if (airportIndex === searchAirportIndex) {
-                setSearchAirport(current => ({ ...current, formValues: values, icaoId: values.icaoId, TAF, METAR, messages: TAFMessage + METARMessage }))
+                setSearchAirport(current => ({
+                    ...current,
+                    formValues: values,
+                    icaoId: values.icaoId,
+                    TAF,
+                    METAR,
+                    NOTAMs,
+                    messages: TAFMessage + METARMessage + NOTAMsMessage
+                }))
             } else {
                 setAirports(current => current.map((airport, index) =>
                     index === airportIndex
-                        ? { ...airport, icaoId: values.icaoId, formValues: values, TAF, METAR, messages: TAFMessage + METARMessage }
+                        ? {
+                            ...airport,
+                            icaoId: values.icaoId,
+                            formValues: values,
+                            TAF,
+                            METAR,
+                            NOTAMs,
+                            messages: TAFMessage + METARMessage + NOTAMsMessage
+                        }
                         : airport))
             }
-
         } catch (error) {
             setMessage(error instanceof Error ? error.message : 'There was an unexpected error')
         } finally {
@@ -151,7 +167,8 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             ...searchAirport,
             formValues: { ...searchAirport.formValues },
             METAR: [...searchAirport.METAR],
-            TAF: [...searchAirport.TAF]
+            TAF: [...searchAirport.TAF],
+            NOTAMs: [...searchAirport.NOTAMs]
         }])
     }
 

@@ -1,10 +1,37 @@
 import type { Session, User } from "@supabase/supabase-js";
 
+export interface NotamEntry {
+    /** Full NOTAM text in standard ICAO format — multi-line, "\n" separated. */
+    raw: string;
+    notam_id: string | null;
+    notam_id_domestic: string | null;
+    type: string | null;
+    location: string | null;
+    effective: string | null;
+    expiration: string | null;
+    body: string | null;
+    schedule: string | null;
+    lower_limit: string | null;
+    upper_limit: string | null;
+    affected_fir: string | null;
+    q_code: string | null;
+    qline: string | null;
+    scope: string | null;
+}
+
+export interface NotamsResponse {
+    icao: string;
+    notams: NotamEntry[];
+    total: number;
+}
+
 export type AirportFormValues = {
   icaoId: string;
   useDatetime: boolean;
   date?: string;
   time?: string;
+  notamIncludeFIR: boolean;
+  notamIncludeFuture: boolean;
 }
 
 export type TAFJson = {
@@ -23,6 +50,7 @@ export type AirportData = {
   formValues: AirportFormValues;
   TAF: TAFJson[];
   METAR: METARJson[];
+  NOTAMs: NotamEntry[];
   messages: string;
 }
 

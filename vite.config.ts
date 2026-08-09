@@ -22,25 +22,30 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '^/api/data/taf\\?ids=0000(?:&|$)': mockJsonResponse(taf0000),
-      '^/api/data/metar\\?ids=0000(?:&|$)': mockJsonResponse(metar0000),
-      '^/api/data/taf\\?ids=1111(?:&|$)': mockJsonResponse(taf1111),
-      '^/api/data/metar\\?ids=1111(?:&|$)': mockJsonResponse(metar1111),
-      '^/api/data/taf\\?ids=2222(?:&|$)': mockJsonResponse(taf2222),
-      '^/api/data/metar\\?ids=2222(?:&|$)': mockJsonResponse(metar2222),
-      '/api/data/taf': {
+      '^/aviationweather/taf\\?ids=0000(?:&|$)': mockJsonResponse(taf0000),
+      '^/aviationweather/metar\\?ids=0000(?:&|$)': mockJsonResponse(metar0000),
+      '^/aviationweather/taf\\?ids=1111(?:&|$)': mockJsonResponse(taf1111),
+      '^/aviationweather/metar\\?ids=1111(?:&|$)': mockJsonResponse(metar1111),
+      '^/aviationweather/taf\\?ids=2222(?:&|$)': mockJsonResponse(taf2222),
+      '^/aviationweather/metar\\?ids=2222(?:&|$)': mockJsonResponse(metar2222),
+      '/aviationweather/taf': {
         target: 'https://aviationweather.gov',
         changeOrigin: true,
         headers: {
           'User-Agent': 'flightplan-dev/0.1',
         },
       },
-      '/api/data/metar': {
+      '/aviationweather/metar': {
         target: 'https://aviationweather.gov',
         changeOrigin: true,
         headers: {
           'User-Agent': 'flightplan-dev/0.1',
         }
+      },
+      '/api/notam': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api/, "")
       }
     },
   },

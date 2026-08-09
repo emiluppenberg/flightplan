@@ -37,7 +37,7 @@ const ReportRender = (props: ReportRenderProps) => {
                     ].filter(Boolean).join(" ")
 
                     return (
-                        <pre key={`airport-${props.airportIndex}-report-${index}`}>
+                        <pre key={`airport-${props.airportIndex}-${props.report}-report-${index}`}>
                             <span className={className}>{code} </span>
                         </pre>
                     )

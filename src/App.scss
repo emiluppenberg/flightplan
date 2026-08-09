@@ -6,6 +6,7 @@ $color-open: #303064;
 $color-disabled: #15151d;
 $color-danger: #943838;
 $color-success: #10571c;
+$color-warning: #c9c935;
 $color-first-border: #34346d;
 $color-second-border: #28285a;
 $color-third-border: #33335f;
@@ -57,6 +58,14 @@ $color-search: #d3d368;
   white-space: pre-line;
   font-style: italic;
   font-weight: 600;
+
+  &.operating-hours {
+    color: $color-highlight;
+  }
+
+  &.warning {
+    color: $color-warning;
+  }
 }
 
 .app-display,
@@ -361,7 +370,7 @@ h2 {
       border-bottom: 1px solid $color-first-border;
       border-radius: 0;
 
-      .btn-icao {
+      .btn-icao, .btn-notam {
         flex: 1 1 0;
         border: 0;
         border-radius: 0;
@@ -392,7 +401,8 @@ h2 {
 
       .btn-icao,
       .btn-refetch,
-      .btn-search {
+      .btn-search,
+      .btn-notam {
         border-left: 1px solid $color-first-border;
       }
     }
@@ -412,7 +422,7 @@ h2 {
     }
   }
 
-  .airport-report-container {
+  .airport-report-container, .airport-notam-container {
     display: flex;
     flex-direction: row;
     padding: 0.5rem 1rem 0.5rem 1rem;
@@ -431,132 +441,132 @@ h2 {
       display: flex;
       flex-direction: row;
       flex-wrap: wrap;
+    }
 
-      pre {
-        margin: 0;
-        font-size: 1rem;
-        text-align: start;
-        white-space: pre-wrap;
+    pre {
+      margin: 0;
+      font-size: 1rem;
+      text-align: start;
+      white-space: pre-wrap;
 
-        .highlight-wind {
-          color: $color-highlight;
+      .highlight-wind {
+        color: $color-highlight;
+      }
+
+      .highlight-visibility {
+        color: $color-highlight;
+
+        &.metar-visibility-lowest {
+          color: $color-metar-visibility-lowest;
         }
 
-        .highlight-visibility {
-          color: $color-highlight;
-
-          &.metar-visibility-lowest {
-            color: $color-metar-visibility-lowest;
-          }
-
-          &.metar-visibility-low {
-            color: $color-metar-visibility-low;
-          }
-
-          &.metar-visibility-medium {
-            color: $color-metar-visibility-medium;
-          }
-
-          &.metar-visibility-high {
-            color: $color-metar-visibility-high;
-          }
-
-          &.metar-visibility-highest {
-            color: $color-metar-visibility-highest;
-          }
-
-          &.taf-visibility-lowest {
-            color: $color-taf-visibility-lowest;
-          }
-
-          &.taf-visibility-low {
-            color: $color-taf-visibility-low;
-          }
-
-          &.taf-visibility-medium {
-            color: $color-taf-visibility-medium;
-          }
-
-          &.taf-visibility-high {
-            color: $color-taf-visibility-high;
-          }
+        &.metar-visibility-low {
+          color: $color-metar-visibility-low;
         }
 
-        .highlight-weather {
-          color: $color-highlight;
+        &.metar-visibility-medium {
+          color: $color-metar-visibility-medium;
         }
 
-        .highlight-forecast-changes {
-          color: $color-highlight;
+        &.metar-visibility-high {
+          color: $color-metar-visibility-high;
         }
 
-        .highlight-temperature {
-          color: $color-highlight;
+        &.metar-visibility-highest {
+          color: $color-metar-visibility-highest;
         }
 
-        .highlight-altimeter {
-          color: $color-highlight;
+        &.taf-visibility-lowest {
+          color: $color-taf-visibility-lowest;
         }
 
-        .highlight-clouds {
-          color: $color-highlight;
+        &.taf-visibility-low {
+          color: $color-taf-visibility-low;
         }
 
-        .highlight-ceiling {
-          color: $color-highlight;
-
-          &.metar-ceiling-lowest {
-            color: $color-metar-ceiling-lowest;
-          }
-
-          &.metar-ceiling-low {
-            color: $color-metar-ceiling-low;
-          }
-
-          &.metar-ceiling-medium {
-            color: $color-metar-ceiling-medium;
-          }
-
-          &.metar-ceiling-high {
-            color: $color-metar-ceiling-high;
-          }
-
-          &.taf-ceiling-lowest {
-            color: $color-taf-ceiling-lowest;
-          }
-
-          &.taf-ceiling-low {
-            color: $color-taf-ceiling-low;
-          }
-
-          &.taf-ceiling-medium {
-            color: $color-taf-ceiling-medium;
-          }
-
-          &.taf-ceiling-high {
-            color: $color-taf-ceiling-high;
-          }
-
-          &.taf-ceiling-highest {
-            color: $color-taf-ceiling-highest;
-          }
+        &.taf-visibility-medium {
+          color: $color-taf-visibility-medium;
         }
 
-        .highlight-convective {
-          color: $color-highlight;
+        &.taf-visibility-high {
+          color: $color-taf-visibility-high;
+        }
+      }
 
-          &.convective-warning {
-            color: $color-convective-warning;
-          }
+      .highlight-weather {
+        color: $color-highlight;
+      }
 
-          &.convective-danger {
-            color: $color-convective-danger;
-          }
+      .highlight-forecast-changes {
+        color: $color-highlight;
+      }
+
+      .highlight-temperature {
+        color: $color-highlight;
+      }
+
+      .highlight-altimeter {
+        color: $color-highlight;
+      }
+
+      .highlight-clouds {
+        color: $color-highlight;
+      }
+
+      .highlight-ceiling {
+        color: $color-highlight;
+
+        &.metar-ceiling-lowest {
+          color: $color-metar-ceiling-lowest;
         }
 
-        .highlight-wind-shear {
-          color: $color-highlight;
+        &.metar-ceiling-low {
+          color: $color-metar-ceiling-low;
         }
+
+        &.metar-ceiling-medium {
+          color: $color-metar-ceiling-medium;
+        }
+
+        &.metar-ceiling-high {
+          color: $color-metar-ceiling-high;
+        }
+
+        &.taf-ceiling-lowest {
+          color: $color-taf-ceiling-lowest;
+        }
+
+        &.taf-ceiling-low {
+          color: $color-taf-ceiling-low;
+        }
+
+        &.taf-ceiling-medium {
+          color: $color-taf-ceiling-medium;
+        }
+
+        &.taf-ceiling-high {
+          color: $color-taf-ceiling-high;
+        }
+
+        &.taf-ceiling-highest {
+          color: $color-taf-ceiling-highest;
+        }
+      }
+
+      .highlight-convective {
+        color: $color-highlight;
+
+        &.convective-warning {
+          color: $color-convective-warning;
+        }
+
+        &.convective-danger {
+          color: $color-convective-danger;
+        }
+      }
+
+      .highlight-wind-shear {
+        color: $color-highlight;
       }
     }
   }

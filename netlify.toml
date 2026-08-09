@@ -3,7 +3,7 @@
   publish = "dist"
 
 [[redirects]]
-  from = "/api/data/*"
+  from = "/aviationweather/*"
   to = "https://aviationweather.gov/api/data/:splat"
   status = 200
   force = true
@@ -12,6 +12,13 @@
     "User-Agent" = "flightplan/0.1"
 
 [[redirects]]
+  from = "/api/*"
+  to = "http://localhost:3000/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+

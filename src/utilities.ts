@@ -1,7 +1,8 @@
-import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, codeHighlights } from "./types"
+import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, codeHighlights, type NotamsResponse, type NotamEntry } from "./types"
 
-export const API_PATH_TAF = '/api/data/taf'
-export const API_PATH_METAR = '/api/data/metar'
+export const API_PATH_NOTAM = "/api/notam"
+export const API_PATH_TAF = '/aviationweather/taf'
+export const API_PATH_METAR = '/aviationweather/metar'
 export const SVG_URLS = {
   logo: '/flygvader-logo.svg',
   highlight: '/ui/underline-text-editor-svgrepo-com.svg',
@@ -63,16 +64,42 @@ export const fetchMETAR = async (values: AirportFormValues): Promise<[METARJson[
   return [await response.json(), ""]
 }
 
+export const fetchNOTAMs = async (values: AirportFormValues): Promise<[NotamEntry[], string]> => {
+  const params = new URLSearchParams({
+    icao: values.icaoId,
+    includeFIR: String(values.notamIncludeFIR),
+    includeFuture: String(values.notamIncludeFuture)
+  })
+
+  const response = await fetch(`${API_PATH_NOTAM}?${params}`)
+
+  if (response.status === 204) {
+    return [
+      [],
+      `No NOTAMs available for ${values.icaoId}\n`,
+    ]
+  }
+
+  if (!response.ok) {
+    throw new Error(`NOTAM request for ${values.icaoId} failed with status ${response.status}`)
+  }
+  
+  const result: NotamsResponse = await response.json();
+  return [result.notams, ""]
+}
+
 export const refreshAirports = async (icaoIds: string[]): Promise<AirportData[]> => {
   return await Promise.all(icaoIds.map(async icaoId => {
     const formValues: AirportFormValues = {
       icaoId: icaoId,
-      useDatetime: false
+      useDatetime: false,
+      notamIncludeFIR: false,
+      notamIncludeFuture: true
     }
 
     const [TAF, TAFMessage] = await fetchTAF(formValues)
     const [METAR, METARMessage] = await fetchMETAR(formValues)
-
+    const [NOTAMs, NOTAMsMessage] = await fetchNOTAMs(formValues)
     METAR.sort((a, b) => Date.parse(b.receiptTime) - Date.parse(a.receiptTime))
 
     return {
@@ -80,7 +107,8 @@ export const refreshAirports = async (icaoIds: string[]): Promise<AirportData[]>
       formValues: formValues,
       TAF,
       METAR,
-      messages: TAFMessage + METARMessage
+      NOTAMs: NOTAMs,
+      messages: TAFMessage + METARMessage + NOTAMsMessage
     }
   }))
 }
@@ -92,10 +120,13 @@ export const createAirport = (icaoId?: string): AirportData => {
       icaoId: icaoId ? icaoId : "",
       useDatetime: false,
       date: "",
-      time: ""
+      time: "",
+      notamIncludeFIR: false,
+      notamIncludeFuture: true
     },
     TAF: [],
     METAR: [],
+    NOTAMs: [],
     messages: ""
   }
 }
@@ -129,3 +160,31 @@ export const formatRawCodes = (raw: string) => {
 
   return formatted;
 };
+
+export const getOpeningHours = (notams: NotamEntry[]): string => {
+  const now = Date.now()
+
+  const candidates = notams.filter(notam => {
+    if (!notam.effective || !notam.expiration) return false
+    // if (notam.q_code !== "QFAAH") return false
+
+    const effective = parseSkylinkDate(notam.effective)
+    const expiration = parseSkylinkDate(notam.expiration)
+
+    return effective <= now && expiration >= now
+  })
+  
+  const goodEnough = candidates.find(notam => notam.body?.startsWith("AERODROME OPERATING HOURS"))
+  return goodEnough?.body ?? "OPERATING HOURS NOT AVAILABLE"
+  // return candidates.at(0)?.body ?? undefined
+}
+
+export const parseSkylinkDate = (value: string): number => {
+  return Date.UTC(
+    Number(value.slice(0, 4)),      // year
+    Number(value.slice(4, 6)) - 1,  // month is zero-based
+    Number(value.slice(6, 8)),      // day
+    Number(value.slice(8, 10)),     // hour
+    Number(value.slice(10, 12))     // minute
+  )
+}
