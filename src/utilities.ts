@@ -1,8 +1,8 @@
 import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, codeHighlights, type NotamsResponse, type NotamEntry } from "./types"
 
-export const API_PATH_NOTAM = "/api/notam"
-export const API_PATH_TAF = '/aviationweather/taf'
-export const API_PATH_METAR = '/aviationweather/metar'
+export const PATH_NOTAM = "/api/reports/notam"
+export const PATH_TAF = '/api/reports/taf'
+export const PATH_METAR = '/api/reports/metar'
 export const SVG_URLS = {
   logo: '/flygvader-logo.svg',
   highlight: '/ui/underline-text-editor-svgrepo-com.svg',
@@ -19,7 +19,7 @@ export const fetchTAF = async (values: AirportFormValues): Promise<[TAFJson[], s
     date: values.useDatetime && values.date && values.time ? `${values.date.replaceAll("-", "")}_${values.time.replace(":", "")}` : ""
   })
 
-  const response = await fetch(`${API_PATH_TAF}?${params}`)
+  const response = await fetch(`${PATH_TAF}?${params}`)
 
   if (response.status === 204) {
     return [
@@ -45,7 +45,7 @@ export const fetchMETAR = async (values: AirportFormValues): Promise<[METARJson[
     hours: "5"
   })
 
-  const response = await fetch(`${API_PATH_METAR}?${params}`)
+  const response = await fetch(`${PATH_METAR}?${params}`)
 
   if (response.status === 204) {
     return [
@@ -71,7 +71,7 @@ export const fetchNOTAMs = async (values: AirportFormValues): Promise<[NotamEntr
     includeFuture: String(values.notamIncludeFuture)
   })
 
-  const response = await fetch(`${API_PATH_NOTAM}?${params}`)
+  const response = await fetch(`${PATH_NOTAM}?${params}`)
 
   if (response.status === 204) {
     return [
@@ -81,7 +81,7 @@ export const fetchNOTAMs = async (values: AirportFormValues): Promise<[NotamEntr
   }
 
   if (!response.ok) {
-    throw new Error(`NOTAM request for ${values.icaoId} failed with status ${response.status}`)
+    throw new Error(await response.text())
   }
   
   const result: NotamsResponse = await response.json();

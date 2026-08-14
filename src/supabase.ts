@@ -29,8 +29,6 @@ export const signUpUser = async (values: UserFormValues): Promise<string> => {
         password: values.password
     })
 
-    console.log(response)
-
     if (response.error) {
         throw new Error(response.error.message)
     }

@@ -3,6 +3,7 @@
     "tsBuildInfoFile": "./tsconfig.node.tsbuildinfo",
     "target": "es2023",
     "lib": ["ES2023"],
+    "types": ["node"],
     "module": "esnext",
     "skipLibCheck": true,
 
@@ -19,5 +20,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "netlify/functions"]
 }
