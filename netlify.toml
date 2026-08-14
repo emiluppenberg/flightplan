@@ -3,8 +3,17 @@
   publish = "dist"
 
 [[redirects]]
-  from = "/api/data/*"
-  to = "https://aviationweather.gov/api/data/:splat"
+  from = "api/reports/taf"
+  to = "https://aviationweather.gov/api/data/taf"
+  status = 200
+  force = true
+
+  [redirects.headers]
+    "User-Agent" = "flightplan/0.1"
+
+[[redirects]]
+  from = "api/reports/metar"
+  to = "https://aviationweather.gov/api/data/metar"
   status = 200
   force = true
 
@@ -15,3 +24,4 @@
   from = "/*"
   to = "/index.html"
   status = 200
+

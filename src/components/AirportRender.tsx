@@ -6,8 +6,9 @@ import AirportDatetimeForm from "./AirportDatetimeForm";
 import { FormProvider, useForm } from "react-hook-form";
 import type { AirportFormValues } from "../types";
 import AirportHeaderButtons from "./AirportHeaderButtons";
-import { formatRawCodes } from "../utilities";
+import { formatRawCodes, getOpeningHours } from "../utilities";
 import Expand from "./Expand";
+import NotamRender from "./NotamRender";
 
 type AirportRenderProps = {
     airport: AirportData;
@@ -16,7 +17,8 @@ type AirportRenderProps = {
 
 const AirportRender = (props: AirportRenderProps) => {
     const context = useFlightPathContext()
-    const [airportOpen, setAirportOpen] = useState(false)
+    const [reportsOpen, setReportsOpen] = useState(false)
+    const [notamsOpen, setNotamsOpen] = useState(false)
     const form = useForm<AirportFormValues>({
         defaultValues: props.airport.formValues
     })
@@ -42,6 +44,15 @@ const AirportRender = (props: AirportRenderProps) => {
                 highlights={context.highlightsTAF} />
         ))
     ]
+    const notams = [
+        ...props.airport.NOTAMs.map((notam, index) => (
+            <NotamRender
+                key={`airport-${props.airportIndex}-notam-${index}`}
+                notam={notam} />
+        ))
+    ]
+
+    const airportOpeningHours = getOpeningHours(props.airport.NOTAMs)
 
     return (
         <FormProvider {...form}>
@@ -50,29 +61,30 @@ const AirportRender = (props: AirportRenderProps) => {
                     <AirportHeaderButtons
                         airport={props.airport}
                         airportIndex={props.airportIndex}
-                        airportOpen={airportOpen}
-                        setAirportOpen={setAirportOpen}
+                        reportsOpen={reportsOpen}
+                        notamsOpen={notamsOpen}
+                        setReportsOpen={setReportsOpen}
+                        setNotamsOpen={setNotamsOpen}
                     />
-                    <Expand
-                        isOpen={airportOpen}
-                        rows={1}>
-                        <div className="airport-header-datetime">
-                            <AirportDatetimeForm
-                                airportIndex={props.airportIndex}
-                            />
-                        </div>
-                    </Expand>
+                    <AirportDatetimeForm airportIndex={props.airportIndex} />
                 </div>
                 <div className="airport-data-container">
                     {props.airport.messages.length > 0 && (
-                        <p className="message">{props.airport.messages}</p>
+                        <p className="message warning">{props.airport.messages}</p>
                     )}
-                    {metarReports[0]}
-                    {!airportOpen && tafReports[0]}
+                    <p className="message operating-hours">{airportOpeningHours}</p>
                     <Expand
-                        isOpen={airportOpen}
-                        rows={2}
-                    >
+                        isOpen={notamsOpen}
+                        rows={1}>
+                        <div>
+                            {notams}
+                        </div>
+                    </Expand>
+                    {metarReports[0]}
+                    {!reportsOpen && tafReports[0]}
+                    <Expand
+                        isOpen={reportsOpen}
+                        rows={1}>
                         <div>
                             {metarReports.slice(1)}
                             {tafReports}
