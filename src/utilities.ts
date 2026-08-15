@@ -1,5 +1,6 @@
-import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, codeHighlights, type NotamsResponse, type NotamEntry } from "./types"
+import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, codeHighlights, type NotamsResponse, type NotamEntry, type AirportResource, type AirportsResourceResponse } from "./types"
 
+export const PATH_AIRPORTS = "https://airportsapi.com/api/airports"
 export const PATH_NOTAM = "/api/reports/notam"
 export const PATH_TAF = '/api/reports/taf'
 export const PATH_METAR = '/api/reports/metar'
@@ -73,19 +74,49 @@ export const fetchNOTAMs = async (values: AirportFormValues): Promise<[NotamEntr
 
   const response = await fetch(`${PATH_NOTAM}?${params}`)
 
-  if (response.status === 204) {
+  
+  if (!response.ok) {
+    return [
+      [],
+      await response.text()
+    ]
+  }
+  
+  const result: NotamsResponse = await response.json();
+
+  if (result.notams.length === 0) {
     return [
       [],
       `No NOTAMs available for ${values.icaoId}\n`,
     ]
   }
+  return [result.notams, ""]
+}
+
+export const fetchAirports = async (name: string): Promise<[AirportsResourceResponse | undefined, string]> => {
+  const params = new URLSearchParams({
+    "filter[name]": name
+  })
+
+  const response = await fetch(`${PATH_AIRPORTS}?${params}`)
 
   if (!response.ok) {
     throw new Error(await response.text())
   }
-  
-  const result: NotamsResponse = await response.json();
-  return [result.notams, ""]
+
+  const result: AirportsResourceResponse = await response.json()
+  return [result, ""]
+}
+
+export const fetchAirportsPage = async (link: string): Promise<[AirportsResourceResponse | undefined, string]> => {
+  const response = await fetch(link)
+
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+
+  const result: AirportsResourceResponse = await response.json()
+  return [result, ""]
 }
 
 export const refreshAirports = async (icaoIds: string[]): Promise<AirportData[]> => {
@@ -173,7 +204,7 @@ export const getOpeningHours = (notams: NotamEntry[]): string => {
 
     return effective <= now && expiration >= now
   })
-  
+
   const goodEnough = candidates.find(notam => notam.body?.startsWith("AERODROME OPERATING HOURS"))
   return goodEnough?.body ?? "OPERATING HOURS NOT AVAILABLE"
   // return candidates.at(0)?.body ?? undefined

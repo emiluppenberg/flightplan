@@ -1,6 +1,6 @@
 $color-first: #171736;
 $color-second: #1b1b30;
-$color-third: #101057;
+$color-third: #10101a;
 $color-fourth: #2b2b3f;
 $color-open: #303064;
 $color-disabled: #15151d;
@@ -9,31 +9,31 @@ $color-success: #10571c;
 $color-warning: #c9c935;
 $color-first-border: #34346d;
 $color-second-border: #28285a;
-$color-third-border: #33335f;
+$color-third-border: #222231;
 $color-fourth-border: #50505c;
 $color-danger-border: #6d3434;
 $color-success-border: #346d3c;
 $color-selected: #51518a;
 $color-border-light: white;
-$color-highlight: #83ff89;
+$color-highlight: #4ad9fd;
 $color-metar-visibility-lowest: magenta;
 $color-metar-visibility-low: red;
 $color-metar-visibility-medium: orange;
 $color-metar-visibility-high: yellow;
-$color-metar-visibility-highest: green;
+$color-metar-visibility-highest: #83ff89;
 $color-taf-visibility-lowest: magenta;
 $color-taf-visibility-low: red;
 $color-taf-visibility-medium: orange;
-$color-taf-visibility-high: green;
+$color-taf-visibility-high: #83ff89;
 $color-metar-ceiling-lowest: red;
 $color-metar-ceiling-low: orange;
 $color-metar-ceiling-medium: yellow;
-$color-metar-ceiling-high: green;
+$color-metar-ceiling-high: #83ff89;
 $color-taf-ceiling-lowest: magenta;
 $color-taf-ceiling-low: red;
 $color-taf-ceiling-medium: orange;
 $color-taf-ceiling-high: yellow;
-$color-taf-ceiling-highest: green;
+$color-taf-ceiling-highest: #83ff89;
 $color-convective-warning: yellow;
 $color-convective-danger: red;
 $color-background: #090913;
@@ -84,6 +84,8 @@ $color-search: #d3d368;
 }
 
 dialog {
+  color: inherit;
+  
   &[open] {
     position: relative;
     display: flex;
@@ -98,8 +100,13 @@ dialog {
       margin-bottom: 1rem;
     }
 
+    .btn-close {
+      margin: auto;
+      margin-bottom: 1rem;
+    }
+
     .dialog-content {
-      min-height: 0;
+      min-height: 70vh;
       overflow-y: auto;
     }
 
@@ -121,6 +128,18 @@ fieldset {
 
   &.open {
     background: $color-open;
+  }
+
+  &.btn-sticky {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0;
+    border-bottom: 1px solid $color-search;
+    height: 3rem;
+    width: 100%;
   }
 
   &.btn-highlight,
@@ -352,6 +371,10 @@ h2 {
   &.search {
     border-color: $color-search;
     border-bottom: 0;
+
+    .airport-search-container {
+      min-height: 40vh;
+    }
   }
 
   .airport-header-container {
@@ -365,12 +388,39 @@ h2 {
       border-color: $color-search;
     }
 
+    .airport-header-search {
+      display: flex;
+      flex-direction: column;
+      max-height: 40vh;
+      overflow-y: auto;
+
+      .btn-search-item {
+        display: grid;
+        background: $color-third;
+        border-radius: 0;
+        border-color: $color-third-border;
+        border-top: 0;
+        grid-template-columns: 5rem 1fr;
+        width: 100%;
+        text-align: left;
+
+        &+& {
+          border-top: 1px solid $color-third-border;
+        }
+
+        &.open {
+          background: $color-open;
+        }
+      }
+    }
+
     .airport-header-buttons {
       display: flex;
       border-bottom: 1px solid $color-first-border;
       border-radius: 0;
 
-      .btn-icao, .btn-notam {
+      .btn-icao,
+      .btn-notam {
         flex: 1 1 0;
         border: 0;
         border-radius: 0;
@@ -408,21 +458,8 @@ h2 {
     }
   }
 
-  .airport-data-container {
-    .airport-add {
-      position: sticky;
-      bottom: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 0;
-      border-bottom: 1px solid $color-search;
-      height: 2rem;
-      width: 100%;
-    }
-  }
-
-  .airport-report-container, .airport-notam-container {
+  .airport-report-container,
+  .airport-notam-container {
     display: flex;
     flex-direction: row;
     padding: 0.5rem 1rem 0.5rem 1rem;
