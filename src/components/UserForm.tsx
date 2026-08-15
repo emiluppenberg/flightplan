@@ -40,7 +40,6 @@ const UserForm = (props: UserFormProps) => {
                     </div>
                     <div className="form-row">
                         <button type="submit">{props.submitText}</button>
-                        <button type="button" onClick={props.onClose}>Cancel</button>
                     </div>
                 </div>
             </form>

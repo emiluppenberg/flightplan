@@ -1,28 +1,53 @@
 import type { Session, User } from "@supabase/supabase-js";
 
 export interface NotamEntry {
-    /** Full NOTAM text in standard ICAO format — multi-line, "\n" separated. */
-    raw: string;
-    notam_id: string | null;
-    notam_id_domestic: string | null;
-    type: string | null;
-    location: string | null;
-    effective: string | null;
-    expiration: string | null;
-    body: string | null;
-    schedule: string | null;
-    lower_limit: string | null;
-    upper_limit: string | null;
-    affected_fir: string | null;
-    q_code: string | null;
-    qline: string | null;
-    scope: string | null;
+  /** Full NOTAM text in standard ICAO format — multi-line, "\n" separated. */
+  raw: string;
+  notam_id: string | null;
+  notam_id_domestic: string | null;
+  type: string | null;
+  location: string | null;
+  effective: string | null;
+  expiration: string | null;
+  body: string | null;
+  schedule: string | null;
+  lower_limit: string | null;
+  upper_limit: string | null;
+  affected_fir: string | null;
+  q_code: string | null;
+  qline: string | null;
+  scope: string | null;
 }
 
 export interface NotamsResponse {
-    icao: string;
-    notams: NotamEntry[];
-    total: number;
+  icao: string;
+  notams: NotamEntry[];
+  total: number;
+}
+
+export interface AirportsResourceResponse {
+  data: AirportResource[];
+  links: {
+    prev?: string;
+    next?: string;
+  }
+}
+
+export interface AirportResource {
+  id: string;
+  type: string;
+  attributes: {
+    name: string;
+    code: string;
+    type: string;
+    latitude?: string;
+    longitude?: string;
+    elevation?: number;
+    gps_code?: string;
+    icao_code?: string;
+    iata_code?: string;
+    local_code?: string;
+  };
 }
 
 export type AirportFormValues = {
@@ -288,8 +313,8 @@ export const codeHighlights: CodeHighlight[] = [
 ]
 
 export type UserFormValues = {
-    email: string;
-    password: string;
+  email: string;
+  password: string;
 }
 
 export type AppUser = {

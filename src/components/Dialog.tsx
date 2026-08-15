@@ -46,6 +46,12 @@ const Dialog = (props: DialogProps) => {
                 onClick={handleDialogClick}
             >
                 <h2>{props.title}</h2>
+                <button
+                    type="button"
+                    className="btn-close"
+                    onClick={handleCloseDialog}>
+                    Close
+                </button>
                 <div className="dialog-content">
                     {props.children(handleCloseDialog)}
                 </div>
