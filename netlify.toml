@@ -3,7 +3,7 @@
   publish = "dist"
 
 [[redirects]]
-  from = "api/reports/taf"
+  from = "/api/reports/taf"
   to = "https://aviationweather.gov/api/data/taf"
   status = 200
   force = true
@@ -12,7 +12,7 @@
     "User-Agent" = "flightplan/0.1"
 
 [[redirects]]
-  from = "api/reports/metar"
+  from = "/api/reports/metar"
   to = "https://aviationweather.gov/api/data/metar"
   status = 200
   force = true

@@ -3,7 +3,7 @@ import type { AirportFormValues } from "../types";
 import { useFlightPathContext } from "../Context";
 
 type AirportDatetimeFormProps = {
-    airportIndex: number;
+    id: string;
 }
 
 const AirportDatetimeForm = (props: AirportDatetimeFormProps) => {
@@ -13,11 +13,7 @@ const AirportDatetimeForm = (props: AirportDatetimeFormProps) => {
         control,
         name: "useDatetime"
     })
-
-    const saveFormValues = () => {
-        context.handleSetFormValues(getValues(), props.airportIndex)
-    }
-
+    
     return (
         <div className="form">
             <div className="form-row">
@@ -27,19 +23,19 @@ const AirportDatetimeForm = (props: AirportDatetimeFormProps) => {
                         disabled={!useDatetime}
                         {...register("date", {
                             required: false,
-                            onChange: saveFormValues
+                            onChange: () => context.handleSetFormValues(getValues(), props.id)
                         })} />
                     <input
                         type="time"
                         disabled={!useDatetime}
                         {...register("time", {
                             required: false,
-                            onChange: saveFormValues
+                            onChange: () => context.handleSetFormValues(getValues(), props.id)
                         })} />
                         <input
                             type="checkbox"
                             {...register("useDatetime", {
-                                onChange: saveFormValues
+                                onChange: () => context.handleSetFormValues(getValues(), props.id)
                             })} />
                 </div>
             </div>

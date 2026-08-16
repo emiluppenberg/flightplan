@@ -1,7 +1,7 @@
 import { type CodeHighlight } from "../types";
 
 type ReportRenderProps = {
-    airportIndex: number;
+    icaoId: string;
     report: "TAF" | "METAR";
     codes: string[];
     highlights?: CodeHighlight[];
@@ -37,7 +37,7 @@ const ReportRender = (props: ReportRenderProps) => {
                     ].filter(Boolean).join(" ")
 
                     return (
-                        <pre key={`airport-${props.airportIndex}-${props.report}-report-${index}`}>
+                        <pre key={`airport-${props.icaoId}-${props.report}-report-${index}`}>
                             <span className={className}>{code} </span>
                         </pre>
                     )

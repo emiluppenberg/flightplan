@@ -3,7 +3,7 @@ import { FormProvider, useForm } from "react-hook-form"
 import { useFlightPathContext } from "../Context"
 import type { AirportFormValues, AirportsResourceResponse } from "../types"
 import ReportRender from "./ReportRender"
-import { fetchAirportsPage, fetchAirports, formatRawCodes, searchAirportIndex, SVG_URLS, getOpeningHours } from "../utilities"
+import { fetchAirportsPage, fetchAirports, formatRawCodes, SVG_URLS, getOpeningHours, searchAirportId } from "../utilities"
 import AirportDatetimeForm from "./AirportDatetimeForm"
 import Expand from "./Expand"
 import NotamRender from "./NotamRender"
@@ -18,40 +18,50 @@ export type SearchAirportFormHandle = {
 
 const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormProps>(({ onClose }, ref) => {
     const context = useFlightPathContext()
+    const searchAirport = context.airports.find(airport => airport.id === searchAirportId)
     const form = useForm<AirportFormValues>({
-        defaultValues: context.searchAirport.formValues
+        defaultValues: searchAirport?.formValues
     })
     const { register, getValues, setFocus, setValue, watch } = form;
     const selectedIcaoId = watch("icaoId");
 
-    const reports = [
-        ...context.searchAirport.METAR.map((metar, index) => (
-            <ReportRender
-                key={`search-airport-metar-${index}`}
-                airportIndex={searchAirportIndex}
-                report="METAR"
-                codes={formatRawCodes(metar.rawOb)}
-                highlights={context.highlightsMETAR}
-                isMostRecentMETAR={index === 0} />
-        )),
-        ...context.searchAirport.TAF.map((taf, index) => (
-            <ReportRender
-                key={`search-airport--taf-${index}`}
-                airportIndex={searchAirportIndex}
-                report="TAF"
-                codes={formatRawCodes(taf.rawTAF)}
-                highlights={context.highlightsTAF} />
-        ))
-    ];
-    const notams = [
-        ...context.searchAirport.NOTAMs.map((notam, index) => (
-            <NotamRender
-                key={`search-airport-notam-${index}`}
-                notam={notam} />
-        ))
-    ]
+    const reportsMETAR = searchAirport
+        ? [
+            ...searchAirport.METAR.map((metar, index) => (
+                <ReportRender
+                    key={`search-airport-metar-${index}`}
+                    icaoId={searchAirport.formValues.icaoId}
+                    report="METAR"
+                    codes={formatRawCodes(metar.rawOb)}
+                    highlights={context.highlightsMETAR}
+                    isMostRecentMETAR={index === 0} />))
+        ]
+        : []
 
-    const airportOpeningHours = getOpeningHours(context.searchAirport.NOTAMs)
+    const reportsTAF = searchAirport
+        ? [
+            ...searchAirport.TAF.map((taf, index) => (
+                <ReportRender
+                    key={`search-airport--taf-${index}`}
+                    icaoId={searchAirport.formValues.icaoId}
+                    report="TAF"
+                    codes={formatRawCodes(taf.rawTAF)}
+                    highlights={context.highlightsTAF} />))
+        ]
+        : []
+
+    const reportsNOTAM = searchAirport
+        ? [
+            ...searchAirport.NOTAM.map((notam, index) => (
+                <NotamRender
+                    key={`search-airport-notam-${index}`}
+                    notam={notam} />))
+        ]
+        : []
+
+    const airportOpeningHours = searchAirport
+        ? getOpeningHours(searchAirport.NOTAM)
+        : ""
 
     const onOpen = useCallback(() => {
         setFocus("icaoId");
@@ -62,27 +72,26 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
     const [searchResponse, setSearchResponse] = useState<AirportsResourceResponse>()
     const [searchOpen, setSearchOpen] = useState(false)
     const [searchParam, setSearchParam] = useState("")
+    const [searchMessage, setSearchMessage] = useState("")
 
     const handleSearch = async () => {
-        const result = await fetchAirports(searchParam);
-        const response = result[0];
-
-        if (!response) {
-            throw new Error(result[1])
+        setSearchMessage("")
+        try {
+            const response = await fetchAirports(searchParam);
+            setSearchResponse(response)
+        } catch (error) {
+            setSearchMessage(error instanceof Error ? error.message : "There was an unexpected error during search")
         }
-
-        setSearchResponse(response)
     }
 
     const handlePagination = async (page: string) => {
-        const result = await fetchAirportsPage(page);
-        const response = result[0];
-
-        if (!response) {
-            throw new Error(result[1])
+        setSearchMessage("")
+        try {
+            const response = await fetchAirportsPage(page);
+            setSearchResponse(response)
+        } catch (error) {
+            setSearchMessage(error instanceof Error ? error.message : "There was an unexpected error during pagination")
         }
-
-        setSearchResponse(response)
     }
 
     const handleSelectSearchItem = (icao: string) => {
@@ -96,8 +105,14 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
             shouldValidate: true,
         });
 
-        context.handleSetFormValues(values, searchAirportIndex);
-        context.handleSubmit(values, searchAirportIndex);
+        context.handleSetFormValues(values, searchAirportId);
+        context.handleSubmit(values, searchAirportId);
+    }
+
+    const handleSubmit = () => {
+        if (searchAirport && !searchAirport.isLoading) {
+            context.handleSubmit(searchAirport.formValues, searchAirportId);
+        }
     }
 
     return (
@@ -126,7 +141,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
                         </button>
                         <button
                             type="button"
-                            className="btn-search"
+                            className={`btn-search`}
                             onClick={() => handleSearch()}>
                             <img src={SVG_URLS.search} width="20" />
                         </button>
@@ -135,10 +150,14 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
                         isOpen={searchOpen}
                         rows={1}>
                         <div className="airport-header-search">
+                            {searchMessage.length > 0 && (
+                                <p className="message warning">{searchMessage}</p>
+                            )}
                             {searchResponse?.data.map((airport, index) => (
                                 <button
                                     key={`search-airport-${index}`}
                                     type="button"
+                                    disabled={searchAirport?.isLoading ? true : false}
                                     className={`btn-search-item ${selectedIcaoId === airport.attributes.code ? "open" : ""}`}
                                     onClick={() => handleSelectSearchItem(airport.attributes.code)}>
                                     <span className="search-item-icao">{airport.attributes.code}</span>
@@ -153,47 +172,51 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
                             </button>
                         </div>
                     </Expand>
-                    <div className="airport-header-buttons">
-                        <input
-                            type="text"
-                            className="btn-icao"
-                            placeholder="Enter ICAO"
-                            value={context.searchAirport.formValues.icaoId}
-                            {...register("icaoId", {
-                                required: true,
-                                setValueAs: (value: string) => value.trim().toUpperCase(),
-                                onChange: () => context.handleSetFormValues(getValues(), searchAirportIndex)
-                            })} />
-                        <button
-                            type="button"
-                            className="btn-search"
-                            onClick={() => context.handleSubmit(context.searchAirport.formValues, searchAirportIndex)}>
-                            <img src={SVG_URLS.search} width="20" />
-                        </button>
-                    </div>
-                    <div className="airport-header-expand open">
-                        <div>
-                            <AirportDatetimeForm airportIndex={searchAirportIndex} />
-                        </div>
-                    </div>
+                    {searchAirport && (
+                        <>
+                            <div className="airport-header-buttons">
+                                <input
+                                    type="text"
+                                    className="btn-icao"
+                                    placeholder="Enter ICAO"
+                                    value={searchAirport.formValues.icaoId}
+                                    {...register("icaoId", {
+                                        required: true,
+                                        setValueAs: (value: string) => value.trim().toUpperCase(),
+                                        onChange: () => context.handleSetFormValues(getValues(), searchAirportId)
+                                    })} />
+                                <button
+                                    type="button"
+                                    className={`btn-search ${searchAirport.isLoading ? "loading" : ""}`}
+                                    onClick={handleSubmit}>
+                                    <img src={SVG_URLS.search} width="20" />
+                                </button>
+                            </div>
+                            <div className="airport-header-expand open">
+                                <div>
+                                    <AirportDatetimeForm id={searchAirportId} />
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
-                <div className="airport-search-container">
-                    {context.isLoading && (
-                        <p className="message">Loading...</p>
-                    )}
-                    {context.message.length > 0 && (
-                        <p className="message warning">{context.message}</p>
-                    )}
-                    {context.searchAirport.messages.length > 0 && (
-                        <p className="message warning">{context.searchAirport.messages}</p>
-                    )}
-                    <p className="message operating-hours">{airportOpeningHours}</p>
-                    {notams}
-                    {reports}
-                </div>
+                {searchAirport && (
+                    <div className="airport-search-container">
+                        {searchAirport.isLoading && (
+                            <p className="message">Loading...</p>
+                        )}
+                        {searchAirport.messages.length > 0 && (
+                            <p className="message warning">{searchAirport.messages}</p>
+                        )}
+                        <p className="message operating-hours">{airportOpeningHours}</p>
+                        {reportsNOTAM}
+                        {reportsMETAR}
+                        {reportsTAF}
+                    </div>
+                )}
                 <button
                     className="btn-sticky"
-                    onClick={context.handleAddAirport}>
+                    onClick={() => context.handleAddAirport(selectedIcaoId)}>
                     Add to My Airports
                 </button>
             </div>

@@ -1,12 +1,13 @@
 import AirportRender from '../components/AirportRender'
 import { useFlightPathContext } from '../Context'
+import { searchAirportId } from '../utilities'
 
 const AppDisplay = () => {
   const context = useFlightPathContext()
 
   return (
     <div className="app-display">
-      {context.airports.length > 0 && (
+      {context.airports.length > 1 && (
         <h2>My Airports</h2>
       )}
       {context.isLoading && (
@@ -16,13 +17,13 @@ const AppDisplay = () => {
         <p className="message warning">{context.message}</p>
       )}
       <div className="renders-container">
-        {context.airports.map((airport, index) => (
-          <AirportRender
-            key={`airport-render-${index}`}
+        {context.airports.map((airport) => {
+          if (airport.id === searchAirportId) return
+          return (<AirportRender
+            key={airport.id}
             airport={airport}
-            airportIndex={index}
-          />
-        ))}
+          />)
+        })}
       </div>
     </div>
   )

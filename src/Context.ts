@@ -3,15 +3,14 @@ import type { AirportData, AirportFormValues, AppUser, CodeHighlight, UserFormVa
 
 export type FlightPathState = {
     airports: AirportData[];
-    searchAirport: AirportData;
     highlightsTAF: CodeHighlight[];
     highlightsMETAR: CodeHighlight[];
-    handleSubmit: (values: AirportFormValues, airportIndex: number) => void;
-    handleSetFormValues: (newValues: AirportFormValues, airportIndex: number) => void;
+    handleSubmit: (values: AirportFormValues, id: string) => void;
+    handleSetFormValues: (newValues: AirportFormValues, id: string) => void;
     handleSetHighlightsTAF: (newHighlights: CodeHighlight[]) => void;
     handleSetHighlightsMETAR: (newHighlights: CodeHighlight[]) => void;
-    handleAddAirport: () => void;
-    handleDeleteAirport: (airportIndex: number) => void;
+    handleAddAirport: (icaoId: string) => void;
+    handleDeleteAirport: (id: string) => void;
     handleSignIn: (values: UserFormValues) => void;
     handleSignOut: () => void;
     handleSignUp: (values: UserFormValues) => void;
