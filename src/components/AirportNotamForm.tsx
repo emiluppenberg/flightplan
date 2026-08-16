@@ -3,7 +3,7 @@ import type { AirportFormValues } from "../types";
 import { useFlightPathContext } from "../Context";
 
 type AirportNotamFormProps = {
-    airportIndex: number;
+    id: string;
 }
 
 const AirportNotamForm = (props: AirportNotamFormProps) => {
@@ -14,10 +14,6 @@ const AirportNotamForm = (props: AirportNotamFormProps) => {
         name: "useDatetime"
     })
 
-    const saveFormValues = () => {
-        context.handleSetFormValues(getValues(), props.airportIndex)
-    }
-
     return (
         <div className="form">
             <div className="form-row">
@@ -27,20 +23,20 @@ const AirportNotamForm = (props: AirportNotamFormProps) => {
                         disabled={!useDatetime}
                         {...register("date", {
                             required: false,
-                            onChange: saveFormValues
+                            onChange: () => context.handleSetFormValues(getValues(), props.id)
                         })} />
                     <input
                         type="time"
                         disabled={!useDatetime}
                         {...register("time", {
                             required: false,
-                            onChange: saveFormValues
+                            onChange: () => context.handleSetFormValues(getValues(), props.id)
                         })} />
-                        <input
-                            type="checkbox"
-                            {...register("useDatetime", {
-                                onChange: saveFormValues
-                            })} />
+                    <input
+                        type="checkbox"
+                        {...register("useDatetime", {
+                            onChange: () => context.handleSetFormValues(getValues(), props.id)
+                        })} />
                 </div>
             </div>
         </div>

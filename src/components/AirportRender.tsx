@@ -12,7 +12,6 @@ import NotamRender from "./NotamRender";
 
 type AirportRenderProps = {
     airport: AirportData;
-    airportIndex: number;
 }
 
 const AirportRender = (props: AirportRenderProps) => {
@@ -23,36 +22,36 @@ const AirportRender = (props: AirportRenderProps) => {
         defaultValues: props.airport.formValues
     })
 
-    const metarReports = [
+    const reportsMETAR = [
         ...props.airport.METAR.map((metar, index) => (
             <ReportRender
-                key={`airport-${props.airportIndex}-metar-${index}`}
-                airportIndex={props.airportIndex}
+                key={`${props.airport.id}-metar-${index}`}
+                icaoId={props.airport.formValues.icaoId}
                 report="METAR"
                 codes={formatRawCodes(metar.rawOb)}
                 highlights={context.highlightsMETAR}
                 isMostRecentMETAR={index === 0} />
         )),
     ];
-    const tafReports = [
+    const reportsTAF = [
         ...props.airport.TAF.map((taf, index) => (
             <ReportRender
-                key={`airport-${props.airportIndex}-taf-${index}`}
-                airportIndex={props.airportIndex}
+                key={`${props.airport.id}-taf-${index}`}
+                icaoId={props.airport.formValues.icaoId}
                 report="TAF"
                 codes={formatRawCodes(taf.rawTAF)}
                 highlights={context.highlightsTAF} />
         ))
     ]
-    const notams = [
-        ...props.airport.NOTAMs.map((notam, index) => (
+    const reportsNOTAM = [
+        ...props.airport.NOTAM.map((notam, index) => (
             <NotamRender
-                key={`airport-${props.airportIndex}-notam-${index}`}
+                key={`${props.airport.id}-notam-${index}`}
                 notam={notam} />
         ))
     ]
 
-    const airportOpeningHours = getOpeningHours(props.airport.NOTAMs)
+    const airportOpeningHours = getOpeningHours(props.airport.NOTAM)
 
     return (
         <FormProvider {...form}>
@@ -60,13 +59,12 @@ const AirportRender = (props: AirportRenderProps) => {
                 <div className="airport-header-container">
                     <AirportHeaderButtons
                         airport={props.airport}
-                        airportIndex={props.airportIndex}
                         reportsOpen={reportsOpen}
                         notamsOpen={notamsOpen}
                         setReportsOpen={setReportsOpen}
                         setNotamsOpen={setNotamsOpen}
                     />
-                    <AirportDatetimeForm airportIndex={props.airportIndex} />
+                    <AirportDatetimeForm id={props.airport.id} />
                 </div>
                 <div className="airport-data-container">
                     {props.airport.messages.length > 0 && (
@@ -77,17 +75,17 @@ const AirportRender = (props: AirportRenderProps) => {
                         isOpen={notamsOpen}
                         rows={1}>
                         <div>
-                            {notams}
+                            {reportsNOTAM}
                         </div>
                     </Expand>
-                    {metarReports[0]}
-                    {!reportsOpen && tafReports[0]}
+                    {reportsMETAR[0]}
+                    {!reportsOpen && reportsTAF[0]}
                     <Expand
                         isOpen={reportsOpen}
                         rows={1}>
                         <div>
-                            {metarReports.slice(1)}
-                            {tafReports}
+                            {reportsMETAR.slice(1)}
+                            {reportsTAF}
                         </div>
                     </Expand>
                 </div>

@@ -1,5 +1,10 @@
 import type { Session, User } from "@supabase/supabase-js";
 
+export type FetchResult<T> = {
+  data: T | undefined;
+  message: string;
+}
+
 export interface NotamEntry {
   /** Full NOTAM text in standard ICAO format — multi-line, "\n" separated. */
   raw: string;
@@ -71,12 +76,14 @@ export type METARJson = {
 }
 
 export type AirportData = {
-  icaoId: string;
+  id: string;
   formValues: AirportFormValues;
   TAF: TAFJson[];
   METAR: METARJson[];
-  NOTAMs: NotamEntry[];
+  NOTAM: NotamEntry[];
   messages: string;
+  nextPoll: number;
+  isLoading: boolean;
 }
 
 export type CodeHighlight = {

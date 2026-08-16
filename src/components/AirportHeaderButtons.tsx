@@ -5,7 +5,6 @@ import { SVG_URLS } from "../utilities";
 
 type AirportHeaderButtonsProps = {
     airport: AirportData;
-    airportIndex: number;
     reportsOpen: boolean;
     notamsOpen: boolean;
     setReportsOpen: Dispatch<SetStateAction<boolean>>;
@@ -16,8 +15,14 @@ const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
     const context = useFlightPathContext();
 
     const handleDelete = () => {
-        if (window.confirm(`Delete ${props.airport.icaoId}?`)) {
-            context.handleDeleteAirport(props.airportIndex)
+        if (window.confirm(`Delete ${props.airport.formValues.icaoId}?`)) {
+            context.handleDeleteAirport(props.airport.id)
+        }
+    }
+
+    const handleSubmit = () => {
+        if (!props.airport.isLoading) {
+            context.handleSubmit(props.airport.formValues, props.airport.id)
         }
     }
 
@@ -33,7 +38,7 @@ const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
                 type="button"
                 className={`btn-icao ${props.reportsOpen ? "open" : ""}`}
                 onClick={() => props.setReportsOpen(value => !value)}>
-                <h4>{props.airport.icaoId.length > 0 ? props.airport.icaoId.toUpperCase() : "New ICAO"}</h4>
+                <h4>{props.airport.formValues.icaoId.length > 0 ? props.airport.formValues.icaoId.toUpperCase() : "New ICAO"}</h4>
             </button>
             <button
                 type="button"
@@ -43,8 +48,8 @@ const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
             </button>
             <button
                 type="button"
-                className="btn-refetch"
-                onClick={() => context.handleSubmit(props.airport.formValues, props.airportIndex)}>
+                className={`btn-refetch ${props.airport.isLoading ? "loading" : ""}`}
+                onClick={handleSubmit}>
                 <img src={SVG_URLS.reload} width="20" />
             </button>
         </div>

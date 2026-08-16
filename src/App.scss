@@ -85,7 +85,7 @@ $color-search: #d3d368;
 
 dialog {
   color: inherit;
-  
+
   &[open] {
     position: relative;
     display: flex;
@@ -159,6 +159,13 @@ fieldset {
 
   &:disabled {
     background: $color-disabled;
+  }
+
+  &.btn-refetch,
+  &.btn-search {
+    &.loading {
+      background-color: rgba($color-warning, 0.3);
+    }
   }
 }
 

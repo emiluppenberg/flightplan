@@ -1,4 +1,4 @@
-import { useEffect, useState, type PropsWithChildren } from "react";
+import { useCallback, useEffect, useState, type PropsWithChildren } from "react";
 import type {
     AirportData,
     AirportFormValues,
@@ -7,18 +7,29 @@ import type {
     UserFormValues,
 } from "./types";
 import { FlightPathContext } from "./Context";
-import { fetchTAF, fetchMETAR, createAirport, searchAirportIndex, refreshAirports, resolveHighlights, fetchNOTAMs } from "./utilities";
+import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL, fetchReports, searchAirportId } from "./utilities";
 import { deleteAirport, initializeAppUser, insertAirport, selectAllAirports, selectHighlightsMETAR, selectHighlightsTAF, signInUser, signOutUser, signUpUser, upsertHighlightsMETAR, upsertHighlightsTAF } from "./supabase";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
-    const [airports, setAirports] = useState<AirportData[]>([])
-    const [searchAirport, setSearchAirport] = useState<AirportData>(createAirport())
+    const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])
     const [highlightsTAF, setHighlightsTAF] = useState<CodeHighlight[]>([])
     const [highlightsMETAR, setHighlightsMETAR] = useState<CodeHighlight[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [message, setMessage] = useState("")
     const [user, setUser] = useState<AppUser>()
     const [initialized, setInitialized] = useState(false);
+
+    const loadUserData = async () => {
+        const airportIcaoIds = await selectAllAirports()
+        const airports = await refreshAirports(airportIcaoIds)
+        setAirports([...airports, createAirport(searchAirportId)])
+
+        const highlightsTAF = await selectHighlightsTAF()
+        setHighlightsTAF(resolveHighlights(highlightsTAF))
+
+        const highlightsMETAR = await selectHighlightsMETAR()
+        setHighlightsMETAR(resolveHighlights(highlightsMETAR))
+    }
 
     useEffect(() => {
         if (initialized) return;
@@ -40,74 +51,69 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         void restoreSession();
     }, [])
 
-    const loadUserData = async () => {
-        const airportIcaoIds = await selectAllAirports()
-        const airports = await refreshAirports(airportIcaoIds)
-        setAirports(airports)
+    const handleSubmit = useCallback(async (
+        values: AirportFormValues,
+        id: string,
+        fetchNotam: boolean = true
+    ) => {
+        if (values.icaoId.length === 0) return;
 
-        const highlightsTAF = await selectHighlightsTAF()
-        setHighlightsTAF(resolveHighlights(highlightsTAF))
+        setAirports(current => current.map((airport) => (
+            airport.id === id
+                ? { ...airport, isLoading: true }
+                : airport
+        )))
 
-        const highlightsMETAR = await selectHighlightsMETAR()
-        setHighlightsMETAR(resolveHighlights(highlightsMETAR))
-    }
+        const [TAF, METAR, NOTAM, messages] = await fetchReports(values, fetchNotam)
+        const nextPoll = Date.now() + POLL_INTERVAL;
 
-    const handleSubmit = async (values: AirportFormValues, airportIndex: number) => {
-        setIsLoading(true)
-        setMessage('')
+        setAirports(current => current.map(airport => {
+            if (airport.id === id) {
+                const matchTAF = airport.TAF.some(taf => taf.icaoId === values.icaoId)
+                const matchMETAR = airport.METAR.some(metar => metar.icaoId === values.icaoId)
+                const matchNOTAM = airport.NOTAM.some(notam => notam.location === values.icaoId)
 
-        try {
-            const [TAF, TAFMessage] = await fetchTAF(values)
-            const [METAR, METARMessage] = await fetchMETAR(values)
-            const [NOTAMs, NOTAMsMessage] = await fetchNOTAMs(values)
-
-            METAR.sort((a, b) => Date.parse(b.receiptTime) - Date.parse(a.receiptTime))
-
-            if (airportIndex === searchAirportIndex) {
-                setSearchAirport(current => ({
-                    ...current,
-                    formValues: values,
+                return {
+                    ...airport,
                     icaoId: values.icaoId,
-                    TAF,
-                    METAR,
-                    NOTAMs,
-                    messages: TAFMessage + METARMessage + NOTAMsMessage
-                }))
+                    TAF: TAF ?? (matchTAF ? airport.TAF : []),
+                    METAR: METAR ?? (matchMETAR ? airport.METAR : []),
+                    NOTAM: fetchNotam
+                        ? NOTAM ?? (matchNOTAM ? airport.NOTAM : [])
+                        : (matchNOTAM ? airport.NOTAM : []),
+                    messages: messages,
+                    nextPoll: nextPoll,
+                    isLoading: false
+                }
             } else {
-                setAirports(current => current.map((airport, index) =>
-                    index === airportIndex
-                        ? {
-                            ...airport,
-                            icaoId: values.icaoId,
-                            formValues: values,
-                            TAF,
-                            METAR,
-                            NOTAMs,
-                            messages: TAFMessage + METARMessage + NOTAMsMessage
-                        }
-                        : airport))
-            }
-        } catch (error) {
-            setMessage(error instanceof Error ? error.message : 'There was an unexpected error')
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    const handleSetFormValues = (values: AirportFormValues, airportIndex: number) => {
-        if (airportIndex === searchAirportIndex) {
-            setSearchAirport({ ...searchAirport, icaoId: values.icaoId, formValues: values })
-            return;
-        }
-
-        setAirports(current => current.map((airport, index) => {
-            if (index !== airportIndex) return airport;
-
-            return {
-                ...airport,
-                formValues: values
+                return airport
             }
         }))
+    }, [])
+
+    const handlePolling = useCallback(async () => {
+        const now = Date.now()
+
+        for (const airport of airports) {
+            if (airport.formValues.icaoId.trim().length > 0 &&
+                !airport.isLoading &&
+                airport.nextPoll <= now) {
+                handleSubmit(airport.formValues, airport.id, false)
+            }
+        }
+    }, [airports, handleSubmit])
+
+    useEffect(() => {
+        const intervalId = setInterval(handlePolling, 5000)
+        return (() => clearInterval(intervalId))
+    }, [handlePolling])
+
+    const handleSetFormValues = (values: AirportFormValues, id: string) => {
+        setAirports(current => current.map((airport) => (
+            airport.id === id
+                ? { ...airport, formValues: values }
+                : airport
+        )))
     }
 
     const handleSetHighlightsTAF = async (newHighlights: CodeHighlight[]) => {
@@ -142,11 +148,16 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         }
     }
 
-    const handleAddAirport = async () => {
-        const isDuplicate = airports.some(airport => airport.icaoId === searchAirport.icaoId);
+    const handleAddAirport = async (icaoId: string) => {
+        if (icaoId.length === 0) return
+
+        const isDuplicate = airports.some(airport =>
+            airport.formValues.icaoId === icaoId &&
+            airport.id !== searchAirportId
+        );
 
         if (isDuplicate) {
-            window.alert(`You have already saved ${searchAirport.icaoId}`)
+            window.alert(`You have already saved ${icaoId}`)
             return;
         }
 
@@ -155,7 +166,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             setMessage('')
 
             try {
-                await insertAirport(searchAirport.icaoId)
+                await insertAirport(icaoId)
             } catch (error) {
                 setMessage(error instanceof Error ? error.message : "")
             } finally {
@@ -163,22 +174,32 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             }
         }
 
+        const searchAirport = airports.find(airport => airport.id === searchAirportId) ?? createAirport(crypto.randomUUID())
+        const hasTAF = searchAirport.TAF.some(taf => taf.icaoId === icaoId)
+        const hasMETAR = searchAirport.METAR.some(metar => metar.icaoId === icaoId)
+        const hasNOTAM = searchAirport.NOTAM.some(notam => notam.location === icaoId)
+
         setAirports(current => [...current, {
             ...searchAirport,
+            id: crypto.randomUUID(),
             formValues: { ...searchAirport.formValues },
-            METAR: [...searchAirport.METAR],
-            TAF: [...searchAirport.TAF],
-            NOTAMs: [...searchAirport.NOTAMs]
+            TAF: hasTAF ? [...searchAirport.TAF] : [],
+            METAR: hasMETAR ? [...searchAirport.METAR] : [],
+            NOTAM: hasNOTAM ? [...searchAirport.NOTAM] : [],
+            nextPoll: Date.now() + POLL_INTERVAL,
+            isLoading: false
         }])
     }
 
-    const handleDeleteAirport = async (airportIndex: number) => {
+    const handleDeleteAirport = async (id: string) => {
         if (user) {
             setIsLoading(true)
             setMessage('')
 
             try {
-                await deleteAirport(airports[airportIndex].icaoId)
+                const airport = airports.find(airport => airport.id === id)
+                if (!airport) throw new Error(`Could not delete airport with id: ${id}`)
+                await deleteAirport(airport.formValues.icaoId)
             } catch (error) {
                 setMessage(error instanceof Error ? error.message : "")
             } finally {
@@ -186,7 +207,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             }
         }
 
-        setAirports(current => current.filter((_, index) => index !== airportIndex))
+        setAirports(current => current.filter(airport => airport.id !== id))
     }
 
     const handleSignIn = async (values: UserFormValues) => {
@@ -219,7 +240,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         try {
             await signOutUser()
             setUser(undefined)
-            setAirports([])
+            setAirports([createAirport(searchAirportId)])
             setHighlightsTAF([])
             setHighlightsMETAR([])
         } catch (error) {
@@ -247,7 +268,6 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         <FlightPathContext
             value={{
                 airports,
-                searchAirport,
                 highlightsTAF,
                 highlightsMETAR,
                 handleSubmit,
