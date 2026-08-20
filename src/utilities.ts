@@ -1,4 +1,5 @@
-import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, codeHighlights, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult } from "./types"
+import { deleteNOTAM, selectAirportNOTAM, updateAirportNextPollNOTAM, upsertNOTAM } from "./supabase"
+import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, codeHighlights, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport } from "./types"
 
 export const PATH_AIRPORTS = "https://airportsapi.com/api/airports"
 export const PATH_NOTAM = "/api/reports/notam"
@@ -13,7 +14,8 @@ export const SVG_URLS = {
 } as const;
 
 export const searchAirportId = "search-airport"
-export const POLL_INTERVAL = 1 * 30 * 1000;
+export const POLL_INTERVAL_TAF_METAR = 1 * 30 * 1000;
+export const POLL_INTERVAL_NOTAM = 24 * 60 * 60 * 1000
 
 export const fetchTAF = async (values: AirportFormValues): Promise<TAFJson[]> => {
   const params = new URLSearchParams({
@@ -52,7 +54,17 @@ export const fetchMETAR = async (values: AirportFormValues): Promise<METARJson[]
     throw new Error(`METAR request for ${values.icaoId} failed with status ${response.status}\n`)
   }
 
-  return await response.json()
+  let METAR: METARJson[] = await response.json()
+
+  try {
+    METAR.sort((a, b) =>
+      Date.parse(b.receiptTime) -
+      Date.parse(a.receiptTime))
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : "There was an unexpected error while sorting METAR")
+  }
+
+  return METAR
 }
 
 export const fetchNOTAMs = async (values: AirportFormValues): Promise<NotamEntry[]> => {
@@ -69,7 +81,6 @@ export const fetchNOTAMs = async (values: AirportFormValues): Promise<NotamEntry
   }
 
   const result: NotamsResponse = await response.json();
-
   return result.notams
 }
 
@@ -97,9 +108,8 @@ export const fetchAirportsPage = async (link: string): Promise<AirportsResourceR
   return await response.json()
 }
 
-const capture = async<T>(
-  request: () => Promise<T>,
-  fallbackMessage: string
+export const capture = async<T>(
+  request: () => Promise<T>
 ): Promise<FetchResult<T>> => {
   try {
     return {
@@ -109,87 +119,82 @@ const capture = async<T>(
   } catch (error) {
     return {
       data: undefined,
-      message:
-        error instanceof Error
-          ? error.message
-          : fallbackMessage
+      message: error instanceof Error
+        ? error.message
+        : `There was unexpected error while executing ${request.name}`
     };
   }
 }
 
-export const fetchReports = async (
-  formValues: AirportFormValues,
-  fetchNotam: boolean = true
-): Promise<[TAFJson[] | undefined, METARJson[] | undefined, NotamEntry[] | undefined, string]> => {
-  const skippedNotams: FetchResult<NotamEntry[]> = {
-    data: undefined,
-    message: ""
-  };
+export const captureSyncNOTAM = async (
+  NOTAM: NotamEntry[],
+  airport: AirportData,
+  nextPollNOTAM: number
+): Promise<string> => {
+  if (!airport.supabaseId) {
+    return "Airport is missing supabaseId"
+  }
 
-  const [TAF, METAR, NOTAM] = await Promise.all([
-    capture(
-      () => fetchTAF(formValues),
-      "There was an unexpected error while fetching TAF\n"
-    ),
-    capture(
-      () => fetchMETAR(formValues),
-      "There was an unexpected error while fetching METAR\n"
-    ),
-    fetchNotam
-      ? capture(
-        () => fetchNOTAMs(formValues),
-        "There was an unexpected error while fetching NOTAMs\n"
-      )
-      : Promise.resolve(skippedNotams)
-  ]);
-
-  const sortedMETAR = METAR.data
-  ? await capture(
-    () => Promise.resolve(METAR.data?.sort((a, b) =>
-      Date.parse(b.receiptTime) -
-      Date.parse(a.receiptTime))),
-    METAR.message + "There was an unexpected error while sorting METAR\n"
+  const deleted = await capture(
+    () => deleteNOTAM(airport.supabaseId!),
   )
-  : {
-    data: undefined,
-    message: METAR.message
-  };
 
-  const messages = [
-    TAF.message,
-    sortedMETAR.message,
-    NOTAM.message
-  ].join("");
+  const upserted = await capture(
+    () => upsertNOTAM(NOTAM, airport.supabaseId!),
+  )
 
-  return [
-    TAF.data,
-    sortedMETAR.data,
-    NOTAM.data,
-    messages
-  ];
+  const updated = await capture(
+    () => updateAirportNextPollNOTAM(airport.formValues.icaoId, nextPollNOTAM),
+  )
+
+  return deleted.message + upserted.message + updated.message
 }
 
-export const refreshAirports = async (icaoIds: string[]): Promise<AirportData[]> => {
-  return await Promise.all(icaoIds.map(async icaoId => {
+export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Promise<AirportData[]> => {
+  const now = Date.now()
+
+  return await Promise.all(supabaseAirports.map(async airport => {
     const formValues: AirportFormValues = {
-      icaoId: icaoId,
+      icaoId: airport.icao,
       useDatetime: false,
       notamIncludeFIR: false,
       notamIncludeFuture: true
     }
 
-    const [TAF, METAR, NOTAMs, messages] = await fetchReports(formValues)
+    const fetchFreshNOTAM = airport.next_poll_notam <= now
+
+    const [TAF, METAR] = await Promise.all([
+      await capture(() => fetchTAF(formValues)),
+      await capture(() => fetchMETAR(formValues)),
+    ])
+
+    let NOTAM = fetchFreshNOTAM
+      ? await capture(() => fetchNOTAMs(formValues))
+      : { data: undefined, message: "" }
+
+    let nextPollNOTAM = airport.next_poll_notam
+
+    if (!NOTAM.data) {
+      NOTAM.data = await selectAirportNOTAM(airport.id)
+    } else {
+      nextPollNOTAM = now + POLL_INTERVAL_NOTAM
+      await deleteNOTAM(airport.id)
+      await upsertNOTAM(NOTAM.data, airport.id)
+      await updateAirportNextPollNOTAM(airport.icao, nextPollNOTAM)
+    }
 
     return {
       id: crypto.randomUUID(),
-      icaoId: icaoId,
+      icaoId: airport.icao,
       formValues: formValues,
-      TAF: TAF ? TAF : [],
-      METAR: METAR ? METAR : [],
-      NOTAM: NOTAMs ? NOTAMs : [],
-      messages: messages,
-      nextPoll: Date.now() + POLL_INTERVAL,
-      isLoading: false
+      TAF: TAF.data ? TAF.data : [],
+      METAR: METAR.data ? METAR.data : [],
+      NOTAM: NOTAM.data ? NOTAM.data : [],
+      messages: TAF.message + METAR.message + NOTAM.message,
+      nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR,
+      nextPollNOTAM: nextPollNOTAM,
+      isLoading: false,
+      supabaseId: airport.id
     }
   }))
 }
@@ -209,7 +214,8 @@ export const createAirport = (id: string): AirportData => {
     METAR: [],
     NOTAM: [],
     messages: "",
-    nextPoll: Date.now() + POLL_INTERVAL,
+    nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR,
+    nextPollNOTAM: Date.now(),
     isLoading: false
   }
 }

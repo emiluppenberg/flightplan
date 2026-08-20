@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
-import type { AppUser, CodeHighlight, UserFormValues } from "./types";
+import type { AppUser, CodeHighlight, NotamEntry, SupabaseAirport, UserFormValues } from "./types";
 import type { Database } from "./database.types";
 
 const supabase = createClient<Database>(
@@ -57,28 +57,34 @@ export const signOutUser = async () => {
     }
 }
 
-export const insertAirport = async (icaoId: string) => {
+export const insertAirport = async (icaoId: string, nextPollNOTAM: number): Promise<SupabaseAirport> => {
     const response = await supabase
         .from("user_airports")
-        .insert({ icao: icaoId })
+        .insert({ icao: icaoId, next_poll_notam: nextPollNOTAM })
+        .select()
 
     if (!response.success) {
         throw new Error(response.error.message)
     }
+
+    return response.data[0]
 }
 
-export const deleteAirport = async (icaoId: string) => {
+export const deleteAirport = async (icaoId: string): Promise<SupabaseAirport> => {
     const response = await supabase
         .from("user_airports")
         .delete()
         .eq("icao", icaoId)
+        .select()
 
     if (!response.success) {
         throw new Error(response.error.message)
     }
+
+    return response.data[0]
 }
 
-export const selectAllAirports = async (): Promise<string[]> => {
+export const selectAllAirports = async (): Promise<SupabaseAirport[]> => {
     const response = await supabase
         .from("user_airports")
         .select()
@@ -87,7 +93,57 @@ export const selectAllAirports = async (): Promise<string[]> => {
         throw new Error(response.error.message)
     }
 
-    return response.data.map(airport => (airport.icao))
+    return response.data
+}
+
+export const updateAirportNextPollNOTAM = async (icaoId: string, nextPollNOTAM: number) => {
+    const response = await supabase
+        .from("user_airports")
+        .update({ "next_poll_notam": nextPollNOTAM })
+        .eq("icao", icaoId)
+
+    if (!response.success) {
+        throw new Error(response.error.message)
+    }
+}
+
+export const upsertNOTAM = async (notam: NotamEntry[], airportSupabaseId: string) => {
+    if (notam.length === 0) return
+
+    const response = await supabase
+        .from("user_airports_notam")
+        .upsert(notam.map(notam => ({
+            ...notam, airport_id: airportSupabaseId
+        })), { onConflict: "id" })
+        .select()
+
+    if (!response.success) {
+        throw new Error(response.error.message + "\n")
+    }
+}
+
+export const deleteNOTAM = async (airportSupabaseId: string) => {
+    const response = await supabase
+        .from("user_airports_notam")
+        .delete()
+        .in("airport_id", [airportSupabaseId])
+
+    if (!response.success) {
+        throw new Error(response.error.message + "\n")
+    }
+}
+
+export const selectAirportNOTAM = async (airportSupabaseId: string): Promise<NotamEntry[]> => {
+    const response = await supabase
+        .from("user_airports_notam")
+        .select()
+        .eq("airport_id", airportSupabaseId)
+
+    if (!response.success) {
+        throw new Error(response.error.message + "\n")
+    }
+
+    return response.data
 }
 
 export const upsertHighlightsTAF = async (highlights: CodeHighlight[]) => {

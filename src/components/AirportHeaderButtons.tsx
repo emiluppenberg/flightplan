@@ -22,7 +22,7 @@ const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
 
     const handleSubmit = () => {
         if (!props.airport.isLoading) {
-            context.handleSubmit(props.airport.formValues, props.airport.id)
+            context.handleSubmit(props.airport, true)
         }
     }
 

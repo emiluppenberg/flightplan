@@ -1,5 +1,12 @@
 import type { Session, User } from "@supabase/supabase-js";
 
+export interface SupabaseAirport {
+  icao: string
+  id: string
+  next_poll_notam: number
+  user_id: string
+}
+
 export type FetchResult<T> = {
   data: T | undefined;
   message: string;
@@ -22,6 +29,8 @@ export interface NotamEntry {
   q_code: string | null;
   qline: string | null;
   scope: string | null;
+  status: string | null;
+  id: string | undefined;
 }
 
 export interface NotamsResponse {
@@ -82,8 +91,10 @@ export type AirportData = {
   METAR: METARJson[];
   NOTAM: NotamEntry[];
   messages: string;
-  nextPoll: number;
+  nextPollReports: number;
+  nextPollNOTAM: number;
   isLoading: boolean;
+  supabaseId?: string;
 }
 
 export type CodeHighlight = {

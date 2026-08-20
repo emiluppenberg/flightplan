@@ -18,19 +18,96 @@ export type Database = {
         Row: {
           icao: string
           id: string
+          next_poll_notam: number
           user_id: string
         }
         Insert: {
           icao: string
           id?: string
+          next_poll_notam?: number
           user_id?: string
         }
         Update: {
           icao?: string
           id?: string
+          next_poll_notam?: number
           user_id?: string
         }
         Relationships: []
+      }
+      user_airports_notam: {
+        Row: {
+          affected_fir: string | null
+          airport_id: string | null
+          body: string | null
+          effective: string | null
+          expiration: string | null
+          id: string
+          location: string | null
+          lower_limit: string | null
+          notam_id: string | null
+          notam_id_domestic: string | null
+          q_code: string | null
+          qline: string | null
+          raw: string
+          schedule: string | null
+          scope: string | null
+          status: string | null
+          type: string | null
+          upper_limit: string | null
+          user_id: string
+        }
+        Insert: {
+          affected_fir?: string | null
+          airport_id?: string | null
+          body?: string | null
+          effective?: string | null
+          expiration?: string | null
+          id?: string
+          location?: string | null
+          lower_limit?: string | null
+          notam_id?: string | null
+          notam_id_domestic?: string | null
+          q_code?: string | null
+          qline?: string | null
+          raw: string
+          schedule?: string | null
+          scope?: string | null
+          status?: string | null
+          type?: string | null
+          upper_limit?: string | null
+          user_id?: string
+        }
+        Update: {
+          affected_fir?: string | null
+          airport_id?: string | null
+          body?: string | null
+          effective?: string | null
+          expiration?: string | null
+          id?: string
+          location?: string | null
+          lower_limit?: string | null
+          notam_id?: string | null
+          notam_id_domestic?: string | null
+          q_code?: string | null
+          qline?: string | null
+          raw?: string
+          schedule?: string | null
+          scope?: string | null
+          status?: string | null
+          type?: string | null
+          upper_limit?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_airports_notam_airport_id_fkey"
+            columns: ["airport_id"]
+            isOneToOne: false
+            referencedRelation: "user_airports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_highlights_metar: {
         Row: {
