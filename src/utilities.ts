@@ -174,11 +174,11 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
         : Promise.resolve({ data: undefined, error: "" }),
     ])
 
-    const nextPollNOTAM = fetchFreshNOTAM
+    const nextPollNOTAM = fetchFreshNOTAM && NOTAM.data
       ? airport.next_poll_notam + POLL_INTERVAL_NOTAM
       : airport.next_poll_notam
 
-    if (!fetchFreshNOTAM) {
+    if (!fetchFreshNOTAM || (fetchFreshNOTAM && !NOTAM.data)) {
       NOTAM.data = await selectAirportNOTAM(airport.id)
     }
 
