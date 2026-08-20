@@ -54,17 +54,18 @@ export const fetchMETAR = async (values: AirportFormValues): Promise<METARJson[]
     throw new Error(`METAR request for ${values.icaoId} failed with status ${response.status}\n`)
   }
 
-  let METAR: METARJson[] = await response.json()
+  const METAR: METARJson[] = await response.json()
 
-  try {
-    METAR.sort((a, b) =>
-      Date.parse(b.receiptTime) -
-      Date.parse(a.receiptTime))
-  } catch (error) {
-    throw new Error(error instanceof Error ? error.message : "There was an unexpected error while sorting METAR")
-  }
+  return METAR.toSorted((a, b) => {
+    const aTime = Date.parse(a.receiptTime)
+    const bTime = Date.parse(b.receiptTime)
 
-  return METAR
+    if (Number.isNaN(aTime) || Number.isNaN(bTime)) {
+      throw new Error("METAR contains an invalid receiptTime")
+    }
+
+    return bTime - aTime
+  })
 }
 
 export const fetchNOTAMs = async (values: AirportFormValues): Promise<NotamEntry[]> => {
