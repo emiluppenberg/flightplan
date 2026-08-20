@@ -76,7 +76,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         const nextPollNOTAM = Date.now() + POLL_INTERVAL_NOTAM;
 
         const synced = user && NOTAM.data
-            ? await captureSyncNOTAM(NOTAM.data, airport.supabaseId, airport.formValues.icaoId, nextPollNOTAM)
+            ? await captureSyncNOTAM(NOTAM.data, airport.supabaseId, airport.formValues.icaoId, nextPollNOTAM, airport.id)
             : ""
 
         setAirports(current => current.map(_airport => {
