@@ -8,7 +8,7 @@ import type {
     UserFormValues,
 } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAMs } from "./utilities";
+import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM } from "./utilities";
 import { deleteAirport, initializeAppUser, insertAirport, selectAllAirports, selectHighlightsMETAR, selectHighlightsTAF, signInUser, signOutUser, signUpUser, upsertHighlightsMETAR, upsertHighlightsTAF } from "./supabase";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
@@ -68,7 +68,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             capture(() => fetchTAF(airport.formValues)),
             capture(() => fetchMETAR(airport.formValues)),
             fetchNotam
-                ? capture(() => fetchNOTAMs(airport.formValues))
+                ? capture(() => fetchNOTAM(airport.formValues))
                 : Promise.resolve({ data: undefined, error: "" }),
         ])
 

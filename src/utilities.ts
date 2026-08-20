@@ -68,7 +68,7 @@ export const fetchMETAR = async (values: AirportFormValues): Promise<METARJson[]
   })
 }
 
-export const fetchNOTAMs = async (values: AirportFormValues): Promise<NotamEntry[]> => {
+export const fetchNOTAM = async (values: AirportFormValues): Promise<NotamEntry[]> => {
   const params = new URLSearchParams({
     icao: values.icaoId,
     includeFIR: String(values.notamIncludeFIR),
@@ -170,7 +170,7 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
       capture(() => fetchTAF(formValues)),
       capture(() => fetchMETAR(formValues)),
       fetchFreshNOTAM
-        ? capture(() => fetchNOTAMs(formValues))
+        ? capture(() => fetchNOTAM(formValues))
         : Promise.resolve({ data: undefined, error: "" }),
     ])
 
