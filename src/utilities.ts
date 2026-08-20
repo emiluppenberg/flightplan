@@ -136,13 +136,13 @@ export const captureSyncNOTAM = async (
       ? ""
       : "Airport is missing supabaseId"
   }
-  
+
   const deleted = await capture(() => deleteNOTAM(airport.supabaseId!))
   const upserted = await capture(() => upsertNOTAM(NOTAM, airport.supabaseId!))
 
   const updated = upserted.error.length === 0
     ? await capture(() => updateAirportNextPollNOTAM(airport.formValues.icaoId, nextPollNOTAM))
-    : { data: undefined, error: ""}
+    : { data: undefined, error: "" }
 
   return deleted.error + upserted.error + updated.error
 }
@@ -160,14 +160,13 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
 
     const fetchFreshNOTAM = airport.next_poll_notam <= now
 
-    const [TAF, METAR] = await Promise.all([
-      await capture(() => fetchTAF(formValues)),
-      await capture(() => fetchMETAR(formValues)),
+    const [TAF, METAR, NOTAM] = await Promise.all([
+      capture(() => fetchTAF(formValues)),
+      capture(() => fetchMETAR(formValues)),
+      fetchFreshNOTAM
+        ? capture(() => fetchNOTAMs(formValues))
+        : Promise.resolve({ data: undefined, error: "" }),
     ])
-
-    let NOTAM = fetchFreshNOTAM
-      ? await capture(() => fetchNOTAMs(formValues))
-      : { data: undefined, error: "" }
 
     let nextPollNOTAM = airport.next_poll_notam
 

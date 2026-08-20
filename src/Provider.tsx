@@ -64,14 +64,13 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 : _airport
         )))
 
-        const [TAF, METAR] = await Promise.all([
-            await capture(() => fetchTAF(airport.formValues)),
-            await capture(() => fetchMETAR(airport.formValues)),
+        const [TAF, METAR, NOTAM] = await Promise.all([
+            capture(() => fetchTAF(airport.formValues)),
+            capture(() => fetchMETAR(airport.formValues)),
+            fetchNotam
+                ? capture(() => fetchNOTAMs(airport.formValues))
+                : Promise.resolve({ data: undefined, error: "" }),
         ])
-
-        const NOTAM = fetchNotam
-            ? await capture(() => fetchNOTAMs(airport.formValues))
-            : { data: undefined, error: "" }
 
         const nextPollReports = Date.now() + POLL_INTERVAL_TAF_METAR;
         const nextPollNOTAM = Date.now() + POLL_INTERVAL_NOTAM;
