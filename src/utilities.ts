@@ -132,7 +132,9 @@ export const captureSyncNOTAM = async (
   nextPollNOTAM: number
 ): Promise<string> => {
   if (!airport.supabaseId) {
-    return "Airport is missing supabaseId"
+    return airport.id === searchAirportId
+      ? ""
+      : "Airport is missing supabaseId"
   }
 
   const deleted = await capture(
