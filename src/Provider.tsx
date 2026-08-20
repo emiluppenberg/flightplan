@@ -71,7 +71,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
         const NOTAM = fetchNotam
             ? await capture(() => fetchNOTAMs(airport.formValues))
-            : { data: undefined, message: "" }
+            : { data: undefined, error: "" }
 
         const nextPollReports = Date.now() + POLL_INTERVAL_TAF_METAR;
         const nextPollNOTAM = Date.now() + POLL_INTERVAL_NOTAM;
@@ -94,7 +94,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                     NOTAM: fetchNotam
                         ? NOTAM.data ?? (matchNOTAM ? _airport.NOTAM : [])
                         : (matchNOTAM ? _airport.NOTAM : []),
-                    messages: TAF.message + METAR.message + NOTAM.message + synced,
+                    messages: TAF.error + METAR.error + NOTAM.error + synced,
                     nextPollReports: nextPollReports,
                     nextPollNOTAM: fetchNotam ? nextPollNOTAM : _airport.nextPollNOTAM,
                     isLoading: false

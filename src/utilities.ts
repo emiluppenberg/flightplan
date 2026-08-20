@@ -114,12 +114,12 @@ export const capture = async<T>(
   try {
     return {
       data: await request(),
-      message: ""
+      error: ""
     };
   } catch (error) {
     return {
       data: undefined,
-      message: error instanceof Error
+      error: error instanceof Error
         ? error.message
         : `There was unexpected error while executing ${request.name}`
     };
@@ -136,20 +136,15 @@ export const captureSyncNOTAM = async (
       ? ""
       : "Airport is missing supabaseId"
   }
+  
+  const deleted = await capture(() => deleteNOTAM(airport.supabaseId!))
+  const upserted = await capture(() => upsertNOTAM(NOTAM, airport.supabaseId!))
 
-  const deleted = await capture(
-    () => deleteNOTAM(airport.supabaseId!),
-  )
+  const updated = upserted.error.length === 0
+    ? await capture(() => updateAirportNextPollNOTAM(airport.formValues.icaoId, nextPollNOTAM))
+    : { data: undefined, error: ""}
 
-  const upserted = await capture(
-    () => upsertNOTAM(NOTAM, airport.supabaseId!),
-  )
-
-  const updated = await capture(
-    () => updateAirportNextPollNOTAM(airport.formValues.icaoId, nextPollNOTAM),
-  )
-
-  return deleted.message + upserted.message + updated.message
+  return deleted.error + upserted.error + updated.error
 }
 
 export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Promise<AirportData[]> => {
@@ -172,7 +167,7 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
 
     let NOTAM = fetchFreshNOTAM
       ? await capture(() => fetchNOTAMs(formValues))
-      : { data: undefined, message: "" }
+      : { data: undefined, error: "" }
 
     let nextPollNOTAM = airport.next_poll_notam
 
@@ -192,7 +187,7 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
       TAF: TAF.data ? TAF.data : [],
       METAR: METAR.data ? METAR.data : [],
       NOTAM: NOTAM.data ? NOTAM.data : [],
-      messages: TAF.message + METAR.message + NOTAM.message,
+      messages: TAF.error + METAR.error + NOTAM.error,
       nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR,
       nextPollNOTAM: nextPollNOTAM,
       isLoading: false,
