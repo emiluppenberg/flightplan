@@ -146,7 +146,7 @@ export const captureSyncNOTAM = async (
     ? await capture(() => upsertNOTAM(NOTAM, airportSupabaseId))
     : { data: undefined, error: "" }
 
-  const updated = !upserted.error
+  const updated = !deleted.error && !upserted.error
     ? await capture(() => updateAirportNextPollNOTAM(icaoId, nextPollNOTAM))
     : { data: undefined, error: "" }
 
@@ -175,17 +175,16 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
     ])
 
     const nextPollNOTAM = fetchFreshNOTAM && NOTAM.data
-      ? airport.next_poll_notam + POLL_INTERVAL_NOTAM
+      ? now + POLL_INTERVAL_NOTAM
       : airport.next_poll_notam
-
-    if (!fetchFreshNOTAM || (fetchFreshNOTAM && !NOTAM.data)) {
-      NOTAM.data = await selectAirportNOTAM(airport.id)
-    }
 
     const synced = fetchFreshNOTAM && NOTAM.data
       ? await captureSyncNOTAM(NOTAM.data, airport.id, airport.icao, nextPollNOTAM)
       : ""
 
+    if (!fetchFreshNOTAM || (fetchFreshNOTAM && !NOTAM.data)) {
+      NOTAM.data = await selectAirportNOTAM(airport.id)
+    }
 
     return {
       id: crypto.randomUUID(),
