@@ -141,7 +141,10 @@ export const captureSyncNOTAM = async (
   }
 
   const deleted = await capture(() => deleteNOTAM(airportSupabaseId))
-  const upserted = await capture(() => upsertNOTAM(NOTAM, airportSupabaseId))
+  
+  const upserted = deleted.error.length === 0
+    ? await capture(() => upsertNOTAM(NOTAM, airportSupabaseId))
+    : { data: undefined, error: "" }
 
   const updated = upserted.error.length === 0
     ? await capture(() => updateAirportNextPollNOTAM(icaoId, nextPollNOTAM))
