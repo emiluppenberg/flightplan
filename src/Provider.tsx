@@ -96,7 +96,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                         : (matchNOTAM ? _airport.NOTAM : []),
                     messages: TAF.error + METAR.error + NOTAM.error + synced,
                     nextPollReports: nextPollReports,
-                    nextPollNOTAM: fetchNotam ? nextPollNOTAM : _airport.nextPollNOTAM,
+                    nextPollNOTAM: fetchNotam && NOTAM.data ? nextPollNOTAM : _airport.nextPollNOTAM,
                     isLoading: false
                 }
             } else {
