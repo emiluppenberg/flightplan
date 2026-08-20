@@ -129,20 +129,22 @@ export const capture = async<T>(
 
 export const captureSyncNOTAM = async (
   NOTAM: NotamEntry[],
-  airport: AirportData,
-  nextPollNOTAM: number
+  airportSupabaseId: string | undefined,
+  icaoId: string,
+  nextPollNOTAM: number,
+  airportId: string = ""
 ): Promise<string> => {
-  if (!airport.supabaseId) {
-    return airport.id === searchAirportId
+  if (!airportSupabaseId) {
+    return airportId === searchAirportId
       ? ""
       : "Airport is missing supabaseId"
   }
 
-  const deleted = await capture(() => deleteNOTAM(airport.supabaseId!))
-  const upserted = await capture(() => upsertNOTAM(NOTAM, airport.supabaseId!))
+  const deleted = await capture(() => deleteNOTAM(airportSupabaseId))
+  const upserted = await capture(() => upsertNOTAM(NOTAM, airportSupabaseId))
 
   const updated = upserted.error.length === 0
-    ? await capture(() => updateAirportNextPollNOTAM(airport.formValues.icaoId, nextPollNOTAM))
+    ? await capture(() => updateAirportNextPollNOTAM(icaoId, nextPollNOTAM))
     : { data: undefined, error: "" }
 
   return deleted.error + upserted.error + updated.error
@@ -169,16 +171,18 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
         : Promise.resolve({ data: undefined, error: "" }),
     ])
 
-    let nextPollNOTAM = airport.next_poll_notam
+    const nextPollNOTAM = fetchFreshNOTAM
+      ? airport.next_poll_notam + POLL_INTERVAL_NOTAM
+      : airport.next_poll_notam
 
-    if (!NOTAM.data) {
+    if (!fetchFreshNOTAM) {
       NOTAM.data = await selectAirportNOTAM(airport.id)
-    } else {
-      nextPollNOTAM = now + POLL_INTERVAL_NOTAM
-      await deleteNOTAM(airport.id)
-      await upsertNOTAM(NOTAM.data, airport.id)
-      await updateAirportNextPollNOTAM(airport.icao, nextPollNOTAM)
     }
+
+    const synced = fetchFreshNOTAM && NOTAM.data
+      ? await captureSyncNOTAM(NOTAM.data, airport.id, airport.icao, nextPollNOTAM)
+      : ""
+
 
     return {
       id: crypto.randomUUID(),
@@ -187,7 +191,7 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
       TAF: TAF.data ? TAF.data : [],
       METAR: METAR.data ? METAR.data : [],
       NOTAM: NOTAM.data ? NOTAM.data : [],
-      messages: TAF.error + METAR.error + NOTAM.error,
+      messages: TAF.error + METAR.error + NOTAM.error + synced,
       nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR,
       nextPollNOTAM: nextPollNOTAM,
       isLoading: false,
