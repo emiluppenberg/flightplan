@@ -106,14 +106,19 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
         });
 
         context.handleSetFormValues(values, searchAirportId);
-        context.handleSubmit(values, searchAirportId);
+
+        if (searchAirport) {
+            context.handleSubmit({ ...searchAirport, formValues: values }, true);
+        }
     }
 
     const handleSubmit = () => {
         if (searchAirport && !searchAirport.isLoading) {
-            context.handleSubmit(searchAirport.formValues, searchAirportId);
+            context.handleSubmit(searchAirport, true);
         }
     }
+
+
 
     return (
         <FormProvider {...form}>

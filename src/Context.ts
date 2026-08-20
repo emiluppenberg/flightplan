@@ -5,7 +5,7 @@ export type FlightPathState = {
     airports: AirportData[];
     highlightsTAF: CodeHighlight[];
     highlightsMETAR: CodeHighlight[];
-    handleSubmit: (values: AirportFormValues, id: string) => void;
+    handleSubmit: (airport: AirportData, fetchNotam: boolean) => void;
     handleSetFormValues: (newValues: AirportFormValues, id: string) => void;
     handleSetHighlightsTAF: (newHighlights: CodeHighlight[]) => void;
     handleSetHighlightsMETAR: (newHighlights: CodeHighlight[]) => void;
