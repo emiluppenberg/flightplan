@@ -115,7 +115,7 @@ export const capture = async<T>(
   try {
     return {
       data: await request(),
-      error: ""
+      error: undefined
     };
   } catch (error) {
     return {
@@ -141,16 +141,16 @@ export const captureSyncNOTAM = async (
   }
 
   const deleted = await capture(() => deleteNOTAM(airportSupabaseId))
-  
-  const upserted = deleted.error.length === 0
+
+  const upserted = !deleted.error
     ? await capture(() => upsertNOTAM(NOTAM, airportSupabaseId))
     : { data: undefined, error: "" }
 
-  const updated = upserted.error.length === 0
+  const updated = !upserted.error
     ? await capture(() => updateAirportNextPollNOTAM(icaoId, nextPollNOTAM))
     : { data: undefined, error: "" }
 
-  return deleted.error + upserted.error + updated.error
+  return (deleted.error ?? "") + (upserted.error ?? "") + (updated.error ?? "")
 }
 
 export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Promise<AirportData[]> => {
@@ -194,7 +194,7 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
       TAF: TAF.data ? TAF.data : [],
       METAR: METAR.data ? METAR.data : [],
       NOTAM: NOTAM.data ? NOTAM.data : [],
-      messages: TAF.error + METAR.error + NOTAM.error + synced,
+      messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + synced,
       nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR,
       nextPollNOTAM: nextPollNOTAM,
       isLoading: false,

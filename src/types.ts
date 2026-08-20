@@ -9,7 +9,7 @@ export interface SupabaseAirport {
 
 export type FetchResult<T> = {
   data: T | undefined;
-  error: string;
+  error: string | undefined;
 }
 
 export interface NotamEntry {
