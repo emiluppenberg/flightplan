@@ -1,7 +1,7 @@
 import type { AirportData } from "../types";
 import ReportRender from "./ReportRender";
 import { useFlightPathContext } from "../Context";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AirportDatetimeForm from "./AirportDatetimeForm";
 import { FormProvider, useForm } from "react-hook-form";
 import type { AirportFormValues } from "../types";
@@ -21,38 +21,47 @@ const AirportRender = (props: AirportRenderProps) => {
     const form = useForm<AirportFormValues>({
         defaultValues: props.airport.formValues
     })
-
+    
     const reportsMETAR = [
         ...props.airport.METAR.map((metar, index) => (
             <ReportRender
-                key={`${props.airport.id}-metar-${index}`}
-                icaoId={props.airport.formValues.icaoId}
-                report="METAR"
-                codes={formatRawCodes(metar.rawOb)}
-                highlights={context.highlightsMETAR}
-                isMostRecentMETAR={index === 0} />
+            key={`${props.airport.id}-metar-${index}`}
+            icaoId={props.airport.formValues.icaoId}
+            report="METAR"
+            codes={formatRawCodes(metar.rawOb)}
+            highlights={context.highlightsMETAR}
+            isMostRecentMETAR={index === 0} />
         )),
     ];
     const reportsTAF = [
         ...props.airport.TAF.map((taf, index) => (
             <ReportRender
-                key={`${props.airport.id}-taf-${index}`}
-                icaoId={props.airport.formValues.icaoId}
-                report="TAF"
-                codes={formatRawCodes(taf.rawTAF)}
-                highlights={context.highlightsTAF} />
+            key={`${props.airport.id}-taf-${index}`}
+            icaoId={props.airport.formValues.icaoId}
+            report="TAF"
+            codes={formatRawCodes(taf.rawTAF)}
+            highlights={context.highlightsTAF} />
         ))
     ]
     const reportsNOTAM = [
         ...props.airport.NOTAM.map((notam, index) => (
             <NotamRender
-                key={`${props.airport.id}-notam-${index}`}
-                notam={notam} />
+            key={`${props.airport.id}-notam-${index}`}
+            notam={notam} />
         ))
     ]
+    
+    const useDatetime = form.watch("useDatetime")
+    const date = form.watch("date")
+    const time = form.watch("time")
+    const targetDate = useMemo(() => (
+        useDatetime && date && time
+        ? new Date(`${date}T${time}Z`).getTime()
+        : Date.now()
+    ), [useDatetime, date, time])
 
-    const airportOpeningHours = getOpeningHours(props.airport.NOTAM)
-
+    const airportOpeningHours = getOpeningHours(props.airport.NOTAM, targetDate, context.highlightsOPERATIONAL_STATUS)
+    
     return (
         <FormProvider {...form}>
             <div className="airport-render-container">
@@ -70,7 +79,9 @@ const AirportRender = (props: AirportRenderProps) => {
                     {props.airport.messages.length > 0 && (
                         <p className="message warning">{props.airport.messages}</p>
                     )}
-                    <p className="message operating-hours">{airportOpeningHours}</p>
+                    {airportOpeningHours.map(openingHours => (
+                        <p className="message hours-of-service">{openingHours}</p>
+                    ))}
                     <Expand
                         isOpen={notamsOpen}
                         rows={1}>

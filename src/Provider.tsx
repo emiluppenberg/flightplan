@@ -15,6 +15,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])
     const [highlightsTAF, setHighlightsTAF] = useState<CodeHighlight[]>([])
     const [highlightsMETAR, setHighlightsMETAR] = useState<CodeHighlight[]>([])
+    const [highlightsOPERATIONAL_STATUS, setHighlightsOPERATIONAL_STATUS] = useState<CodeHighlight[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [message, setMessage] = useState("")
     const [user, setUser] = useState<AppUser>()
@@ -166,6 +167,19 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         }
     }
 
+    const handleSetHighlightsOPERATIONAL_STATUS = async (newHighlights: CodeHighlight[]) => {
+        try {
+            if (user) {
+                // 
+            }
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : "")
+        } finally {
+            setHighlightsOPERATIONAL_STATUS(newHighlights)
+            setIsLoading(false)
+        }
+    }
+
     const handleAddAirport = async (icaoId: string) => {
         if (icaoId.length === 0) return
 
@@ -301,10 +315,12 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 airports,
                 highlightsTAF,
                 highlightsMETAR,
+                highlightsOPERATIONAL_STATUS,
                 handleSubmit,
                 handleSetFormValues,
                 handleSetHighlightsTAF,
                 handleSetHighlightsMETAR,
+                handleSetHighlightsOPERATIONAL_STATUS,
                 handleAddAirport,
                 handleDeleteAirport,
                 handleSignIn,

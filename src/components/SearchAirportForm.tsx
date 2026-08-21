@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useImperativeHandle, useState } from "react"
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useFlightPathContext } from "../Context"
 import type { AirportFormValues, AirportsResourceResponse } from "../types"
@@ -59,8 +59,17 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
         ]
         : []
 
+    const useDatetime = form.watch("useDatetime")
+    const date = form.watch("date")
+    const time = form.watch("time")
+    const targetDate = useMemo(() => (
+        useDatetime && date && time
+            ? new Date(`${date}T${time}Z`).getTime()
+            : Date.now()
+    ), [useDatetime, date, time])
+
     const airportOpeningHours = searchAirport
-        ? getOpeningHours(searchAirport.NOTAM)
+        ? getOpeningHours(searchAirport.NOTAM, targetDate, context.highlightsOPERATIONAL_STATUS)
         : ""
 
     const onOpen = useCallback(() => {
@@ -213,7 +222,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
                         {searchAirport.messages.length > 0 && (
                             <p className="message warning">{searchAirport.messages}</p>
                         )}
-                        <p className="message operating-hours">{airportOpeningHours}</p>
+                        <p className="message hours-of-service">{airportOpeningHours}</p>
                         {reportsNOTAM}
                         {reportsMETAR}
                         {reportsTAF}

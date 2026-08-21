@@ -58,8 +58,11 @@ $color-search: #d3d368;
   white-space: pre-line;
   font-style: italic;
   font-weight: 600;
+  font-size: 0.8rem;
 
-  &.operating-hours {
+  &.hours-of-service {
+    margin-top: 0.5rem;
+    line-height: normal;
     color: $color-highlight;
   }
 
@@ -492,6 +495,10 @@ h2 {
       font-size: 1rem;
       text-align: start;
       white-space: pre-wrap;
+
+      .highlight-notam {
+        color: $color-highlight;
+      }
 
       .highlight-wind {
         color: $color-highlight;

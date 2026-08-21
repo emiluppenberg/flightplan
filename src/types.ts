@@ -98,7 +98,7 @@ export type AirportData = {
 }
 
 export type CodeHighlight = {
-  report: "TAF" | "METAR" | "TAF/METAR";
+  report: "TAF" | "METAR" | "TAF/METAR" | "NOTAM" | "OPERATIONAL STATUS";
   label?: string;
   priority: number;
   class: string;
@@ -106,7 +106,7 @@ export type CodeHighlight = {
   variants?: CodeHighlight[];
 }
 
-export const codeHighlights: CodeHighlight[] = [
+export const HIGHLIGHTS_TAF_METAR: CodeHighlight[] = [
   {
     report: "TAF/METAR",
     label: "wind",
@@ -326,6 +326,33 @@ export const codeHighlights: CodeHighlight[] = [
     class: "highlight-wind-shear",
     priority: 1,
     regEx: /^WS(?:\d{3}\/(?:VRB|\d{3})\d{2,3}(?:G\d{2,3})?KT)?$/,
+    variants: []
+  },
+]
+
+export const HIGHLIGHTS_OPERATIONAL_STATUS: CodeHighlight[] = [
+  {
+    report: "OPERATIONAL STATUS",
+    label: "TWR",
+    class: "highlight-notam",
+    priority: 1,
+    regEx: /\bQST(?:AH|AK|AL|AM|AO|AP|AR|AS|AU|AW|AX|LC|LS|LT|XX)\b/,
+    variants: []
+  },
+  {
+    report: "OPERATIONAL STATUS",
+    label: "AFIS",
+    class: "highlight-notam",
+    priority: 1,
+    regEx: /\bQSF(?:AH|AK|AL|AM|AO|AP|AR|AS|AU|AW|AX|LC|LS|LT|XX)\b/,
+    variants: []
+  },
+  {
+    report: "OPERATIONAL STATUS",
+    label: "AERODROME",
+    class: "highlight-notam",
+    priority: 1,
+    regEx: /\bQFA(?:AH|AK|AL|AM|AO|AP|AR|AS|AU|AW|AX|LC|LS|LT|XX)\b/,
     variants: []
   }
 ]
