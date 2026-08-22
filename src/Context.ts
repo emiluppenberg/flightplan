@@ -5,12 +5,14 @@ export type FlightPathState = {
     airports: AirportData[];
     highlightsTAF: CodeHighlight[];
     highlightsMETAR: CodeHighlight[];
-    highlightsOPERATIONAL_STATUS: CodeHighlight[]
+    highlightsOPERATIONAL_HOURS: CodeHighlight[];
+    highlightsNOTAM: CodeHighlight[];
     handleSubmit: (airport: AirportData, fetchNotam: boolean) => void;
     handleSetFormValues: (newValues: AirportFormValues, id: string) => void;
     handleSetHighlightsTAF: (newHighlights: CodeHighlight[]) => void;
     handleSetHighlightsMETAR: (newHighlights: CodeHighlight[]) => void;
-    handleSetHighlightsOPERATIONAL_STATUS: (newHighlights: CodeHighlight[]) => void;
+    handleSetHighlightsNOTAM: (newHighlights: CodeHighlight[]) => void;
+    handleSetHighlightsOPERATIONAL_HOURS: (newHighlights: CodeHighlight[]) => void;
     handleAddAirport: (icaoId: string) => void;
     handleDeleteAirport: (id: string) => void;
     handleSignIn: (values: UserFormValues) => void;

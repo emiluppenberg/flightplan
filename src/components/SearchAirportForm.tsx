@@ -3,7 +3,7 @@ import { FormProvider, useForm } from "react-hook-form"
 import { useFlightPathContext } from "../Context"
 import type { AirportFormValues, AirportsResourceResponse } from "../types"
 import ReportRender from "./ReportRender"
-import { fetchAirportsPage, fetchAirports, formatRawCodes, SVG_URLS, getOpeningHours, searchAirportId } from "../utilities"
+import { fetchAirportsPage, fetchAirports, formatRawCodes, SVG_URLS, getOperationalHours, searchAirportId, sortNOTAM } from "../utilities"
 import AirportDatetimeForm from "./AirportDatetimeForm"
 import Expand from "./Expand"
 import NotamRender from "./NotamRender"
@@ -24,6 +24,16 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
     })
     const { register, getValues, setFocus, setValue, watch } = form;
     const selectedIcaoId = watch("icaoId");
+
+    const highlightsNOTAM = useMemo(() =>
+        [...context.highlightsOPERATIONAL_HOURS, ...context.highlightsNOTAM],
+        [context.highlightsOPERATIONAL_HOURS, context.highlightsNOTAM])
+
+    const sortedNOTAM = useMemo(() => 
+        searchAirport
+        ? sortNOTAM([...searchAirport.NOTAM], highlightsNOTAM)
+        : [],
+        [searchAirport, highlightsNOTAM])
 
     const reportsMETAR = searchAirport
         ? [
@@ -52,7 +62,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
 
     const reportsNOTAM = searchAirport
         ? [
-            ...searchAirport.NOTAM.map((notam, index) => (
+            sortedNOTAM.map((notam, index) => (
                 <NotamRender
                     key={`search-airport-notam-${index}`}
                     notam={notam} />))
@@ -69,7 +79,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
     ), [useDatetime, date, time])
 
     const airportOpeningHours = searchAirport
-        ? getOpeningHours(searchAirport.NOTAM, targetDate, context.highlightsOPERATIONAL_STATUS)
+        ? getOperationalHours(searchAirport.NOTAM, targetDate, context.highlightsOPERATIONAL_HOURS)
         : ""
 
     const onOpen = useCallback(() => {

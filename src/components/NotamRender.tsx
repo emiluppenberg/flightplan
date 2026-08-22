@@ -8,9 +8,11 @@ type NotamRenderProps = {
 
 const NotamRender = (props: NotamRenderProps) => {
     const context = useFlightPathContext()
-    const classes = useMemo(() => [...context.highlightsOPERATIONAL_STATUS]
-        .filter(highlight => highlight.regEx.test(props.notam.q_code ?? ""))
-        .map(highlight => highlight.class), [context.highlightsOPERATIONAL_STATUS])
+    const classes = useMemo(() =>
+        [...context.highlightsOPERATIONAL_HOURS, ...context.highlightsNOTAM]
+            .filter(highlight => highlight.regEx.test(props.notam.q_code ?? props.notam.raw))
+            .map(highlight => highlight.class),
+        [context.highlightsOPERATIONAL_HOURS, context.highlightsNOTAM])
 
     return (
         <div className="airport-notam-container">

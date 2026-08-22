@@ -253,8 +253,8 @@ export const formatRawCodes = (raw: string) => {
   return formatted;
 };
 
-export const getOpeningHours = (notams: NotamEntry[], targetDate: number, highlightsOPERATIONAL_STATUS: CodeHighlight[]): string[] => {
-  const nonMatches = highlightsOPERATIONAL_STATUS.filter(highlight =>
+export const getOperationalHours = (notams: NotamEntry[], targetDate: number, highlightsOPERATIONAL_HOURS: CodeHighlight[]): string[] => {
+  const nonMatches = highlightsOPERATIONAL_HOURS.filter(highlight =>
     !notams.some(notam => highlight.regEx.test(notam.q_code ?? ""))
   )
 
@@ -268,19 +268,28 @@ export const getOpeningHours = (notams: NotamEntry[], targetDate: number, highli
   })
 
   const candidates = activeNotams.filter(notam =>
-    highlightsOPERATIONAL_STATUS.some(highlight => highlight.regEx.test(notam.raw ?? ""))
+    highlightsOPERATIONAL_HOURS.some(highlight => highlight.regEx.test(notam.raw ?? ""))
   )
 
   const result = candidates.map(candidate => {
-      const body = candidate.body?.replace(/\s+/g, " ").trim()
-      return `${candidate.effective} - ${candidate.expiration}\n${body}`
-    })
+    const body = candidate.body?.replace(/\s+/g, " ").trim()
+    return `${candidate.effective} - ${candidate.expiration}\n${body}`
+  })
 
   return result.length > 0
-    ? [...result, ...nonMatches.map(highlight => `OPERATIONAL STATUS not available for ${highlight.label}`)]
-    : (highlightsOPERATIONAL_STATUS.length > 0
-      ? nonMatches.map(highlight => `OPERATIONAL STATUS not available for ${highlight.label}`)
+    ? [...result, ...nonMatches.map(highlight => `OPERATIONAL HOURS not available for ${highlight.label}`)]
+    : (highlightsOPERATIONAL_HOURS.length > 0
+      ? nonMatches.map(highlight => `OPERATIONAL HOURS not available for ${highlight.label}`)
       : [""])
+}
+
+export const sortNOTAM = (notams: NotamEntry[], highlights: CodeHighlight[]): NotamEntry[] => {
+  return notams.sort((a, b) => {
+    const aIsHighlighted = highlights.some(highlight => highlight.regEx.test(a.q_code ?? a.raw))
+    const bIsHighlighted = highlights.some(highlight => highlight.regEx.test(b.q_code ?? b.raw))
+
+    return Number(bIsHighlighted) - Number(aIsHighlighted)
+  })
 }
 
 export const parseSkylinkDate = (value: string): number => {
