@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState, type PropsWithChildren } from "react";
-import type { AirportData, AirportFormValues, AppUser, CodeHighlight, SupabaseAirport, UserFormValues } from "./types";
+import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
 import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM } from "./utilities";
-import { deleteAirport, initializeAppUser, insertAirport, selectAllAirports, selectHighlightsMETAR, selectHighlightsTAF, signInUser, signOutUser, signUpUser, upsertHighlightsMETAR, upsertHighlightsTAF } from "./supabase";
+import { deleteAirport, initializeAppUser, insertAirport, selectAllAirports, selectHighlights, signInUser, signOutUser, signUpUser, upsertHighlights } from "./supabase";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])
@@ -20,11 +20,17 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         const airports = await refreshAirports(supabaseAirports)
         setAirports([...airports, createAirport(searchAirportId)])
 
-        const highlightsTAF = await selectHighlightsTAF()
-        setHighlightsTAF(resolveHighlights(highlightsTAF))
+        const highlightsTAF = await selectHighlights("TAF")
+        setHighlightsTAF(resolveHighlights(highlightsTAF, HIGHLIGHTS_TAF_METAR))
 
-        const highlightsMETAR = await selectHighlightsMETAR()
-        setHighlightsMETAR(resolveHighlights(highlightsMETAR))
+        const highlightsMETAR = await selectHighlights("METAR")
+        setHighlightsMETAR(resolveHighlights(highlightsMETAR, HIGHLIGHTS_TAF_METAR))
+
+        const highlightsOPERATIONAL_HOURS = await selectHighlights("OPERATIONAL HOURS")
+        setHighlightsOPERATIONAL_HOURS(resolveHighlights(highlightsOPERATIONAL_HOURS, HIGHLIGHTS_OPERATIONAL_HOURS))
+
+        const highlightsNOTAM = await selectHighlights("NOTAM")
+        setHighlightsNOTAM(resolveHighlights(highlightsNOTAM, HIGHLIGHTS_NOTAM))
     }
 
     useEffect(() => {
@@ -129,60 +135,20 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         )))
     }
 
-    const handleSetHighlightsTAF = async (newHighlights: CodeHighlight[]) => {
+    const handleSetHighlights = async (newHighlights: CodeHighlight[], report: CodeHighlightReport) => {
         try {
             if (user) {
                 setIsLoading(true)
                 setMessage('')
-
-                await upsertHighlightsTAF(newHighlights)
+                await upsertHighlights(newHighlights, report)
             }
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "")
         } finally {
-            setHighlightsTAF(newHighlights)
-            setIsLoading(false)
-        }
-    }
-
-    const handleSetHighlightsMETAR = async (newHighlights: CodeHighlight[]) => {
-        try {
-            if (user) {
-                setIsLoading(true)
-                setMessage('')
-
-                await upsertHighlightsMETAR(newHighlights)
-            }
-        } catch (error) {
-            setMessage(error instanceof Error ? error.message : "")
-        } finally {
-            setHighlightsMETAR(newHighlights)
-            setIsLoading(false)
-        }
-    }
-
-    const handleSetHighlightsOPERATIONAL_HOURS = async (newHighlights: CodeHighlight[]) => {
-        try {
-            if (user) {
-                // 
-            }
-        } catch (error) {
-            setMessage(error instanceof Error ? error.message : "")
-        } finally {
-            setHighlightsOPERATIONAL_HOURS(newHighlights)
-            setIsLoading(false)
-        }
-    }
-
-    const handleSetHighlightsNOTAM = async (newHighlights: CodeHighlight[]) => {
-        try {
-            if (user) {
-                // 
-            }
-        } catch (error) {
-            setMessage(error instanceof Error ? error.message : "")
-        } finally {
-            setHighlightsNOTAM(newHighlights)
+            if (report === "TAF") setHighlightsTAF(newHighlights)
+            if (report === "METAR") setHighlightsMETAR(newHighlights)
+            if (report === "NOTAM") setHighlightsNOTAM(newHighlights)
+            if (report === "OPERATIONAL HOURS") setHighlightsOPERATIONAL_HOURS(newHighlights)
             setIsLoading(false)
         }
     }
@@ -295,6 +261,8 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             setAirports([createAirport(searchAirportId)])
             setHighlightsTAF([])
             setHighlightsMETAR([])
+            setHighlightsNOTAM([])
+            setHighlightsOPERATIONAL_HOURS([])
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "")
         } finally {
@@ -326,10 +294,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 highlightsNOTAM,
                 handleSubmit,
                 handleSetFormValues,
-                handleSetHighlightsTAF,
-                handleSetHighlightsMETAR,
-                handleSetHighlightsOPERATIONAL_HOURS,
-                handleSetHighlightsNOTAM,
+                handleSetHighlights,
                 handleAddAirport,
                 handleDeleteAirport,
                 handleSignIn,

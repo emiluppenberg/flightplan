@@ -97,8 +97,10 @@ export type AirportData = {
   supabaseId?: string;
 }
 
+export type CodeHighlightReport = "TAF" | "METAR" | "NOTAM" | "OPERATIONAL HOURS"
+
 export type CodeHighlight = {
-  report: "TAF" | "METAR" | "TAF/METAR" | "NOTAM";
+  report: CodeHighlightReport | "TAF/METAR";
   label?: string;
   priority: number;
   class: string;
@@ -334,21 +336,21 @@ export const HIGHLIGHTS_OPERATIONAL_HOURS: CodeHighlight[] = [
   {
     report: "NOTAM",
     label: "TWR",
-    class: "highlight-notam",
+    class: "highlight-operational-hours-twr",
     priority: 1,
     regEx: /\bQST(?:AH|AK|AL|AM|AO|AP|AR|AS|AU|AW|AX|LC|LS|LT|)\b/,
   },
   {
     report: "NOTAM",
     label: "AFIS",
-    class: "highlight-notam",
+    class: "highlight-operational-hours-afis",
     priority: 1,
     regEx: /\bQSF(?:AH|AK|AL|AM|AO|AP|AR|AS|AU|AW|AX|LC|LS|LT|)\b/,
   },
   {
     report: "NOTAM",
     label: "AERODROME",
-    class: "highlight-notam",
+    class: "highlight-operational-hours-aerodrome",
     priority: 1,
     regEx: /\bQFA(?:AH|AK|AL|AM|AO|AP|AR|AS|AU|AW|AX|LC|LS|LT|)\b/,
   },
@@ -358,70 +360,70 @@ export const HIGHLIGHTS_NOTAM: CodeHighlight[] = [
   {
     report: "NOTAM",
     label: "SNOWTAM",
-    class: "highlight-notam",
+    class: "highlight-snowtam",
     priority: 1,
     regEx: /\bSNOWTAM\b/
   },
   {
     report: "NOTAM",
     label: "runway",
-    class: "highlight-notam",
+    class: "highlight-runway",
     priority: 1,
     regEx: /\bQ(?:PU|PI|MW|MU|MT|MS|MR|MO|MH|MD|MC|LZ|LV|LT|LS|LP|LM|LL|LK|LJ|LI|LH|LF|LE|LC|LA|IY|IX|IW|IU|IT|IS|IO|IM|IL|II|IG|IC|FT|CP|ID|LR)[A-Z]{2}\b/,
   },
   {
     report: "NOTAM",
     label: "taxiway",
-    class: "highlight-notam",
+    class: "highlight-taxiway",
     priority: 1,
     regEx: /\bQ(?:MX|MY|MG|MO)[A-Z]{2}\b/
   },
   {
     report: "NOTAM",
     label: "airspace activity",
-    class: "highlight-notam",
+    class: "highlight-airspace-activity",
     priority: 1,
     regEx: /\bQW[A-Z]{3}\b/
   },
   {
     report: "NOTAM",
     label: "obstacles",
-    class: "highlight-notam",
+    class: "highlight-obstacles",
     priority: 1,
     regEx: /\bQOB[A-Z]{2}\b/
   },
   {
     report: "NOTAM",
     label: "obstruction lights",
-    class: "highlight-notam",
+    class: "highlight-obstruction-lights",
     priority: 1,
     regEx: /\bQOL[A-Z]{2}\b/
   },
   {
     report: "NOTAM",
     label: "restricted/prohibited/danger",
-    class: "highlight-notam",
+    class: "highlight-restricted-prohibited-danger",
     priority: 1,
     regEx: /\bQ(?:RA|RD|RM|RO|RP|RR|RT)[A-Z]{2}\b/
   },
   {
     report: "NOTAM",
     label: "SID/STAR",
-    class: "highlight-notam",
+    class: "highlight-sid-star",
     priority: 1,
     regEx: /\bQ(?:PD|PA)[A-Z]{2}\b/
   },
   {
     report: "NOTAM",
     label: "approach procedure",
-    class: "highlight-notam",
+    class: "highlight-approach-procedure",
     priority: 1,
     regEx: /\bQ(?:PI|PK)[A-Z]{2}\b/
   },
   {
     report: "NOTAM",
     label: "operating minima",
-    class: "highlight-notam",
+    class: "highlight-operating-minima",
     priority: 1,
     regEx: /\bQ(?:PM|PO)[A-Z]{2}\b/
   }

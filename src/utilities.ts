@@ -223,8 +223,7 @@ export const createAirport = (id: string): AirportData => {
   }
 }
 
-export const resolveHighlights = (classes: string[]) =>
-  HIGHLIGHTS_TAF_METAR.filter(highlight => classes.includes(highlight.class));
+export const resolveHighlights = (classes: string[], highlightCollection: CodeHighlight[]) => highlightCollection.filter(highlight => classes.includes(highlight.class));
 
 export const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every(item => typeof item === "string");

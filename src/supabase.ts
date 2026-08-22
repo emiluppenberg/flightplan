@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
-import type { AppUser, CodeHighlight, NotamEntry, SupabaseAirport, UserFormValues } from "./types";
+import type { AppUser, CodeHighlight, CodeHighlightReport, NotamEntry, SupabaseAirport, UserFormValues } from "./types";
 import type { Database } from "./database.types";
 
 const supabase = createClient<Database>(
@@ -146,52 +146,33 @@ export const selectAirportNOTAM = async (airportSupabaseId: string): Promise<Not
     return response.data
 }
 
-export const upsertHighlightsTAF = async (highlights: CodeHighlight[]) => {
+export const upsertHighlights = async (
+    highlights: CodeHighlight[],
+    report: CodeHighlightReport
+) => {
     const value = highlights.map(highlight => highlight.class)
 
     const response = await supabase
-        .from("user_highlights_taf")
-        .upsert({ highlights_taf: value }, { onConflict: "user_id" })
+        .from("user_highlights")
+        .upsert({ highlights: value, report: report }, {onConflict: "user_id, report"})
 
     if (!response.success) {
         throw new Error(response.error.message)
     }
 }
 
-export const upsertHighlightsMETAR = async (highlights: CodeHighlight[]) => {
-    const value = highlights.map(highlight => highlight.class)
-
+export const selectHighlights = async (
+    report: CodeHighlightReport
+): Promise<string[]> => {
     const response = await supabase
-        .from("user_highlights_metar")
-        .upsert({ highlights_metar: value }, { onConflict: "user_id" })
-
-    if (!response.success) {
-        throw new Error(response.error.message)
-    }
-}
-
-export const selectHighlightsTAF = async (): Promise<string[]> => {
-    const response = await supabase
-        .from("user_highlights_taf")
+        .from("user_highlights")
         .select()
+        .eq("report", report)
         .maybeSingle()
 
     if (!response.success) {
         throw new Error(response.error.message)
     }
 
-    return response.data?.highlights_taf ?? []
-}
-
-export const selectHighlightsMETAR = async (): Promise<string[]> => {
-    const response = await supabase
-        .from("user_highlights_metar")
-        .select()
-        .maybeSingle()
-
-    if (!response.success) {
-        throw new Error(response.error.message)
-    }
-
-    return response.data?.highlights_metar ?? []
+    return response.data?.highlights ?? []
 }
