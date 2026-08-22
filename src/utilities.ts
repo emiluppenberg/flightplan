@@ -225,6 +225,11 @@ export const createAirport = (id: string): AirportData => {
 
 export const resolveHighlights = (classes: string[], highlightCollection: CodeHighlight[]) => highlightCollection.filter(highlight => classes.includes(highlight.class));
 
+export const matchesNotamHighlight = (
+  notam: NotamEntry,
+  highlight: CodeHighlight
+): boolean => [notam.q_code, notam.raw].some(value => value != null && highlight.regEx.test(value))
+
 export const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every(item => typeof item === "string");
 
@@ -267,10 +272,10 @@ export const getOperationalHours = (
   })
 
   const nonMatches = highlightsOPERATIONAL_HOURS.filter(highlight =>
-    !activeNotams.some(notam => highlight.regEx.test(notam.q_code ?? notam.raw)))
+    !activeNotams.some(notam => matchesNotamHighlight(notam, highlight)))
 
   const candidates = activeNotams.filter(notam =>
-    highlightsOPERATIONAL_HOURS.some(highlight => highlight.regEx.test(notam.q_code ?? notam.raw)))
+    highlightsOPERATIONAL_HOURS.some(highlight => matchesNotamHighlight(notam, highlight)))
 
   const result = candidates.map(candidate => {
     const body = candidate.body?.replace(/\s+/g, " ").trim()
@@ -286,8 +291,8 @@ export const getOperationalHours = (
 
 export const sortNOTAM = (notams: NotamEntry[], highlights: CodeHighlight[]): NotamEntry[] => {
   return notams.sort((a, b) => {
-    const aIsHighlighted = highlights.some(highlight => highlight.regEx.test(a.q_code ?? a.raw))
-    const bIsHighlighted = highlights.some(highlight => highlight.regEx.test(b.q_code ?? b.raw))
+    const aIsHighlighted = highlights.some(highlight => matchesNotamHighlight(a, highlight))
+    const bIsHighlighted = highlights.some(highlight => matchesNotamHighlight(b, highlight))
 
     return Number(bIsHighlighted) - Number(aIsHighlighted)
   })
