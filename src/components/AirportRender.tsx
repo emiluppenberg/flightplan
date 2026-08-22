@@ -1,12 +1,12 @@
 import type { AirportData } from "../types";
 import ReportRender from "./ReportRender";
 import { useFlightPathContext } from "../Context";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AirportDatetimeForm from "./AirportDatetimeForm";
 import { FormProvider, useForm } from "react-hook-form";
 import type { AirportFormValues } from "../types";
 import AirportHeaderButtons from "./AirportHeaderButtons";
-import { formatRawCodes, getOpeningHours } from "../utilities";
+import { formatRawCodes, getOperationalHours, sortNOTAM } from "../utilities";
 import Expand from "./Expand";
 import NotamRender from "./NotamRender";
 
@@ -21,6 +21,14 @@ const AirportRender = (props: AirportRenderProps) => {
     const form = useForm<AirportFormValues>({
         defaultValues: props.airport.formValues
     })
+
+    const highlightsNOTAM = useMemo(() =>
+        [...context.highlightsOPERATIONAL_HOURS, ...context.highlightsNOTAM],
+        [context.highlightsOPERATIONAL_HOURS, context.highlightsNOTAM])
+
+    const sortedNOTAM = useMemo(() =>
+        sortNOTAM([...props.airport.NOTAM], highlightsNOTAM),
+        [props.airport.NOTAM, highlightsNOTAM])
 
     const reportsMETAR = [
         ...props.airport.METAR.map((metar, index) => (
@@ -44,14 +52,21 @@ const AirportRender = (props: AirportRenderProps) => {
         ))
     ]
     const reportsNOTAM = [
-        ...props.airport.NOTAM.map((notam, index) => (
+        sortedNOTAM.map((notam, index) => (
             <NotamRender
                 key={`${props.airport.id}-notam-${index}`}
                 notam={notam} />
         ))
     ]
 
-    const airportOpeningHours = getOpeningHours(props.airport.NOTAM)
+    const useDatetime = form.watch("useDatetime")
+    const date = form.watch("date")
+    const time = form.watch("time")
+    const targetDate = useDatetime && date && time
+        ? new Date(`${date}T${time}Z`).getTime()
+        : Date.now()
+
+    const airportOpeningHours = getOperationalHours(props.airport.NOTAM, targetDate, context.highlightsOPERATIONAL_HOURS)
 
     return (
         <FormProvider {...form}>
@@ -70,7 +85,11 @@ const AirportRender = (props: AirportRenderProps) => {
                     {props.airport.messages.length > 0 && (
                         <p className="message warning">{props.airport.messages}</p>
                     )}
-                    <p className="message operating-hours">{airportOpeningHours}</p>
+                    {airportOpeningHours.map((openingHours, index) => (
+                        <p
+                            key={`${props.airport.id}-operational-hours-${index}`}
+                            className="message hours-of-service">{openingHours}</p>
+                    ))}
                     <Expand
                         isOpen={notamsOpen}
                         rows={1}>

@@ -40,6 +40,7 @@ export type Database = {
           affected_fir: string | null
           airport_id: string | null
           body: string | null
+          created_at: string
           effective: string | null
           expiration: string | null
           id: string
@@ -61,6 +62,7 @@ export type Database = {
           affected_fir?: string | null
           airport_id?: string | null
           body?: string | null
+          created_at?: string
           effective?: string | null
           expiration?: string | null
           id?: string
@@ -82,6 +84,7 @@ export type Database = {
           affected_fir?: string | null
           airport_id?: string | null
           body?: string | null
+          created_at?: string
           effective?: string | null
           expiration?: string | null
           id?: string
@@ -109,38 +112,23 @@ export type Database = {
           },
         ]
       }
-      user_highlights_metar: {
+      user_highlights: {
         Row: {
-          highlights_metar: string[]
+          highlights: string[]
           id: string
+          report: string
           user_id: string
         }
         Insert: {
-          highlights_metar: string[]
+          highlights: string[]
           id?: string
+          report: string
           user_id?: string
         }
         Update: {
-          highlights_metar?: string[]
+          highlights?: string[]
           id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_highlights_taf: {
-        Row: {
-          highlights_taf: string[]
-          id: string
-          user_id: string
-        }
-        Insert: {
-          highlights_taf: string[]
-          id?: string
-          user_id?: string
-        }
-        Update: {
-          highlights_taf?: string[]
-          id?: string
+          report?: string
           user_id?: string
         }
         Relationships: []

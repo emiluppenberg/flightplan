@@ -1,5 +1,5 @@
 import { deleteNOTAM, selectAirportNOTAM, updateAirportNextPollNOTAM, upsertNOTAM } from "./supabase"
-import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, codeHighlights, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport } from "./types"
+import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_NOTAM } from "./types"
 
 export const PATH_AIRPORTS = "https://airportsapi.com/api/airports"
 export const PATH_NOTAM = "/api/reports/notam"
@@ -223,14 +223,18 @@ export const createAirport = (id: string): AirportData => {
   }
 }
 
-export const resolveHighlights = (classes: string[]) =>
-  codeHighlights.filter(highlight => classes.includes(highlight.class));
+export const resolveHighlights = (classes: string[], highlightCollection: CodeHighlight[]) => highlightCollection.filter(highlight => classes.includes(highlight.class));
+
+export const matchesNotamHighlight = (
+  notam: NotamEntry,
+  highlight: CodeHighlight
+): boolean => [notam.q_code, notam.raw].some(value => value != null && highlight.regEx.test(value))
 
 export const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every(item => typeof item === "string");
 
 export const formatRawCodes = (raw: string) => {
-  const visibilityRegEx = codeHighlights.find(
+  const visibilityRegEx = HIGHLIGHTS_TAF_METAR.find(
     highlight => highlight.label === "visibility"
   )?.regEx;
 
@@ -253,22 +257,45 @@ export const formatRawCodes = (raw: string) => {
   return formatted;
 };
 
-export const getOpeningHours = (notams: NotamEntry[]): string => {
-  const now = Date.now()
-
-  const candidates = notams.filter(notam => {
+export const getOperationalHours = (
+  notams: NotamEntry[],
+  targetDate: number,
+  highlightsOPERATIONAL_HOURS: CodeHighlight[]
+): string[] => {
+  const activeNotams = notams.filter(notam => {
     if (!notam.effective || !notam.expiration) return false
-    // if (notam.q_code !== "QFAAH") return false
 
     const effective = parseSkylinkDate(notam.effective)
     const expiration = parseSkylinkDate(notam.expiration)
 
-    return effective <= now && expiration >= now
+    return effective <= targetDate && expiration >= targetDate
   })
 
-  const goodEnough = candidates.find(notam => notam.body?.startsWith("AERODROME OPERATING HOURS"))
-  return goodEnough?.body ?? "OPERATING HOURS NOT AVAILABLE"
-  // return candidates.at(0)?.body ?? undefined
+  const nonMatches = highlightsOPERATIONAL_HOURS.filter(highlight =>
+    !activeNotams.some(notam => matchesNotamHighlight(notam, highlight)))
+
+  const candidates = activeNotams.filter(notam =>
+    highlightsOPERATIONAL_HOURS.some(highlight => matchesNotamHighlight(notam, highlight)))
+
+  const result = candidates.map(candidate => {
+    const body = candidate.body?.replace(/\s+/g, " ").trim()
+    return `${candidate.effective} - ${candidate.expiration}\n${body}`
+  })
+
+  return result.length > 0
+    ? [...result, ...nonMatches.map(highlight => `OPERATIONAL HOURS not available for ${highlight.label}`)]
+    : highlightsOPERATIONAL_HOURS.length > 0
+      ? [`OPERATIONAL HOURS not available for ${nonMatches.map(highlight => highlight.label).join(", ")}`]
+      : [""]
+}
+
+export const sortNOTAM = (notams: NotamEntry[], highlights: CodeHighlight[]): NotamEntry[] => {
+  return notams.sort((a, b) => {
+    const aIsHighlighted = highlights.some(highlight => matchesNotamHighlight(a, highlight))
+    const bIsHighlighted = highlights.some(highlight => matchesNotamHighlight(b, highlight))
+
+    return Number(bIsHighlighted) - Number(aIsHighlighted)
+  })
 }
 
 export const parseSkylinkDate = (value: string): number => {

@@ -1,14 +1,15 @@
 import { createContext, useContext } from "react";
-import type { AirportData, AirportFormValues, AppUser, CodeHighlight, UserFormValues } from "./types"
+import type { AirportData, AirportFormValues, AppUser, CodeHighlight, CodeHighlightReport, UserFormValues } from "./types"
 
 export type FlightPathState = {
     airports: AirportData[];
     highlightsTAF: CodeHighlight[];
     highlightsMETAR: CodeHighlight[];
+    highlightsOPERATIONAL_HOURS: CodeHighlight[];
+    highlightsNOTAM: CodeHighlight[];
     handleSubmit: (airport: AirportData, fetchNotam: boolean) => void;
     handleSetFormValues: (newValues: AirportFormValues, id: string) => void;
-    handleSetHighlightsTAF: (newHighlights: CodeHighlight[]) => void;
-    handleSetHighlightsMETAR: (newHighlights: CodeHighlight[]) => void;
+    handleSetHighlights: (newHighlights: CodeHighlight[], report: CodeHighlightReport) => void;
     handleAddAirport: (icaoId: string) => void;
     handleDeleteAirport: (id: string) => void;
     handleSignIn: (values: UserFormValues) => void;

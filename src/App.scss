@@ -54,12 +54,34 @@ $color-search: #d3d368;
   }
 }
 
+img {
+  &.loading {
+    animation: loading-pulse 1s ease-in-out infinite;
+    transform-origin: center;
+  }
+}
+
+@keyframes loading-pulse {
+  0% {
+    transform: scale(1);
+  }
+  33% {
+    transform: scale(1.10);
+  }
+  66% {
+    transform: scale(0.90);
+  }
+}
+
 .message {
   white-space: pre-line;
   font-style: italic;
   font-weight: 600;
+  font-size: 0.8rem;
 
-  &.operating-hours {
+  &.hours-of-service {
+    margin-top: 0.5rem;
+    line-height: normal;
     color: $color-highlight;
   }
 
@@ -74,7 +96,6 @@ $color-search: #d3d368;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  padding: 1rem 0;
 }
 
 .renders-container {
@@ -492,6 +513,22 @@ h2 {
       font-size: 1rem;
       text-align: start;
       white-space: pre-wrap;
+
+      .highlight-operational-hours-twr,
+      .highlight-operational-hours-afis,
+      .highlight-operational-hours-aerodrome,
+      .highlight-snowtam,
+      .highlight-runway,
+      .highlight-taxiway,
+      .highlight-airspace-activity,
+      .highlight-obstacles,
+      .highlight-obstruction-lights,
+      .highlight-restricted-prohibited-danger,
+      .highlight-sid-star,
+      .highlight-approach-procedure,
+      .highlight-operating-minima {
+        color: $color-highlight;
+      }
 
       .highlight-wind {
         color: $color-highlight;

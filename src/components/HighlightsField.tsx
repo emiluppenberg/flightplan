@@ -1,14 +1,15 @@
 import { useMemo, type ChangeEvent } from "react";
-import { codeHighlights, type CodeHighlight } from "../types";
+import { type CodeHighlight } from "../types";
 
 type HighlightsFieldProps = {
     title: string;
+    options: CodeHighlight[];
     selections: CodeHighlight[];
     onSelected: (selections: CodeHighlight[]) => void;
 }
 
 const HighlightsField = (props: HighlightsFieldProps) => {
-    const isToggled = useMemo(() => props.selections.length === codeHighlights.length, [props.selections])
+    const isToggled = useMemo(() => props.selections.length === props.options.length, [props.selections])
 
     const handleSelect = (e: ChangeEvent<HTMLInputElement>, codeHighlight: CodeHighlight) => {
         const nextSelections = e.target.checked
@@ -21,7 +22,7 @@ const HighlightsField = (props: HighlightsFieldProps) => {
     const handleToggleAll = () => {
         const nextSelections = isToggled
             ? []
-            : codeHighlights
+            : props.options
 
         props.onSelected(nextSelections)
     }
@@ -38,7 +39,7 @@ const HighlightsField = (props: HighlightsFieldProps) => {
                         onChange={handleToggleAll}
                     />
                 </label>
-                {codeHighlights.map((codeHighlight) => (
+                {props.options.map((codeHighlight) => (
                     <label key={`code-highlight-picker-${codeHighlight.label}`}>
                         {codeHighlight.label}
                         <input
