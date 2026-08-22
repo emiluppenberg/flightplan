@@ -29,17 +29,17 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
         [...context.highlightsOPERATIONAL_HOURS, ...context.highlightsNOTAM],
         [context.highlightsOPERATIONAL_HOURS, context.highlightsNOTAM])
 
-    const sortedNOTAM = useMemo(() => 
+    const sortedNOTAM = useMemo(() =>
         searchAirport
-        ? sortNOTAM([...searchAirport.NOTAM], highlightsNOTAM)
-        : [],
+            ? sortNOTAM([...searchAirport.NOTAM], highlightsNOTAM)
+            : [],
         [searchAirport, highlightsNOTAM])
 
     const reportsMETAR = searchAirport
         ? [
             ...searchAirport.METAR.map((metar, index) => (
                 <ReportRender
-                    key={`search-airport-metar-${index}`}
+                    key={`${searchAirportId}-airport-metar-${index}`}
                     icaoId={searchAirport.formValues.icaoId}
                     report="METAR"
                     codes={formatRawCodes(metar.rawOb)}
@@ -52,7 +52,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
         ? [
             ...searchAirport.TAF.map((taf, index) => (
                 <ReportRender
-                    key={`search-airport--taf-${index}`}
+                    key={`${searchAirportId}-airport-taf-${index}`}
                     icaoId={searchAirport.formValues.icaoId}
                     report="TAF"
                     codes={formatRawCodes(taf.rawTAF)}
@@ -64,7 +64,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
         ? [
             sortedNOTAM.map((notam, index) => (
                 <NotamRender
-                    key={`search-airport-notam-${index}`}
+                    key={`${searchAirportId}-airport-notam-${index}`}
                     notam={notam} />))
         ]
         : []
@@ -72,15 +72,13 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
     const useDatetime = form.watch("useDatetime")
     const date = form.watch("date")
     const time = form.watch("time")
-    const targetDate = useMemo(() => (
-        useDatetime && date && time
-            ? new Date(`${date}T${time}Z`).getTime()
-            : Date.now()
-    ), [useDatetime, date, time])
+    const targetDate = useDatetime && date && time
+        ? new Date(`${date}T${time}Z`).getTime()
+        : Date.now()
 
     const airportOpeningHours = searchAirport
         ? getOperationalHours(searchAirport.NOTAM, targetDate, context.highlightsOPERATIONAL_HOURS)
-        : ""
+        : [""]
 
     const onOpen = useCallback(() => {
         setFocus("icaoId");
@@ -137,8 +135,6 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
         }
     }
 
-
-
     return (
         <FormProvider {...form}>
             <div className="airport-render-container search">
@@ -179,7 +175,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
                             )}
                             {searchResponse?.data.map((airport, index) => (
                                 <button
-                                    key={`search-airport-${index}`}
+                                    key={`${searchAirportId}-airport-${index}`}
                                     type="button"
                                     disabled={searchAirport?.isLoading ? true : false}
                                     className={`btn-search-item ${selectedIcaoId === airport.attributes.code ? "open" : ""}`}
@@ -232,8 +228,11 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
                         {searchAirport.messages.length > 0 && (
                             <p className="message warning">{searchAirport.messages}</p>
                         )}
-                        <p className="message hours-of-service">{airportOpeningHours}</p>
-                        {reportsNOTAM}
+                        {airportOpeningHours.map((openingHours, index) => (
+                            <p
+                                key={`${searchAirportId}-operational-hours-${index}`}
+                                className="message hours-of-service">{openingHours}</p>
+                        ))}                        {reportsNOTAM}
                         {reportsMETAR}
                         {reportsTAF}
                     </div>

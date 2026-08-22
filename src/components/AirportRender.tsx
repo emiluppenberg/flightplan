@@ -62,11 +62,9 @@ const AirportRender = (props: AirportRenderProps) => {
     const useDatetime = form.watch("useDatetime")
     const date = form.watch("date")
     const time = form.watch("time")
-    const targetDate = useMemo(() => (
-        useDatetime && date && time
-            ? new Date(`${date}T${time}Z`).getTime()
-            : Date.now()
-    ), [useDatetime, date, time])
+    const targetDate = useDatetime && date && time
+        ? new Date(`${date}T${time}Z`).getTime()
+        : Date.now()
 
     const airportOpeningHours = getOperationalHours(props.airport.NOTAM, targetDate, context.highlightsOPERATIONAL_HOURS)
 
@@ -87,8 +85,10 @@ const AirportRender = (props: AirportRenderProps) => {
                     {props.airport.messages.length > 0 && (
                         <p className="message warning">{props.airport.messages}</p>
                     )}
-                    {airportOpeningHours.map(openingHours => (
-                        <p className="message hours-of-service">{openingHours}</p>
+                    {airportOpeningHours.map((openingHours, index) => (
+                        <p
+                            key={`${props.airport.id}-operational-hours-${index}`}
+                            className="message hours-of-service">{openingHours}</p>
                     ))}
                     <Expand
                         isOpen={notamsOpen}

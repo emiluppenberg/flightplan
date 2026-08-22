@@ -1,5 +1,5 @@
 import { deleteNOTAM, selectAirportNOTAM, updateAirportNextPollNOTAM, upsertNOTAM } from "./supabase"
-import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight } from "./types"
+import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_NOTAM } from "./types"
 
 export const PATH_AIRPORTS = "https://airportsapi.com/api/airports"
 export const PATH_NOTAM = "/api/reports/notam"
@@ -252,11 +252,11 @@ export const formatRawCodes = (raw: string) => {
   return formatted;
 };
 
-export const getOperationalHours = (notams: NotamEntry[], targetDate: number, highlightsOPERATIONAL_HOURS: CodeHighlight[]): string[] => {
-  const nonMatches = highlightsOPERATIONAL_HOURS.filter(highlight =>
-    !notams.some(notam => highlight.regEx.test(notam.q_code ?? ""))
-  )
-
+export const getOperationalHours = (
+  notams: NotamEntry[],
+  targetDate: number,
+  highlightsOPERATIONAL_HOURS: CodeHighlight[]
+): string[] => {
   const activeNotams = notams.filter(notam => {
     if (!notam.effective || !notam.expiration) return false
 
@@ -266,9 +266,11 @@ export const getOperationalHours = (notams: NotamEntry[], targetDate: number, hi
     return effective <= targetDate && expiration >= targetDate
   })
 
+  const nonMatches = highlightsOPERATIONAL_HOURS.filter(highlight =>
+    !activeNotams.some(notam => highlight.regEx.test(notam.q_code ?? notam.raw)))
+
   const candidates = activeNotams.filter(notam =>
-    highlightsOPERATIONAL_HOURS.some(highlight => highlight.regEx.test(notam.raw ?? ""))
-  )
+    highlightsOPERATIONAL_HOURS.some(highlight => highlight.regEx.test(notam.q_code ?? notam.raw)))
 
   const result = candidates.map(candidate => {
     const body = candidate.body?.replace(/\s+/g, " ").trim()
@@ -277,9 +279,9 @@ export const getOperationalHours = (notams: NotamEntry[], targetDate: number, hi
 
   return result.length > 0
     ? [...result, ...nonMatches.map(highlight => `OPERATIONAL HOURS not available for ${highlight.label}`)]
-    : (highlightsOPERATIONAL_HOURS.length > 0
-      ? nonMatches.map(highlight => `OPERATIONAL HOURS not available for ${highlight.label}`)
-      : [""])
+    : highlightsOPERATIONAL_HOURS.length > 0
+      ? [`OPERATIONAL HOURS not available for ${nonMatches.map(highlight => highlight.label).join(", ")}`]
+      : [""]
 }
 
 export const sortNOTAM = (notams: NotamEntry[], highlights: CodeHighlight[]): NotamEntry[] => {

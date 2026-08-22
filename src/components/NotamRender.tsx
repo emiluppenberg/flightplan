@@ -12,7 +12,7 @@ const NotamRender = (props: NotamRenderProps) => {
         [...context.highlightsOPERATIONAL_HOURS, ...context.highlightsNOTAM]
             .filter(highlight => highlight.regEx.test(props.notam.q_code ?? props.notam.raw))
             .map(highlight => highlight.class),
-        [context.highlightsOPERATIONAL_HOURS, context.highlightsNOTAM])
+        [context.highlightsOPERATIONAL_HOURS, context.highlightsNOTAM, props.notam])
 
     return (
         <div className="airport-notam-container">
