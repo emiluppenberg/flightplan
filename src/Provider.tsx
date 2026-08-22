@@ -59,6 +59,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     ) => {
         if (airport.formValues.icaoId.length === 0) return;
 
+        setIsLoading(true)
         setAirports(current => current.map((_airport) => (
             _airport.id === airport.id
                 ? { ..._airport, isLoading: true }
@@ -103,6 +104,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 return _airport
             }
         }))
+        setIsLoading(false)
     }, [user, airports])
 
     const handlePolling = useCallback(async () => {

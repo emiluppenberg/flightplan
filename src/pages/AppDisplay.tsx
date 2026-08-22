@@ -7,12 +7,6 @@ const AppDisplay = () => {
 
   return (
     <div className="app-display">
-      {context.airports.length > 1 && (
-        <h2>My Airports</h2>
-      )}
-      {context.isLoading && (
-        <p className="message">Loading...</p>
-      )}
       {context.message && (
         <p className="message warning">{context.message}</p>
       )}

@@ -1,7 +1,16 @@
+import { useFlightPathContext } from "../Context"
 import { SVG_URLS } from "../utilities"
 
 const AppLogo = () => {
-    return <img src={SVG_URLS.logo} alt="Flygvader" width="100" />
+    const context = useFlightPathContext()
+
+    return <img
+        src={SVG_URLS.logo}
+        alt="Flygvader"
+        width="100"
+        className={context.isLoading ? "loading" : ""}
+    />
+
 }
 
 export default AppLogo
