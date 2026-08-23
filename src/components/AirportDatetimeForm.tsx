@@ -1,4 +1,4 @@
-import { useFormContext, useWatch } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import type { AirportFormValues } from "../types";
 import { useFlightPathContext } from "../Context";
 
@@ -7,36 +7,37 @@ type AirportDatetimeFormProps = {
 }
 
 const AirportDatetimeForm = (props: AirportDatetimeFormProps) => {
-    const { register, getValues, control } = useFormContext<AirportFormValues>();
+    const { register, getValues, setValue } = useFormContext<AirportFormValues>();
     const context = useFlightPathContext()
-    const useDatetime = useWatch({
-        control,
-        name: "useDatetime"
-    })
-    
+
+    const clearDatetime = () => {
+        setValue("date", undefined)
+        setValue("time", undefined)
+        context.handleSetFormValues(getValues(), props.id)
+    }
+
     return (
         <div className="form">
             <div className="form-row">
-                <div className={`form-datetime ${useDatetime ? "" : "disabled"}`}>
+                <div className="form-datetime">
                     <input
                         type="date"
-                        disabled={!useDatetime}
                         {...register("date", {
                             required: false,
                             onChange: () => context.handleSetFormValues(getValues(), props.id)
                         })} />
                     <input
                         type="time"
-                        disabled={!useDatetime}
                         {...register("time", {
                             required: false,
                             onChange: () => context.handleSetFormValues(getValues(), props.id)
                         })} />
-                        <input
-                            type="checkbox"
-                            {...register("useDatetime", {
-                                onChange: () => context.handleSetFormValues(getValues(), props.id)
-                            })} />
+                    <button
+                        type="button"
+                        className="btn-clear"
+                        onClick={clearDatetime}>
+                        Clear
+                    </button>
                 </div>
             </div>
         </div>

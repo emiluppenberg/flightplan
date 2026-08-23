@@ -1,5 +1,5 @@
 import { deleteNOTAM, selectAirportNOTAM, updateAirportNextPollNOTAM, upsertNOTAM } from "./supabase"
-import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_NOTAM } from "./types"
+import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight } from "./types"
 
 export const PATH_AIRPORTS = "https://airportsapi.com/api/airports"
 export const PATH_NOTAM = "/api/reports/notam"
@@ -21,7 +21,7 @@ export const fetchTAF = async (values: AirportFormValues): Promise<TAFJson[]> =>
   const params = new URLSearchParams({
     ids: values.icaoId,
     format: "json",
-    date: values.useDatetime && values.date && values.time ? `${values.date.replaceAll("-", "")}_${values.time.replace(":", "")}` : ""
+    date: values.date && values.time ? `${values.date.replaceAll("-", "")}_${values.time.replace(":", "")}` : ""
   })
 
   const response = await fetch(`${PATH_TAF}?${params}`)
@@ -159,7 +159,6 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
   return await Promise.all(supabaseAirports.map(async airport => {
     const formValues: AirportFormValues = {
       icaoId: airport.icao,
-      useDatetime: false,
       notamIncludeFIR: false,
       notamIncludeFuture: true
     }
@@ -207,7 +206,6 @@ export const createAirport = (id: string): AirportData => {
     id: id,
     formValues: {
       icaoId: "",
-      useDatetime: false,
       date: "",
       time: "",
       notamIncludeFIR: false,
