@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react"
 import type { AirportData } from "../types";
 import { useFlightPathContext } from "../Context";
-import { SVG_URLS } from "../utilities";
+import { searchAirportId, SVG_URLS } from "../utilities";
 
 type AirportHeaderButtonsProps = {
     airport: AirportData;
@@ -32,23 +32,25 @@ const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
 
     return (
         <>
-            <div className="airport-header-buttons">
-                <button
-                    type="button"
-                    className="btn-delete"
-                    onClick={handleDelete}>
-                    <img src={SVG_URLS.close} width="20" />
-                </button>
-                <div className="airport-header-icao">
-                    <h4>{props.airport.formValues.icaoId}</h4>
+            {props.airport.id !== searchAirportId && (
+                <div className="airport-header-buttons">
+                    <button
+                        type="button"
+                        className="btn-delete"
+                        onClick={handleDelete}>
+                        <img src={SVG_URLS.close} width="20" />
+                    </button>
+                    <div className="airport-header-icao">
+                        <h4>{props.airport.formValues.icaoId}</h4>
+                    </div>
+                    <button
+                        type="button"
+                        className={`btn-refetch ${props.airport.isLoading ? "loading" : ""}`}
+                        onClick={handleSubmit}>
+                        <img src={SVG_URLS.reload} width="20" />
+                    </button>
                 </div>
-                <button
-                    type="button"
-                    className={`btn-refetch ${props.airport.isLoading ? "loading" : ""}`}
-                    onClick={handleSubmit}>
-                    <img src={SVG_URLS.reload} width="20" />
-                </button>
-            </div>
+            )}
             <div className="airport-header-buttons">
                 <button
                     type="button"

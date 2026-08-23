@@ -142,6 +142,27 @@ dialog {
   }
 }
 
+.sticky {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  border-bottom: 1px solid $color-search;
+  width: 100%;
+  padding: 0;
+
+  button {
+    flex: 1 1 0;
+    border-radius: 0;
+
+    &:hover {
+      border-radius: 0;
+    }
+  }
+}
+
 input,
 button,
 fieldset {
@@ -154,18 +175,6 @@ fieldset {
   &.open {
     background: $color-open;
     border-color: $color-open-border;
-  }
-
-  &.btn-sticky {
-    position: sticky;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0;
-    border-bottom: 1px solid $color-search;
-    height: 3rem;
-    width: 100%;
   }
 
   &.btn-highlight,
@@ -467,6 +476,7 @@ h2 {
       }
 
       .airport-header-icao,
+      .input-search,
       .btn-notam,
       .btn-taf-metar,
       .btn-date,
