@@ -21,6 +21,8 @@ const Dialog = (props: DialogProps) => {
     }
 
     const handleDialogClick = (event: MouseEvent<HTMLDialogElement>) => {
+        if (event.target !== event.currentTarget) return
+        
         const bounds = event.currentTarget.getBoundingClientRect();
         const clickedOutside =
             event.clientX < bounds.left ||

@@ -165,8 +165,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
                                     onFocus={() => setSearchOpen(true)} />
                                 <button
                                     type="submit"
-                                    className={`btn-search ${searchAirport.isLoading ? "loading" : ""}`}
-                                    onClick={handleSubmit}>
+                                    className={`btn-search ${searchAirport.isLoading ? "loading" : ""}`}>
                                     <img src={SVG_URLS.search} width="20" />
                                 </button>
                             </div>
