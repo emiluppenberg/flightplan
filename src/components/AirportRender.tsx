@@ -3,7 +3,7 @@ import ReportRender from "./ReportRender";
 import { useFlightPathContext } from "../Context";
 import { useMemo, useState } from "react";
 import AirportDatetimeForm from "./AirportDatetimeForm";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, type UseFormReturn } from "react-hook-form";
 import type { AirportFormValues } from "../types";
 import AirportHeaderButtons from "./AirportHeaderButtons";
 import { formatRawCodes, getOperationalHours, sortNOTAM } from "../utilities";
@@ -12,6 +12,7 @@ import NotamRender from "./NotamRender";
 
 type AirportRenderProps = {
     airport: AirportData;
+    form?: UseFormReturn<AirportFormValues>;
 }
 
 const AirportRender = (props: AirportRenderProps) => {
@@ -20,9 +21,10 @@ const AirportRender = (props: AirportRenderProps) => {
     const [notamsOpen, setNotamsOpen] = useState(false)
     const [dateOpen, setDateOpen] = useState(false)
     const [operationalHoursOpen, setOperationalHoursOpen] = useState(false)
-    const form = useForm<AirportFormValues>({
+    const initialForm = useForm<AirportFormValues>({
         defaultValues: props.airport.formValues
     })
+    const form = props.form ?? initialForm
 
     const highlightsNOTAM = useMemo(() =>
         [...context.highlightsOPERATIONAL_HOURS, ...context.highlightsNOTAM],

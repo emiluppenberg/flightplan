@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react"
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useFlightPathContext } from "../Context"
 import type { AirportFormValues, AirportsResourceResponse } from "../types"
@@ -139,6 +139,10 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
         }
     }
 
+    const airportRender = useMemo(() =>
+        searchAirport && <AirportRender airport={searchAirport} form={form} />,
+        [searchAirport])
+
     return (
         <FormProvider {...form}>
             <form onSubmit={formSubmit(handleSubmit)}>
@@ -207,9 +211,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
                             </div>
                         </Expand>
                     </div>
-                    {searchAirport && (
-                        <AirportRender airport={searchAirport} />
-                    )}
+                    {airportRender && (airportRender)}
                     {searchMessage.length > 0 && (
                         <p className="message warning">{searchMessage}</p>
                     )}
