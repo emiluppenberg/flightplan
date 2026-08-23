@@ -2,7 +2,7 @@ import { deleteNOTAM, selectAirportNOTAM, updateAirportNextPollNOTAM, upsertNOTA
 import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight } from "./types"
 
 export const PATH_AIRPORTS = "https://airportsapi.com/api/airports"
-export const PATH_NOTAM = "/api/reports/x"
+export const PATH_NOTAM = "/api/reports/notam"
 export const PATH_TAF = '/api/reports/taf'
 export const PATH_METAR = '/api/reports/metar'
 export const SVG_URLS = {
