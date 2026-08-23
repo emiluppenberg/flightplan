@@ -69,10 +69,9 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
         ]
         : []
 
-    const useDatetime = form.watch("useDatetime")
     const date = form.watch("date")
     const time = form.watch("time")
-    const targetDate = useDatetime && date && time
+    const targetDate = date && time
         ? new Date(`${date}T${time}Z`).getTime()
         : Date.now()
 

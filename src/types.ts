@@ -66,7 +66,6 @@ export interface AirportResource {
 
 export type AirportFormValues = {
   icaoId: string;
-  useDatetime: boolean;
   date?: string;
   time?: string;
   notamIncludeFIR: boolean;

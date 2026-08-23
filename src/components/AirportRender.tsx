@@ -18,6 +18,8 @@ const AirportRender = (props: AirportRenderProps) => {
     const context = useFlightPathContext()
     const [reportsOpen, setReportsOpen] = useState(false)
     const [notamsOpen, setNotamsOpen] = useState(false)
+    const [dateOpen, setDateOpen] = useState(false)
+    const [operationalHoursOpen, setOperationalHoursOpen] = useState(false)
     const form = useForm<AirportFormValues>({
         defaultValues: props.airport.formValues
     })
@@ -59,10 +61,9 @@ const AirportRender = (props: AirportRenderProps) => {
         ))
     ]
 
-    const useDatetime = form.watch("useDatetime")
     const date = form.watch("date")
     const time = form.watch("time")
-    const targetDate = useDatetime && date && time
+    const targetDate = date && time
         ? new Date(`${date}T${time}Z`).getTime()
         : Date.now()
 
@@ -76,20 +77,34 @@ const AirportRender = (props: AirportRenderProps) => {
                         airport={props.airport}
                         reportsOpen={reportsOpen}
                         notamsOpen={notamsOpen}
+                        dateOpen={dateOpen}
+                        operationalHoursOpen={operationalHoursOpen}
                         setReportsOpen={setReportsOpen}
                         setNotamsOpen={setNotamsOpen}
+                        setDateOpen={setDateOpen}
+                        setOperationalHoursOpen={setOperationalHoursOpen}
                     />
-                    <AirportDatetimeForm id={props.airport.id} />
+                    <Expand
+                        isOpen={dateOpen}
+                        rows={1}>
+                        <AirportDatetimeForm id={props.airport.id} />
+                    </Expand>
+                    <Expand
+                        isOpen={operationalHoursOpen}
+                        rows={1}>
+                        <div className="airport-operational-hours">
+                            {airportOpeningHours.map((openingHours, index) => (
+                                <p
+                                    key={`${props.airport.id}-operational-hours-${index}`}
+                                    className="message operational-hours">{openingHours}</p>
+                            ))}
+                        </div>
+                    </Expand>
                 </div>
                 <div className="airport-data-container">
                     {props.airport.messages.length > 0 && (
                         <p className="message warning">{props.airport.messages}</p>
                     )}
-                    {airportOpeningHours.map((openingHours, index) => (
-                        <p
-                            key={`${props.airport.id}-operational-hours-${index}`}
-                            className="message hours-of-service">{openingHours}</p>
-                    ))}
                     <Expand
                         isOpen={notamsOpen}
                         rows={1}>

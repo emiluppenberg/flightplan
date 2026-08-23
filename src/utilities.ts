@@ -21,7 +21,7 @@ export const fetchTAF = async (values: AirportFormValues): Promise<TAFJson[]> =>
   const params = new URLSearchParams({
     ids: values.icaoId,
     format: "json",
-    date: values.useDatetime && values.date && values.time ? `${values.date.replaceAll("-", "")}_${values.time.replace(":", "")}` : ""
+    date: values.date && values.time ? `${values.date.replaceAll("-", "")}_${values.time.replace(":", "")}` : ""
   })
 
   const response = await fetch(`${PATH_TAF}?${params}`)
@@ -159,7 +159,6 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
   return await Promise.all(supabaseAirports.map(async airport => {
     const formValues: AirportFormValues = {
       icaoId: airport.icao,
-      useDatetime: false,
       notamIncludeFIR: false,
       notamIncludeFuture: true
     }
@@ -207,7 +206,6 @@ export const createAirport = (id: string): AirportData => {
     id: id,
     formValues: {
       icaoId: "",
-      useDatetime: false,
       date: "",
       time: "",
       notamIncludeFIR: false,

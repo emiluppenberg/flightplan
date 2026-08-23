@@ -13,6 +13,7 @@ $color-third-border: #222231;
 $color-fourth-border: #50505c;
 $color-danger-border: #6d3434;
 $color-success-border: #346d3c;
+$color-open-border: #7878d4;
 $color-selected: #51518a;
 $color-border-light: white;
 $color-highlight: #4ad9fd;
@@ -65,9 +66,11 @@ img {
   0% {
     transform: scale(1);
   }
+
   33% {
     transform: scale(1.10);
   }
+
   66% {
     transform: scale(0.90);
   }
@@ -79,11 +82,12 @@ img {
   font-weight: 600;
   font-size: 0.8rem;
 
-  &.hours-of-service {
-    margin-top: 0.5rem;
+  &.operational-hours {
     line-height: normal;
     color: $color-highlight;
+    margin-bottom: 0.5rem;
   }
+
 
   &.warning {
     color: $color-warning;
@@ -149,6 +153,7 @@ fieldset {
 
   &.open {
     background: $color-open;
+    border-color: $color-open-border;
   }
 
   &.btn-sticky {
@@ -267,10 +272,7 @@ h2 {
       align-items: center;
       border-bottom: 1px solid $color-first-border;
       padding: 0.2rem;
-
-      &.disabled {
-        background: $color-disabled;
-      }
+      background: $color-third;
 
       input[type="date"],
       input[type="time"] {
@@ -278,6 +280,10 @@ h2 {
         flex: 1 1 0;
         min-width: 0;
         user-select: none;
+      }
+
+      .btn-clear {
+        padding: 0 0.5rem;
       }
     }
 
@@ -412,6 +418,12 @@ h2 {
     flex-direction: column;
     border-top: 1px solid $color-border-light;
 
+    .airport-operational-hours {
+      padding-top: 0.5rem;
+      background: $color-third;
+      border-bottom: 1px solid $color-first-border;
+    }
+
     &.search {
       border-color: $color-search;
     }
@@ -444,13 +456,22 @@ h2 {
 
     .airport-header-buttons {
       display: flex;
-      border-bottom: 1px solid $color-first-border;
       border-radius: 0;
 
-      .btn-icao,
-      .btn-notam {
-        flex: 1 1 0;
+      .airport-header-icao {
+        font: inherit;
+        padding: 0.5rem;
+        background: $color-first;
         border: 0;
+        user-select: none;
+      }
+
+      .airport-header-icao,
+      .btn-notam,
+      .btn-taf-metar,
+      .btn-date,
+      .btn-operational-hours {
+        flex: 1 1 0;
         border-radius: 0;
         text-align: center;
 
@@ -459,7 +480,12 @@ h2 {
           margin: 0;
           text-align: center;
           height: 100%;
+          font-size: 0.8rem;
         }
+      }
+
+      .airport-header-icao>h4 {
+        font-size: 1.5rem;
       }
 
       .btn-delete,
@@ -477,10 +503,9 @@ h2 {
         border-top-right-radius: 0.5rem;
       }
 
-      .btn-icao,
+      .airport-header-icao,
       .btn-refetch,
-      .btn-search,
-      .btn-notam {
+      .btn-search {
         border-left: 1px solid $color-first-border;
       }
     }
