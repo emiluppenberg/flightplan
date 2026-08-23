@@ -19,9 +19,8 @@ const AppHeader = () => {
                 <div className="top-buttons left">
                     <button
                         type="button"
-                        className={`btn-highlight ${showHighlights ? "open" : ""}`}
-                        onClick={() => setShowHighlights(value => !value)}
-                    >
+                        className={`btn-highlight ${showHighlights && "open"}`}
+                        onClick={() => setShowHighlights(value => !value)}>
                         <img src={SVG_URLS.highlight} width="20" />
                     </button>
                     <Dialog
@@ -29,11 +28,8 @@ const AppHeader = () => {
                         buttonClassName="btn-search"
                         buttonInlineElement={<img src={SVG_URLS.search} width="20" />}
                         onOpen={() => searchFormRef.current?.onOpen()}>
-                        {(closeDialog) => (
-                            <SearchAirportForm
-                                ref={searchFormRef}
-                                onClose={closeDialog}
-                            />
+                        {() => (
+                            <SearchAirportForm ref={searchFormRef} />
                         )}
                     </Dialog>
                 </div>

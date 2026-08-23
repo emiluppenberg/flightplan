@@ -6,15 +6,11 @@ import { fetchAirportsPage, fetchAirports, SVG_URLS, searchAirportId, PATH_AIRPO
 import Expand from "./Expand"
 import AirportRender from "./AirportRender"
 
-type SearchAirportFormProps = {
-    onClose: () => void;
-}
-
 export type SearchAirportFormHandle = {
     onOpen: () => void;
 }
 
-const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormProps>(({ onClose }, ref) => {
+const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
     const context = useFlightPathContext()
     const searchAirport = context.airports.find(airport => airport.id === searchAirportId)
     const form = useForm<AirportFormValues>({
