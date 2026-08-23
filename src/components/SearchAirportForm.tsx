@@ -124,7 +124,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
             const response = await fetch(`${PATH_AIRPORTS}/${selectedIcaoId}`)
 
             if (!response.ok) {
-                throw new Error(`Received status code ${response.status} while verifying airport ICAO code`)
+                throw new Error(`Received status code ${response.status} while verifying ICAO code ${selectedIcaoId}`)
             }
 
             context.handleAddAirport(selectedIcaoId)
@@ -132,7 +132,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
         catch (error) {
             const message = error instanceof Error
                 ? error.message
-                : "There was an unexpected error while verifying airport ICAO code"
+                : `There was an unexpected error while verifying ICAO code ${selectedIcaoId}`
 
             setSearchMessage(message)
         }
