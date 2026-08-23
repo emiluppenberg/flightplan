@@ -55,16 +55,21 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle, SearchAirportFormP
         document.addEventListener("focusin", handleSearchOpen)
 
         return () => {
-            document.addEventListener("pointerdown", handleSearchOpen)
-            document.addEventListener("focusin", handleSearchOpen)
+            document.removeEventListener("pointerdown", handleSearchOpen)
+            document.removeEventListener("focusin", handleSearchOpen)
         }
     }, [searchOpen])
 
     const previousSearchParam = useRef("")
+    const previousSearchId = useRef(0)
     const handleSearch = async () => {
         try {
             setSearchMessage("")
+            const searchId = ++previousSearchId.current
             const response = await fetchAirports(searchParam);
+
+            if (searchId < previousSearchId.current) return
+
             setSearchResponse(response)
         } catch (error) {
             setSearchMessage(error instanceof Error ? error.message : "There was an unexpected error during search")
