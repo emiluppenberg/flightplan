@@ -25,3 +25,7 @@
   to = "/index.html"
   status = 200
 
+[dev]
+  [dev.https]
+    certFile = "certs/localhost.pem"
+    keyFile = "certs/localhost-key.pem"
