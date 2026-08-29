@@ -437,3 +437,51 @@ export type AppUser = {
   user: User;
   session: Session;
 }
+
+export type InsertAirportBody = {
+  accessToken: string;
+  icaoId: string;
+  nextPollNOTAM: number;
+}
+
+export type DeleteAirportBody = {
+  accessToken: string;
+  icaoId: string;
+}
+
+export type UpdateAirportBody = {
+  accessToken: string;
+  icaoId: string;
+  nextPollNOTAM: number;
+}
+
+export type SelectAllAirportsBody = {
+  accessToken: string;
+}
+
+export type UpsertNOTAMBody = {
+  accessToken: string;
+  notam: NotamEntry[];
+  airportSupabaseId: string;
+}
+
+export type DeleteNOTAMBody = {
+  accessToken: string;
+  airportSupabaseId: string;
+}
+
+export type SelectAirportNOTAMBody = {  
+  accessToken: string;
+  airportSupabaseId: string;
+}
+
+export type UpsertHighlightsBody = {
+  accessToken: string;
+  highlights: string[];
+  report: CodeHighlightReport
+}
+
+export type SelectHighlightsBody = {
+  accessToken: string;
+  report: CodeHighlightReport;
+}

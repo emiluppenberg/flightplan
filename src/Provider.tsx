@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState, type PropsWithChildren } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM } from "./utilities";
-import { deleteAirport, initializeAppUser, insertAirport, selectAllAirports, selectHighlights, signInUser, signOutUser, signUpUser, upsertHighlights } from "./supabase";
+import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM, handleTokenExpiry } from "./utilities";
+import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser } from "./fetch/supabase";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])
@@ -15,21 +15,36 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [user, setUser] = useState<AppUser>()
     const [initialized, setInitialized] = useState(false);
 
-    const loadUserData = async () => {
-        const supabaseAirports = await selectAllAirports()
+    const loadUserData = async (accessToken: string) => {
+        const supabaseAirports = await fetchSelectAllAirports({
+            accessToken: accessToken
+        })
+
         const airports = await refreshAirports(supabaseAirports)
         setAirports([...airports, createAirport(searchAirportId)])
 
-        const highlightsTAF = await selectHighlights("TAF")
+        const highlightsTAF = await fetchSelectHighlights({
+            accessToken: accessToken,
+            report: "TAF"
+        })
         setHighlightsTAF(resolveHighlights(highlightsTAF, HIGHLIGHTS_TAF_METAR))
 
-        const highlightsMETAR = await selectHighlights("METAR")
+        const highlightsMETAR = await fetchSelectHighlights({
+            accessToken: accessToken,
+            report: "METAR"
+        })
         setHighlightsMETAR(resolveHighlights(highlightsMETAR, HIGHLIGHTS_TAF_METAR))
 
-        const highlightsOPERATIONAL_HOURS = await selectHighlights("OPERATIONAL HOURS")
+        const highlightsOPERATIONAL_HOURS = await fetchSelectHighlights({
+            accessToken: accessToken,
+            report: "OPERATIONAL HOURS"
+        })
         setHighlightsOPERATIONAL_HOURS(resolveHighlights(highlightsOPERATIONAL_HOURS, HIGHLIGHTS_OPERATIONAL_HOURS))
 
-        const highlightsNOTAM = await selectHighlights("NOTAM")
+        const highlightsNOTAM = await fetchSelectHighlights({
+            accessToken: accessToken,
+            report: "NOTAM"
+        })
         setHighlightsNOTAM(resolveHighlights(highlightsNOTAM, HIGHLIGHTS_NOTAM))
     }
 
@@ -39,9 +54,9 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         const restoreSession = async () => {
             try {
                 setIsLoading(true)
-                const user = await initializeAppUser()
+                const user = await fetchInitializeUser()
                 setUser(user)
-                await loadUserData();
+                await loadUserData(user.session.access_token);
             } catch (error) {
                 setMessage(error instanceof Error ? error.message : "There was an unexpected error when checking your authentication token")
             } finally {
@@ -142,7 +157,17 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             if (user) {
                 setIsLoading(true)
                 setMessage('')
-                await upsertHighlights(newHighlights, report)
+
+                const refreshedUser = await handleTokenExpiry()
+                const accessToken = refreshedUser
+                    ? refreshedUser.session.access_token
+                    : user.session.access_token
+
+                await fetchUpsertHighlights({
+                    accessToken: accessToken,
+                    highlights: newHighlights.map(highlight => highlight.class),
+                    report: report
+                })
             }
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "")
@@ -176,7 +201,16 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             setMessage('')
 
             try {
-                supabaseAirport = await insertAirport(icaoId, nextPollNOTAM)
+                const refreshedUser = await handleTokenExpiry()
+                const accessToken = refreshedUser
+                    ? refreshedUser.session.access_token
+                    : user.session.access_token
+
+                supabaseAirport = await fetchInsertAirport({
+                    accessToken: accessToken,
+                    icaoId: icaoId,
+                    nextPollNOTAM: nextPollNOTAM
+                })
             } catch (error) {
                 setMessage(error instanceof Error ? error.message : "")
             } finally {
@@ -218,8 +252,18 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
             try {
                 const airport = airports.find(airport => airport.id === id)
-                if (!airport) throw new Error(`Could not delete airport with id: ${id}`)
-                await deleteAirport(airport.formValues.icaoId)
+                const icaoId = airport?.formValues.icaoId
+                if (!icaoId) throw new Error(`Could not delete airport with id: ${id}`)
+
+                const refreshedUser = await handleTokenExpiry()
+                const accessToken = refreshedUser
+                    ? refreshedUser.session.access_token
+                    : user.session.access_token
+
+                await fetchDeleteAirport({
+                    accessToken: accessToken,
+                    icaoId: icaoId
+                })
             } catch (error) {
                 setMessage(error instanceof Error ? error.message : "")
             } finally {
@@ -235,7 +279,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         setMessage('')
 
         try {
-            const user = await signInUser(values);
+            const user = await fetchSignInUser(values);
 
             if (user && !user.user.email_confirmed_at) {
                 throw new Error(`Please follow the link in the confirmation email sent to ${values.email} before logging in`)
@@ -245,7 +289,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             }
 
             setUser(user)
-            await loadUserData();
+            await loadUserData(user.session.access_token);
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "")
         } finally {
@@ -258,7 +302,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         setMessage('')
 
         try {
-            await signOutUser()
+            localStorage.removeItem("session")
             setUser(undefined)
             setAirports([createAirport(searchAirportId)])
             setHighlightsTAF([])
@@ -277,7 +321,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         setMessage('')
 
         try {
-            const responseMessage = await signUpUser(values);
+            const responseMessage = await fetchSignUpUser(values);
             setMessage(responseMessage)
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "")

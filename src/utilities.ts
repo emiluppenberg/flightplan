@@ -1,5 +1,6 @@
-import { deleteNOTAM, selectAirportNOTAM, updateAirportNextPollNOTAM, upsertNOTAM } from "./supabase"
-import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight } from "./types"
+import type { Session } from "@supabase/supabase-js"
+import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight, type AppUser, type UserFormValues, type InsertAirportBody, type DeleteAirportBody, type UpdateAirportBody, type UpsertNOTAMBody, type SelectAllAirportsBody, type DeleteNOTAMBody, type SelectAirportNOTAMBody, type UpsertHighlightsBody, type SelectHighlightsBody } from "./types"
+import { fetchDeleteNOTAM, fetchInitializeUser, fetchSelectAirportNOTAM, fetchUpdateAirportNextPollNOTAM, fetchUpsertNOTAM } from "./fetch/supabase"
 
 export const PATH_AIRPORTS = "https://airportsapi.com/api/airports"
 export const PATH_NOTAM = "/api/reports/notam"
@@ -85,6 +86,26 @@ export const fetchNOTAM = async (values: AirportFormValues): Promise<NotamEntry[
   return result.notams
 }
 
+export const handleTokenExpiry = async (): Promise<AppUser | undefined> => {
+  const session = localStorage.getItem("session")
+
+  if (!session) {
+    throw new Error("You are not logged in")
+  }
+
+  const expiresAtMilliseconds = (JSON.parse(session) as Session).expires_at
+
+  if (!expiresAtMilliseconds) {
+    throw new Error("Session is missing value: expires_at")
+  }
+
+  if (expiresAtMilliseconds * 1000 < Date.now()) {
+    return await fetchInitializeUser()
+  }
+
+  return undefined
+}
+
 export const fetchAirports = async (name: string): Promise<AirportsResourceResponse> => {
   const params = new URLSearchParams({
     "filter[name]": name
@@ -140,14 +161,14 @@ export const captureSyncNOTAM = async (
       : "Airport is missing supabaseId"
   }
 
-  const deleted = await capture(() => deleteNOTAM(airportSupabaseId))
+  const deleted = await capture(() => fetchDeleteNOTAM(airportSupabaseId))
 
   const upserted = !deleted.error
-    ? await capture(() => upsertNOTAM(NOTAM, airportSupabaseId))
+    ? await capture(() => fetchUpsertNOTAM(NOTAM, airportSupabaseId))
     : { data: undefined, error: "" }
 
   const updated = !deleted.error && !upserted.error
-    ? await capture(() => updateAirportNextPollNOTAM(icaoId, nextPollNOTAM))
+    ? await capture(() => fetchUpdateAirportNextPollNOTAM(icaoId, nextPollNOTAM))
     : { data: undefined, error: "" }
 
   return (deleted.error ?? "") + (upserted.error ?? "") + (updated.error ?? "")
@@ -182,7 +203,7 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
       : ""
 
     if (!fetchFreshNOTAM || (fetchFreshNOTAM && !NOTAM.data)) {
-      NOTAM.data = await selectAirportNOTAM(airport.id)
+      NOTAM.data = await fetchSelectAirportNOTAM(airport.id)
     }
 
     return {
