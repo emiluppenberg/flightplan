@@ -33,6 +33,7 @@ export default defineConfig({
         name: "Flygväder",
         short_name: "Flygväder",
         description: "For efficient reading of flight reports",
+        background_color: "090913",
         theme_color: "#090913",
         icons: [
           {
