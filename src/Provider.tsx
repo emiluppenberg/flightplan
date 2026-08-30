@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState, type PropsWithChildren } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM, handleTokenExpiry } from "./utilities";
-import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser } from "./fetch/supabase";
+import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM } from "./utilities";
+import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser } from "./fetch/supabase";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])
@@ -158,7 +158,12 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 setIsLoading(true)
                 setMessage('')
 
-                const refreshedUser = await handleTokenExpiry()
+                const refreshedUser = await fetchRefreshedUser()
+
+                if (refreshedUser) {
+                    setUser(refreshedUser)
+                }
+
                 const accessToken = refreshedUser
                     ? refreshedUser.session.access_token
                     : user.session.access_token
@@ -201,7 +206,12 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             setMessage('')
 
             try {
-                const refreshedUser = await handleTokenExpiry()
+                const refreshedUser = await fetchRefreshedUser()
+
+                if (refreshedUser) {
+                    setUser(refreshedUser)
+                }
+
                 const accessToken = refreshedUser
                     ? refreshedUser.session.access_token
                     : user.session.access_token
@@ -255,7 +265,12 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 const icaoId = airport?.formValues.icaoId
                 if (!icaoId) throw new Error(`Could not delete airport with id: ${id}`)
 
-                const refreshedUser = await handleTokenExpiry()
+                const refreshedUser = await fetchRefreshedUser()
+
+                if (refreshedUser) {
+                    setUser(refreshedUser)
+                }
+
                 const accessToken = refreshedUser
                     ? refreshedUser.session.access_token
                     : user.session.access_token

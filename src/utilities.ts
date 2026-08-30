@@ -86,26 +86,6 @@ export const fetchNOTAM = async (values: AirportFormValues): Promise<NotamEntry[
   return result.notams
 }
 
-export const handleTokenExpiry = async (): Promise<AppUser | undefined> => {
-  const session = localStorage.getItem("session")
-
-  if (!session) {
-    throw new Error("You are not logged in")
-  }
-
-  const expiresAtMilliseconds = (JSON.parse(session) as Session).expires_at
-
-  if (!expiresAtMilliseconds) {
-    throw new Error("Session is missing value: expires_at")
-  }
-
-  if (expiresAtMilliseconds * 1000 < Date.now()) {
-    return await fetchInitializeUser()
-  }
-
-  return undefined
-}
-
 export const fetchAirports = async (name: string): Promise<AirportsResourceResponse> => {
   const params = new URLSearchParams({
     "filter[name]": name

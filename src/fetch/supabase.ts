@@ -1,3 +1,4 @@
+import type { Session } from "@supabase/supabase-js"
 import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, NotamEntry, UpsertNOTAMBody, DeleteNOTAMBody, SelectAirportNOTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues, InitializeUserBody, SignInBody, SignUpBody } from "../types"
 import { getAccessToken, getRefreshToken } from "../utilities"
 
@@ -226,4 +227,24 @@ export const fetchSignUpUser = async (body: SignUpBody): Promise<string> => {
   }
 
   return await response.text()
+}
+
+export const fetchRefreshedUser = async (): Promise<AppUser | undefined> => {
+  const session = localStorage.getItem("session")
+
+  if (!session) {
+    throw new Error("You are not logged in")
+  }
+
+  const expiresAtMilliseconds = (JSON.parse(session) as Session).expires_at
+
+  if (!expiresAtMilliseconds) {
+    throw new Error("Session is missing value: expires_at")
+  }
+
+  if (expiresAtMilliseconds * 1000 < Date.now()) {
+    return await fetchInitializeUser()
+  }
+
+  return undefined
 }
