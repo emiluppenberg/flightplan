@@ -470,7 +470,7 @@ export type DeleteNOTAMBody = {
   airportSupabaseId: string;
 }
 
-export type SelectAirportNOTAMBody = {  
+export type SelectAirportNOTAMBody = {
   accessToken: string;
   airportSupabaseId: string;
 }
@@ -494,6 +494,10 @@ export type SignInBody = {
 export type SignUpBody = {
   email: string;
   password: string;
+}
+
+export type SignOutBody = {
+  accessToken: string
 }
 
 export type InitializeUserBody = {

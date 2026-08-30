@@ -1,10 +1,11 @@
 import type { Session } from "@supabase/supabase-js"
-import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, NotamEntry, UpsertNOTAMBody, DeleteNOTAMBody, SelectAirportNOTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues, InitializeUserBody, SignInBody, SignUpBody } from "../types"
+import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, NotamEntry, UpsertNOTAMBody, DeleteNOTAMBody, SelectAirportNOTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues, InitializeUserBody, SignInBody, SignUpBody, SignOutBody } from "../types"
 import { getAccessToken, getRefreshToken } from "../utilities"
 
 export const PATH_INITIALIZE_USER = "/api/supabase/initialize-user"
 export const PATH_SIGN_IN = "/api/supabase/sign-in"
 export const PATH_SIGN_UP = "/api/supabase/sign-up"
+export const PATH_SIGN_OUT = "/api/supabase/sign-out"
 export const PATH_INSERT_AIRPORT = "/api/supabase/insert-airport"
 export const PATH_DELETE_AIRPORT = "/api/supabase/delete-airport"
 export const PATH_SELECT_ALL_AIRPORTS = "/api/supabase/select-all-airports"
@@ -227,6 +228,20 @@ export const fetchSignUpUser = async (body: SignUpBody): Promise<string> => {
   }
 
   return await response.text()
+}
+
+export const fetchSignOutUser = async (body: SignOutBody) => {
+  const response = await fetch(`${PATH_SIGN_OUT}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
 }
 
 export const fetchRefreshedUser = async (): Promise<AppUser | undefined> => {

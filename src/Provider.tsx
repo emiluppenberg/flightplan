@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type PropsWithChildren } from "react"
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
 import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM } from "./utilities";
-import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser } from "./fetch/supabase";
+import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./fetch/supabase";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])
@@ -320,10 +320,21 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     }
 
     const handleSignOut = async () => {
+        if (!user) return
+
         setIsLoading(true)
         setMessage('')
 
         try {
+            const refreshedUser = await fetchRefreshedUser()
+            const accessToken = refreshedUser
+                ? refreshedUser.session.access_token
+                : user.session.access_token
+
+            await fetchSignOutUser({
+                accessToken: accessToken
+            })
+            
             localStorage.removeItem("session")
             setUser(undefined)
             setAirports([createAirport(searchAirportId)])
