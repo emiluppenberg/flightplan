@@ -54,9 +54,13 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         const restoreSession = async () => {
             try {
                 setIsLoading(true)
-                const user = await fetchInitializeUser()
-                setUser(user)
-                await loadUserData(user.session.access_token);
+                const session = localStorage.getItem("session")
+                
+                if (session) {
+                    const user = await fetchInitializeUser()
+                    setUser(user)
+                    await loadUserData(user.session.access_token);
+                }
             } catch (error) {
                 setMessage(error instanceof Error ? error.message : "There was an unexpected error when checking your authentication token")
             } finally {
@@ -334,7 +338,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             await fetchSignOutUser({
                 accessToken: accessToken
             })
-            
+
             localStorage.removeItem("session")
             setUser(undefined)
             setAirports([createAirport(searchAirportId)])
