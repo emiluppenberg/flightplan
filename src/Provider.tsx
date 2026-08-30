@@ -55,7 +55,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             try {
                 setIsLoading(true)
                 const session = localStorage.getItem("session")
-                
+
                 if (session) {
                     const user = await fetchInitializeUser()
                     setUser(user)
@@ -339,7 +339,6 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 accessToken: accessToken
             })
 
-            localStorage.removeItem("session")
             setUser(undefined)
             setAirports([createAirport(searchAirportId)])
             setHighlightsTAF([])
@@ -350,6 +349,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             setMessage(error instanceof Error ? error.message : "")
         } finally {
             setIsLoading(false)
+            localStorage.removeItem("session")
         }
     }
 
