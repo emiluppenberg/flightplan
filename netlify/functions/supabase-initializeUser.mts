@@ -22,11 +22,10 @@ export default async (request: Request) => {
 
     const response = await supabase.auth.refreshSession({ refresh_token: body.refreshToken })
 
-    if (response.error && response.error.name !== "AuthSessionMissingError") {
-        console.error(response.error.message)
+    if (response.error) {
         return new Response(
-            "Server configuration error",
-            { status: 500 }
+            response.error.message,
+            { status: response.error.status }
         )
     }
 

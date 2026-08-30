@@ -42,7 +42,7 @@ export default async (request: Request) => {
     if (!response.success) {
         console.error(response.error.message)
         return new Response(
-            "Server configuration error",
+            response.error.message,
             { status: 500 }
         )
     }

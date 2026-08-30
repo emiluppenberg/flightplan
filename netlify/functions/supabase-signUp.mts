@@ -26,10 +26,9 @@ export default async (request: Request) => {
     })
 
     if (response.error) {
-        console.error(response.error.message)
         return new Response(
-            "Server configuration error",
-            { status: 500 }
+            response.error.message,
+            { status: response.error.status }
         )
     }
 
