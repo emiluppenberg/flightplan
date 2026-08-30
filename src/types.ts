@@ -485,3 +485,17 @@ export type SelectHighlightsBody = {
   accessToken: string;
   report: CodeHighlightReport;
 }
+
+export type SignInBody = {
+  email: string;
+  password: string;
+}
+
+export type SignUpBody = {
+  email: string;
+  password: string;
+}
+
+export type InitializeUserBody = {
+  refreshToken: string;
+}

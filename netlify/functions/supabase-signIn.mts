@@ -1,27 +1,28 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../src/database.types";
 import type { Config } from "@netlify/functions";
+import type { SignInBody } from "../../src/types";
 
 export default async (request: Request) => {
+    let body: SignInBody
+
+    try {
+        body = await request.json() as SignInBody;
+    } catch {
+        return new Response(
+            "Invalid SignInBody",
+            { status: 400 },
+        );
+    }
+
     const supabase = createClient<Database>(
         process.env.SUPABASE_DATABASE_URL ?? "",
         process.env.SUPABASE_ANON_KEY ?? ""
     )
 
-    const requestUrl = new URL(request.url)
-    const email = requestUrl.searchParams.get("email")
-    const password = requestUrl.searchParams.get("password")
-
-    if (!email || !password) {
-        return new Response(
-            "Email and password are required to log in",
-            { status: 400 }
-        )
-    }
-
     const response = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
+        email: body.email,
+        password: body.password
     })
 
     if (response.error) {
@@ -40,5 +41,5 @@ export default async (request: Request) => {
 
 export const config: Config = {
     path: "/api/supabase/sign-in",
-    method: "GET"
+    method: "POST"
 }

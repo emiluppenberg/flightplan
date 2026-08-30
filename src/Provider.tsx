@@ -279,7 +279,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         setMessage('')
 
         try {
-            const user = await fetchSignInUser(values);
+            const user = await fetchSignInUser({ ...values });
 
             if (user && !user.user.email_confirmed_at) {
                 throw new Error(`Please follow the link in the confirmation email sent to ${values.email} before logging in`)
@@ -321,7 +321,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         setMessage('')
 
         try {
-            const responseMessage = await fetchSignUpUser(values);
+            const responseMessage = await fetchSignUpUser({ ...values });
             setMessage(responseMessage)
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "")

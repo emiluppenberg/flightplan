@@ -326,3 +326,23 @@ export const parseSkylinkDate = (value: string): number => {
     Number(value.slice(10, 12))     // minute
   )
 }
+
+export const getRefreshToken = (): string => {
+  const session = localStorage.getItem("session")
+
+  if (!session) {
+    throw new Error("Session was not found in localStorage")
+  }
+
+  return (JSON.parse(session) as Session).refresh_token
+}
+
+export const getAccessToken = (): string => {
+  const session = localStorage.getItem("session")
+
+  if (!session) {
+    throw new Error("Session was not found in localStorage")
+  }
+
+  return (JSON.parse(session) as Session).access_token
+}

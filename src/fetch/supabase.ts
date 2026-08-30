@@ -1,5 +1,5 @@
-import type { Session } from "@supabase/supabase-js"
-import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, NotamEntry, UpsertNOTAMBody, DeleteNOTAMBody, SelectAirportNOTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues } from "../types"
+import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, NotamEntry, UpsertNOTAMBody, DeleteNOTAMBody, SelectAirportNOTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues, InitializeUserBody, SignInBody, SignUpBody } from "../types"
+import { getAccessToken, getRefreshToken } from "../utilities"
 
 export const PATH_INITIALIZE_USER = "/api/supabase/initialize-user"
 export const PATH_SIGN_IN = "/api/supabase/sign-in"
@@ -17,7 +17,10 @@ export const PATH_SELECT_HIGHLIGHTS = "/api/supabase/select-highlights"
 export const fetchInsertAirport = async (body: InsertAirportBody): Promise<SupabaseAirport> => {
   const response = await fetch(`${PATH_INSERT_AIRPORT}`, {
     method: "POST",
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
 
   if (!response.ok) {
@@ -30,7 +33,10 @@ export const fetchInsertAirport = async (body: InsertAirportBody): Promise<Supab
 export const fetchDeleteAirport = async (body: DeleteAirportBody): Promise<SupabaseAirport> => {
   const response = await fetch(`${PATH_DELETE_AIRPORT}`, {
     method: "POST",
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
 
   if (!response.ok) {
@@ -43,7 +49,10 @@ export const fetchDeleteAirport = async (body: DeleteAirportBody): Promise<Supab
 export const fetchSelectAllAirports = async (body: SelectAllAirportsBody): Promise<SupabaseAirport[]> => {
   const response = await fetch(`${PATH_SELECT_ALL_AIRPORTS}`, {
     method: "POST",
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
 
   if (!response.ok) {
@@ -54,23 +63,18 @@ export const fetchSelectAllAirports = async (body: SelectAllAirportsBody): Promi
 }
 
 export const fetchUpdateAirportNextPollNOTAM = async (icaoId: string, nextPollNOTAM: number) => {
-  const session = localStorage.getItem("session")
-
-  if (!session) {
-    throw new Error("Could not update next_poll_notam: You are not logged in")
-  }
-
-  const accessToken = (JSON.parse(session) as Session).access_token
-
   const body: UpdateAirportBody = {
-    accessToken: accessToken,
+    accessToken: getAccessToken(),
     icaoId: icaoId,
     nextPollNOTAM: nextPollNOTAM
   }
 
   const response = await fetch(`${PATH_UPDATE_AIRPORT_NEXT_POLL_NOTAM}`, {
     method: "POST",
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
 
   if (!response.ok) {
@@ -79,23 +83,18 @@ export const fetchUpdateAirportNextPollNOTAM = async (icaoId: string, nextPollNO
 }
 
 export const fetchUpsertNOTAM = async (notam: NotamEntry[], airportSupabaseId: string) => {
-  const session = localStorage.getItem("session")
-
-  if (!session) {
-    throw new Error("Could not update next_poll_notam: You are not logged in")
-  }
-
-  const accessToken = (JSON.parse(session) as Session).access_token
-
   const body: UpsertNOTAMBody = {
-    accessToken: accessToken,
+    accessToken: getAccessToken(),
     notam: notam,
     airportSupabaseId: airportSupabaseId
   }
 
   const response = await fetch(`${PATH_UPSERT_NOTAM}`, {
     method: "POST",
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
 
   if (!response.ok) {
@@ -104,22 +103,17 @@ export const fetchUpsertNOTAM = async (notam: NotamEntry[], airportSupabaseId: s
 }
 
 export const fetchDeleteNOTAM = async (airportSupabaseId: string) => {
-  const session = localStorage.getItem("session")
-
-  if (!session) {
-    throw new Error("Could not update next_poll_notam: You are not logged in")
-  }
-
-  const accessToken = (JSON.parse(session) as Session).access_token
-
   const body: DeleteNOTAMBody = {
-    accessToken: accessToken,
+    accessToken: getAccessToken(),
     airportSupabaseId: airportSupabaseId
   }
 
   const response = await fetch(`${PATH_DELETE_NOTAM}`, {
     method: "POST",
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
 
   if (!response.ok) {
@@ -128,22 +122,17 @@ export const fetchDeleteNOTAM = async (airportSupabaseId: string) => {
 }
 
 export const fetchSelectAirportNOTAM = async (airportSupabaseId: string): Promise<NotamEntry[]> => {
-  const session = localStorage.getItem("session")
-
-  if (!session) {
-    throw new Error("Could not update next_poll_notam: You are not logged in")
-  }
-
-  const accessToken = (JSON.parse(session) as Session).access_token
-
   const body: SelectAirportNOTAMBody = {
-    accessToken: accessToken,
+    accessToken: getAccessToken(),
     airportSupabaseId: airportSupabaseId
   }
 
   const response = await fetch(`${PATH_SELECT_AIRPORT_NOTAM}`, {
     method: "POST",
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
 
   if (!response.ok) {
@@ -156,7 +145,10 @@ export const fetchSelectAirportNOTAM = async (airportSupabaseId: string): Promis
 export const fetchUpsertHighlights = async (body: UpsertHighlightsBody) => {
   const response = await fetch(`${PATH_UPSERT_HIGHLIGHTS}`, {
     method: "POST",
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
 
   if (!response.ok) {
@@ -167,7 +159,10 @@ export const fetchUpsertHighlights = async (body: UpsertHighlightsBody) => {
 export const fetchSelectHighlights = async (body: SelectHighlightsBody): Promise<string[]> => {
   const response = await fetch(`${PATH_SELECT_HIGHLIGHTS}`, {
     method: "POST",
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
 
   if (!response.ok) {
@@ -178,18 +173,17 @@ export const fetchSelectHighlights = async (body: SelectHighlightsBody): Promise
 }
 
 export const fetchInitializeUser = async (): Promise<AppUser> => {
-  const session = localStorage.getItem("session")
-  if (!session) {
-    throw new Error("You are not logged in - airports and highlights will not be saved for this session")
+  const body: InitializeUserBody = {
+    refreshToken: getRefreshToken()
   }
 
-  const refreshToken = JSON.parse(session).refresh_token
-
-  const params = new URLSearchParams({
-    refreshToken: String(refreshToken)
+  const response = await fetch(`${PATH_INITIALIZE_USER}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
-
-  const response = await fetch(`${PATH_INITIALIZE_USER}?${params}`)
 
   if (!response.ok) {
     throw new Error(await response.text())
@@ -200,13 +194,14 @@ export const fetchInitializeUser = async (): Promise<AppUser> => {
   return user
 }
 
-export const fetchSignInUser = async (values: UserFormValues): Promise<AppUser> => {
-  const params = new URLSearchParams({
-    email: values.email,
-    password: values.password
+export const fetchSignInUser = async (body: SignInBody): Promise<AppUser> => {
+  const response = await fetch(`${PATH_SIGN_IN}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
-
-  const response = await fetch(`${PATH_SIGN_IN}?${params}`)
 
   if (!response.ok) {
     throw new Error(await response.text())
@@ -217,13 +212,14 @@ export const fetchSignInUser = async (values: UserFormValues): Promise<AppUser> 
   return user
 }
 
-export const fetchSignUpUser = async (values: UserFormValues): Promise<string> => {
-  const params = new URLSearchParams({
-    email: values.email,
-    password: values.password
+export const fetchSignUpUser = async (body: SignUpBody): Promise<string> => {
+  const response = await fetch(`${PATH_SIGN_UP}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
-
-  const response = await fetch(`${PATH_SIGN_UP}?${params}`)
 
   if (!response.ok) {
     throw new Error(await response.text())

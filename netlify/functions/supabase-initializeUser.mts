@@ -1,21 +1,26 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../src/database.types";
 import type { Config } from "@netlify/functions";
+import type { InitializeUserBody } from "../../src/types";
 
 export default async (request: Request) => {
+    let body: InitializeUserBody
+
+    try {
+        body = await request.json() as InitializeUserBody;
+    } catch {
+        return new Response(
+            "Invalid InitializeUserBody",
+            { status: 400 },
+        );
+    }
+
     const supabase = createClient<Database>(
         process.env.SUPABASE_DATABASE_URL ?? "",
         process.env.SUPABASE_ANON_KEY ?? ""
     )
 
-    const requestUrl = new URL(request.url)
-    const refreshToken = requestUrl.searchParams.get("refreshToken")
-
-    if (!refreshToken) {
-        return new Response("You are not logged in")
-    }
-
-    const response = await supabase.auth.refreshSession({ refresh_token: refreshToken })
+    const response = await supabase.auth.refreshSession({ refresh_token: body.refreshToken })
 
     if (response.error && response.error.name !== "AuthSessionMissingError") {
         console.error(response.error.message)
@@ -40,5 +45,5 @@ export default async (request: Request) => {
 
 export const config: Config = {
     path: "/api/supabase/initialize-user",
-    method: "GET"
+    method: "POST"
 }
