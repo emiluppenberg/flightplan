@@ -174,9 +174,9 @@ export const fetchSelectHighlights = async (body: SelectHighlightsBody): Promise
   return await response.json()
 }
 
-export const fetchInitializeUser = async (): Promise<AppUser> => {
+export const fetchInitializeUser = async (refreshToken?: string): Promise<AppUser> => {
   const body: InitializeUserBody = {
-    refreshToken: getRefreshToken()
+    refreshToken: refreshToken ?? getRefreshToken()
   }
 
   const response = await fetch(`${PATH_INITIALIZE_USER}`, {

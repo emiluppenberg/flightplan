@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type PropsWithChildren } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM } from "./utilities";
+import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM, consumeSupabaseConfirmationLink } from "./utilities";
 import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./fetch/supabase";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
@@ -54,6 +54,16 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         const restoreSession = async () => {
             try {
                 setIsLoading(true)
+
+                const confirmedUser = await consumeSupabaseConfirmationLink()
+
+                if (confirmedUser) {
+                    setMessage(`Welcome to FlyRep`)
+                    setUser(confirmedUser)
+                    await loadUserData(confirmedUser.session.access_token)
+                    return
+                }
+
                 const session = localStorage.getItem("session")
 
                 if (session) {

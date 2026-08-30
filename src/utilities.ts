@@ -1,6 +1,6 @@
 import type { Session } from "@supabase/supabase-js"
-import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight } from "./types"
-import { fetchDeleteNOTAM, fetchSelectAirportNOTAM, fetchUpdateAirportNextPollNOTAM, fetchUpsertNOTAM } from "./fetch/supabase"
+import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight, type AppUser } from "./types"
+import { fetchDeleteNOTAM, fetchInitializeUser, fetchSelectAirportNOTAM, fetchUpdateAirportNextPollNOTAM, fetchUpsertNOTAM } from "./fetch/supabase"
 
 export const PATH_AIRPORTS = "https://airportsapi.com/api/airports"
 export const PATH_NOTAM = "/api/reports/notam"
@@ -325,4 +325,36 @@ export const getAccessToken = (): string => {
   }
 
   return (JSON.parse(session) as Session).access_token
+}
+
+export const consumeSupabaseConfirmationLink = async (): Promise<AppUser | undefined> => {
+  const params = new URLSearchParams(window.location.hash.slice(1))
+
+  const hasAuthToken = params.has("access_token") || params.has("refresh_token")
+  const hasAuthError = params.has("error") && (
+    params.has("error_code") || params.has("error_description")
+  )
+
+  if (!hasAuthToken && !hasAuthError) {
+    return undefined
+  }
+
+  window.history.replaceState(
+    window.history.state,
+    document.title,
+    `${window.location.pathname}${window.location.search}`
+  )
+
+  const refreshToken = params.get("refresh_token")
+  const error = params.get("error_description") ?? params.get("error")
+
+  if (error) {
+    throw new Error(error)
+  }
+
+  if (!refreshToken) {
+    throw new Error("Confirmation link is missing a refresh token")
+  }
+
+  return await fetchInitializeUser(refreshToken)
 }
