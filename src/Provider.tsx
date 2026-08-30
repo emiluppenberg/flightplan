@@ -124,6 +124,13 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
     const handlePolling = useCallback(async () => {
         const now = Date.now()
+        const refreshedUser = user
+            ? await fetchRefreshedUser()
+            : undefined;
+
+        if (refreshedUser) {
+            setUser(refreshedUser)
+        }
 
         for (const airport of airports) {
             const pollReports =
