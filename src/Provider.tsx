@@ -128,25 +128,36 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
     const handlePolling = useCallback(async () => {
         const now = Date.now()
-        const refreshedUser = user
-            ? await fetchRefreshedUser()
-            : undefined;
 
-        if (refreshedUser) {
-            setUser(refreshedUser)
+        try {
+            const session = localStorage.getItem("session")
+
+            const refreshedUser = user && session
+                ? await fetchRefreshedUser()
+                : undefined;
+
+            if (refreshedUser) {
+                setUser(refreshedUser)
+            }
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : "There was an unexpected error while polling")
         }
 
-        for (const airport of airports) {
-            const pollReports =
-                airport.formValues.icaoId.trim().length > 0 &&
-                !airport.isLoading &&
-                airport.id !== searchAirportId &&
-                airport.nextPollReports <= now
+        try {
+            for (const airport of airports) {
+                const pollReports =
+                    airport.formValues.icaoId.trim().length > 0 &&
+                    !airport.isLoading &&
+                    airport.id !== searchAirportId &&
+                    airport.nextPollReports <= now
 
-            if (pollReports) {
-                const pollNOTAM = airport.nextPollNOTAM <= now
-                handleSubmit(airport, pollNOTAM)
+                if (pollReports) {
+                    const pollNOTAM = airport.nextPollNOTAM <= now
+                    handleSubmit(airport, pollNOTAM)
+                }
             }
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : "There was an unexpected error while polling")
         }
     }, [airports, handleSubmit])
 
