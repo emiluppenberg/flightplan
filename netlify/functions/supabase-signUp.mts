@@ -23,9 +23,6 @@ export default async (request: Request) => {
     const response = await supabase.auth.signUp({
         email: body.email,
         password: body.password,
-        options: {
-            emailRedirectTo: "https://flyrep.org"
-        }
     })
 
     if (response.error) {
