@@ -15,6 +15,10 @@ export default async (request: Request) => {
         );
     }
 
+    if (body.notam.length === 0) {
+        return new Response(null, { status: 204 })
+    }
+
     const supabase = createClient<Database>(
         process.env.SUPABASE_DATABASE_URL ?? "",
         process.env.SUPABASE_ANON_KEY ?? "",
@@ -43,7 +47,7 @@ export default async (request: Request) => {
         )
     }
 
-    return new Response(null, {status: 204})
+    return new Response(null, { status: 204 })
 }
 
 export const config: Config = {
