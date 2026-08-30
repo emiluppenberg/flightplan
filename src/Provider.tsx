@@ -338,17 +338,16 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             await fetchSignOutUser({
                 accessToken: accessToken
             })
-
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : "")
+        } finally {
+            setIsLoading(false)
             setUser(undefined)
             setAirports([createAirport(searchAirportId)])
             setHighlightsTAF([])
             setHighlightsMETAR([])
             setHighlightsNOTAM([])
             setHighlightsOPERATIONAL_HOURS([])
-        } catch (error) {
-            setMessage(error instanceof Error ? error.message : "")
-        } finally {
-            setIsLoading(false)
             localStorage.removeItem("session")
         }
     }
