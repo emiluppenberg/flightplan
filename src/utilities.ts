@@ -14,6 +14,7 @@ export const SVG_URLS = {
   reload: '/ui/reload-svgrepo-com.svg',
 } as const;
 
+export const sessionStorageKey = "sb-cgllylmfqjwakuhemjxv-auth-token"
 export const searchAirportId = "search-airport"
 export const POLL_INTERVAL_TAF_METAR = 1 * 30 * 1000;
 export const POLL_INTERVAL_NOTAM = 24 * 60 * 60 * 1000
@@ -308,7 +309,7 @@ export const parseSkylinkDate = (value: string): number => {
 }
 
 export const getRefreshToken = (): string => {
-  const session = localStorage.getItem("session")
+  const session = localStorage.getItem(sessionStorageKey)
 
   if (!session) {
     throw new Error("Session was not found in localStorage")
@@ -318,7 +319,7 @@ export const getRefreshToken = (): string => {
 }
 
 export const getAccessToken = (): string => {
-  const session = localStorage.getItem("session")
+  const session = localStorage.getItem(sessionStorageKey)
 
   if (!session) {
     throw new Error("Session was not found in localStorage")

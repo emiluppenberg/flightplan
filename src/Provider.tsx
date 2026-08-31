@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type PropsWithChildren } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM, consumeSupabaseConfirmationLink } from "./utilities";
+import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM, consumeSupabaseConfirmationLink, sessionStorageKey } from "./utilities";
 import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./fetch/supabase";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
@@ -64,7 +64,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                     return
                 }
 
-                const session = localStorage.getItem("session")
+                const session = localStorage.getItem(sessionStorageKey)
 
                 if (session) {
                     const user = await fetchInitializeUser()
@@ -106,9 +106,17 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         const nextPollReports = Date.now() + POLL_INTERVAL_TAF_METAR;
         const nextPollNOTAM = Date.now() + POLL_INTERVAL_NOTAM;
 
-        const synced = user && NOTAM.data
+        const refreshedUser = user
+            ? await fetchRefreshedUser()
+            : undefined
+
+        const synced = (refreshedUser || user) && NOTAM.data
             ? await captureSyncNOTAM(NOTAM.data, airport.supabaseId, airport.formValues.icaoId, nextPollNOTAM, airport.id)
             : ""
+
+        if (refreshedUser) {
+            setUser(refreshedUser)
+        }
 
         setAirports(current => current.map(_airport => {
             if (_airport.id === airport.id) {
@@ -140,7 +148,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         const now = Date.now()
 
         try {
-            const session = localStorage.getItem("session")
+            const session = localStorage.getItem(sessionStorageKey)
 
             const refreshedUser = user && session
                 ? await fetchRefreshedUser()
@@ -369,7 +377,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             setHighlightsMETAR([])
             setHighlightsNOTAM([])
             setHighlightsOPERATIONAL_HOURS([])
-            localStorage.removeItem("session")
+            localStorage.removeItem(sessionStorageKey)
         }
     }
 

@@ -1,6 +1,6 @@
 import type { Session } from "@supabase/supabase-js"
 import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, NotamEntry, UpsertNOTAMBody, DeleteNOTAMBody, SelectAirportNOTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues, InitializeUserBody, SignInBody, SignUpBody, SignOutBody } from "../types"
-import { getAccessToken, getRefreshToken } from "../utilities"
+import { getAccessToken, getRefreshToken, sessionStorageKey } from "../utilities"
 
 export const PATH_INITIALIZE_USER = "/api/supabase/initialize-user"
 export const PATH_SIGN_IN = "/api/supabase/sign-in"
@@ -192,7 +192,7 @@ export const fetchInitializeUser = async (refreshToken?: string): Promise<AppUse
   }
 
   const user: AppUser = await response.json()
-  localStorage.setItem("session", JSON.stringify(user.session))
+  localStorage.setItem(sessionStorageKey, JSON.stringify(user.session))
   return user
 }
 
@@ -210,7 +210,7 @@ export const fetchSignInUser = async (body: SignInBody): Promise<AppUser> => {
   }
 
   const user: AppUser = await response.json()
-  localStorage.setItem("session", JSON.stringify(user.session))
+  localStorage.setItem(sessionStorageKey, JSON.stringify(user.session))
   return user
 }
 
@@ -245,7 +245,7 @@ export const fetchSignOutUser = async (body: SignOutBody) => {
 }
 
 export const fetchRefreshedUser = async (): Promise<AppUser | undefined> => {
-  const session = localStorage.getItem("session")
+  const session = localStorage.getItem(sessionStorageKey)
 
   if (!session) {
     throw new Error("You are not logged in")
