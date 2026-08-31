@@ -95,53 +95,64 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 : _airport
         )))
 
-        const [TAF, METAR, NOTAM] = await Promise.all([
-            capture(() => fetchTAF(airport.formValues)),
-            capture(() => fetchMETAR(airport.formValues)),
-            fetchNotam
-                ? capture(() => fetchNOTAM(airport.formValues))
-                : Promise.resolve({ data: undefined, error: "" }),
-        ])
+        try {
 
-        const nextPollReports = Date.now() + POLL_INTERVAL_TAF_METAR;
-        const nextPollNOTAM = Date.now() + POLL_INTERVAL_NOTAM;
+            const [TAF, METAR, NOTAM] = await Promise.all([
+                capture(() => fetchTAF(airport.formValues)),
+                capture(() => fetchMETAR(airport.formValues)),
+                fetchNotam
+                    ? capture(() => fetchNOTAM(airport.formValues))
+                    : Promise.resolve({ data: undefined, error: "" }),
+            ])
 
-        const refreshedUser = user
-            ? await fetchRefreshedUser()
-            : undefined
+            const nextPollReports = Date.now() + POLL_INTERVAL_TAF_METAR;
+            const nextPollNOTAM = Date.now() + POLL_INTERVAL_NOTAM;
 
-        const synced = (refreshedUser || user) && NOTAM.data
-            ? await captureSyncNOTAM(NOTAM.data, airport.supabaseId, airport.formValues.icaoId, nextPollNOTAM, airport.id)
-            : ""
+            const refreshedUser = user
+                ? await fetchRefreshedUser()
+                : undefined
 
-        if (refreshedUser) {
-            setUser(refreshedUser)
-        }
+            const synced = (refreshedUser || user) && NOTAM.data
+                ? await captureSyncNOTAM(NOTAM.data, airport.supabaseId, airport.formValues.icaoId, nextPollNOTAM, airport.id)
+                : ""
 
-        setAirports(current => current.map(_airport => {
-            if (_airport.id === airport.id) {
-                const matchTAF = _airport.TAF.some(taf => taf.icaoId === airport.formValues.icaoId)
-                const matchMETAR = _airport.METAR.some(metar => metar.icaoId === airport.formValues.icaoId)
-                const matchNOTAM = _airport.NOTAM.some(notam => notam.location === airport.formValues.icaoId)
-
-                return {
-                    ..._airport,
-                    icaoId: airport.formValues.icaoId,
-                    TAF: TAF.data ?? (matchTAF ? _airport.TAF : []),
-                    METAR: METAR.data ?? (matchMETAR ? _airport.METAR : []),
-                    NOTAM: fetchNotam
-                        ? NOTAM.data ?? (matchNOTAM ? _airport.NOTAM : [])
-                        : (matchNOTAM ? _airport.NOTAM : []),
-                    messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + synced,
-                    nextPollReports: nextPollReports,
-                    nextPollNOTAM: fetchNotam && NOTAM.data ? nextPollNOTAM : _airport.nextPollNOTAM,
-                    isLoading: false
-                }
-            } else {
-                return _airport
+            if (refreshedUser) {
+                setUser(refreshedUser)
             }
-        }))
-        setIsLoading(false)
+
+            setAirports(current => current.map(_airport => {
+                if (_airport.id === airport.id) {
+                    const matchTAF = _airport.TAF.some(taf => taf.icaoId === airport.formValues.icaoId)
+                    const matchMETAR = _airport.METAR.some(metar => metar.icaoId === airport.formValues.icaoId)
+                    const matchNOTAM = _airport.NOTAM.some(notam => notam.location === airport.formValues.icaoId)
+
+                    return {
+                        ..._airport,
+                        icaoId: airport.formValues.icaoId,
+                        TAF: TAF.data ?? (matchTAF ? _airport.TAF : []),
+                        METAR: METAR.data ?? (matchMETAR ? _airport.METAR : []),
+                        NOTAM: fetchNotam
+                            ? NOTAM.data ?? (matchNOTAM ? _airport.NOTAM : [])
+                            : (matchNOTAM ? _airport.NOTAM : []),
+                        messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + synced,
+                        nextPollReports: nextPollReports,
+                        nextPollNOTAM: fetchNotam && NOTAM.data ? nextPollNOTAM : _airport.nextPollNOTAM,
+                        isLoading: false
+                    }
+                } else {
+                    return _airport
+                }
+            }))
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : `There was an unexpected error while fetch data for ${airport.formValues.icaoId}`)
+            setAirports(current => current.map((_airport) => (
+                _airport.id === airport.id
+                    ? { ..._airport, isLoading: false }
+                    : _airport
+            )))
+        } finally {
+            setIsLoading(false)
+        }
     }, [user, airports])
 
     const handlePolling = useCallback(async () => {
