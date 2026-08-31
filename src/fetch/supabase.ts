@@ -1,6 +1,6 @@
 import type { Session } from "@supabase/supabase-js"
 import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, NotamEntry, UpsertNOTAMBody, DeleteNOTAMBody, SelectAirportNOTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues, InitializeUserBody, SignInBody, SignUpBody, SignOutBody } from "../types"
-import { getAccessToken, getRefreshToken, sessionStorageKey } from "../utilities"
+import { EXPIRES_AT_SAFE_INTERVAL, getAccessToken, getRefreshToken, sessionStorageKey } from "../utilities"
 
 export const PATH_INITIALIZE_USER = "/api/supabase/initialize-user"
 export const PATH_SIGN_IN = "/api/supabase/sign-in"
@@ -251,13 +251,13 @@ export const fetchRefreshedUser = async (): Promise<AppUser | undefined> => {
     throw new Error("You are not logged in")
   }
 
-  const expiresAtMilliseconds = (JSON.parse(session) as Session).expires_at
+  const expiresAtSeconds = (JSON.parse(session) as Session).expires_at
 
-  if (!expiresAtMilliseconds) {
+  if (!expiresAtSeconds) {
     throw new Error("Session is missing value: expires_at")
   }
 
-  if (expiresAtMilliseconds * 1000 < Date.now()) {
+  if (expiresAtSeconds * 1000 - EXPIRES_AT_SAFE_INTERVAL < Date.now()) {
     return await fetchInitializeUser()
   }
 

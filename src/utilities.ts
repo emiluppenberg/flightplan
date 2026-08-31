@@ -16,6 +16,8 @@ export const SVG_URLS = {
 
 export const sessionStorageKey = "sb-cgllylmfqjwakuhemjxv-auth-token"
 export const searchAirportId = "search-airport"
+
+export const EXPIRES_AT_SAFE_INTERVAL = 30 * 1000;
 export const POLL_INTERVAL_TAF_METAR = 1 * 30 * 1000;
 export const POLL_INTERVAL_NOTAM = 24 * 60 * 60 * 1000
 
