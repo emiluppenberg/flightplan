@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState, type PropsWithChildren } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM } from "./utilities";
-import { deleteAirport, initializeAppUser, insertAirport, selectAllAirports, selectHighlights, signInUser, signOutUser, signUpUser, upsertHighlights } from "./supabase";
+import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM, consumeSupabaseConfirmationLink, sessionStorageKey } from "./utilities";
+import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./fetch/supabase";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])
@@ -15,21 +15,36 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [user, setUser] = useState<AppUser>()
     const [initialized, setInitialized] = useState(false);
 
-    const loadUserData = async () => {
-        const supabaseAirports = await selectAllAirports()
+    const loadUserData = async (accessToken: string) => {
+        const supabaseAirports = await fetchSelectAllAirports({
+            accessToken: accessToken
+        })
+
         const airports = await refreshAirports(supabaseAirports)
         setAirports([...airports, createAirport(searchAirportId)])
 
-        const highlightsTAF = await selectHighlights("TAF")
+        const highlightsTAF = await fetchSelectHighlights({
+            accessToken: accessToken,
+            report: "TAF"
+        })
         setHighlightsTAF(resolveHighlights(highlightsTAF, HIGHLIGHTS_TAF_METAR))
 
-        const highlightsMETAR = await selectHighlights("METAR")
+        const highlightsMETAR = await fetchSelectHighlights({
+            accessToken: accessToken,
+            report: "METAR"
+        })
         setHighlightsMETAR(resolveHighlights(highlightsMETAR, HIGHLIGHTS_TAF_METAR))
 
-        const highlightsOPERATIONAL_HOURS = await selectHighlights("OPERATIONAL HOURS")
+        const highlightsOPERATIONAL_HOURS = await fetchSelectHighlights({
+            accessToken: accessToken,
+            report: "OPERATIONAL HOURS"
+        })
         setHighlightsOPERATIONAL_HOURS(resolveHighlights(highlightsOPERATIONAL_HOURS, HIGHLIGHTS_OPERATIONAL_HOURS))
 
-        const highlightsNOTAM = await selectHighlights("NOTAM")
+        const highlightsNOTAM = await fetchSelectHighlights({
+            accessToken: accessToken,
+            report: "NOTAM"
+        })
         setHighlightsNOTAM(resolveHighlights(highlightsNOTAM, HIGHLIGHTS_NOTAM))
     }
 
@@ -39,11 +54,36 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         const restoreSession = async () => {
             try {
                 setIsLoading(true)
-                const user = await initializeAppUser()
-                setUser(user)
-                await loadUserData();
+
+                const confirmedUser = await capture(() => consumeSupabaseConfirmationLink())
+
+                if (confirmedUser.data) {
+                    setMessage(`Welcome to FlyRep`)
+                    setUser(confirmedUser.data)
+                    await loadUserData(confirmedUser.data.session.access_token)
+                    return
+                }
+                if (confirmedUser.error) {
+                    setMessage(confirmedUser.error)
+                    localStorage.removeItem(sessionStorageKey)
+                }
+
+                const session = localStorage.getItem(sessionStorageKey)
+
+                if (session) {
+                    const user = await capture(() => fetchInitializeUser())
+
+                    if (user.data) {
+                        setUser(user.data)
+                        await loadUserData(user.data.session.access_token)
+                    }
+                    if (user.error) {
+                        setMessage(user.error)
+                        localStorage.removeItem(sessionStorageKey)
+                    }
+                }
             } catch (error) {
-                setMessage(error instanceof Error ? error.message : "There was an unexpected error when checking your authentication token")
+                setMessage(error instanceof Error ? error.message : "There was an unexpected error while restoring your session")
             } finally {
                 setInitialized(true);
                 setIsLoading(false)
@@ -66,61 +106,98 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 : _airport
         )))
 
-        const [TAF, METAR, NOTAM] = await Promise.all([
-            capture(() => fetchTAF(airport.formValues)),
-            capture(() => fetchMETAR(airport.formValues)),
-            fetchNotam
-                ? capture(() => fetchNOTAM(airport.formValues))
-                : Promise.resolve({ data: undefined, error: "" }),
-        ])
+        try {
 
-        const nextPollReports = Date.now() + POLL_INTERVAL_TAF_METAR;
-        const nextPollNOTAM = Date.now() + POLL_INTERVAL_NOTAM;
+            const [TAF, METAR, NOTAM] = await Promise.all([
+                capture(() => fetchTAF(airport.formValues)),
+                capture(() => fetchMETAR(airport.formValues)),
+                fetchNotam
+                    ? capture(() => fetchNOTAM(airport.formValues))
+                    : Promise.resolve({ data: undefined, error: "" }),
+            ])
 
-        const synced = user && NOTAM.data
-            ? await captureSyncNOTAM(NOTAM.data, airport.supabaseId, airport.formValues.icaoId, nextPollNOTAM, airport.id)
-            : ""
+            const nextPollReports = Date.now() + POLL_INTERVAL_TAF_METAR;
+            const nextPollNOTAM = Date.now() + POLL_INTERVAL_NOTAM;
 
-        setAirports(current => current.map(_airport => {
-            if (_airport.id === airport.id) {
-                const matchTAF = _airport.TAF.some(taf => taf.icaoId === airport.formValues.icaoId)
-                const matchMETAR = _airport.METAR.some(metar => metar.icaoId === airport.formValues.icaoId)
-                const matchNOTAM = _airport.NOTAM.some(notam => notam.location === airport.formValues.icaoId)
+            const refreshedUser = user
+                ? await capture(() => fetchRefreshedUser())
+                : undefined
 
-                return {
-                    ..._airport,
-                    icaoId: airport.formValues.icaoId,
-                    TAF: TAF.data ?? (matchTAF ? _airport.TAF : []),
-                    METAR: METAR.data ?? (matchMETAR ? _airport.METAR : []),
-                    NOTAM: fetchNotam
-                        ? NOTAM.data ?? (matchNOTAM ? _airport.NOTAM : [])
-                        : (matchNOTAM ? _airport.NOTAM : []),
-                    messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + synced,
-                    nextPollReports: nextPollReports,
-                    nextPollNOTAM: fetchNotam && NOTAM.data ? nextPollNOTAM : _airport.nextPollNOTAM,
-                    isLoading: false
-                }
-            } else {
-                return _airport
+            const synced = ((refreshedUser && refreshedUser.data) || user) && NOTAM.data
+                ? await captureSyncNOTAM(NOTAM.data, airport.supabaseId, airport.formValues.icaoId, nextPollNOTAM, airport.id)
+                : ""
+
+            if (refreshedUser && refreshedUser.data) {
+                setUser(refreshedUser.data)
             }
-        }))
-        setIsLoading(false)
+
+            setAirports(current => current.map(_airport => {
+                if (_airport.id === airport.id) {
+                    const matchTAF = _airport.TAF.some(taf => taf.icaoId === airport.formValues.icaoId)
+                    const matchMETAR = _airport.METAR.some(metar => metar.icaoId === airport.formValues.icaoId)
+                    const matchNOTAM = _airport.NOTAM.some(notam => notam.location === airport.formValues.icaoId)
+
+                    return {
+                        ..._airport,
+                        icaoId: airport.formValues.icaoId,
+                        TAF: TAF.data ?? (matchTAF ? _airport.TAF : []),
+                        METAR: METAR.data ?? (matchMETAR ? _airport.METAR : []),
+                        NOTAM: fetchNotam
+                            ? NOTAM.data ?? (matchNOTAM ? _airport.NOTAM : [])
+                            : (matchNOTAM ? _airport.NOTAM : []),
+                        messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + (refreshedUser?.error ?? "") + synced,
+                        nextPollReports: nextPollReports,
+                        nextPollNOTAM: fetchNotam && NOTAM.data ? nextPollNOTAM : _airport.nextPollNOTAM,
+                        isLoading: false
+                    }
+                } else {
+                    return _airport
+                }
+            }))
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : `There was an unexpected error while fetch data for ${airport.formValues.icaoId}`)
+            setAirports(current => current.map((_airport) => (
+                _airport.id === airport.id
+                    ? { ..._airport, isLoading: false }
+                    : _airport
+            )))
+        } finally {
+            setIsLoading(false)
+        }
     }, [user, airports])
 
     const handlePolling = useCallback(async () => {
         const now = Date.now()
 
-        for (const airport of airports) {
-            const pollReports =
-                airport.formValues.icaoId.trim().length > 0 &&
-                !airport.isLoading &&
-                airport.id !== searchAirportId &&
-                airport.nextPollReports <= now
+        try {
+            const session = localStorage.getItem(sessionStorageKey)
 
-            if (pollReports) {
-                const pollNOTAM = airport.nextPollNOTAM <= now
-                handleSubmit(airport, pollNOTAM)
+            const refreshedUser = user && session
+                ? await fetchRefreshedUser()
+                : undefined;
+
+            if (refreshedUser) {
+                setUser(refreshedUser)
             }
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : "There was an unexpected error while polling")
+        }
+
+        try {
+            for (const airport of airports) {
+                const pollReports =
+                    airport.formValues.icaoId.trim().length > 0 &&
+                    !airport.isLoading &&
+                    airport.id !== searchAirportId &&
+                    airport.nextPollReports <= now
+
+                if (pollReports) {
+                    const pollNOTAM = airport.nextPollNOTAM <= now
+                    handleSubmit(airport, pollNOTAM)
+                }
+            }
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : "There was an unexpected error while polling")
         }
     }, [airports, handleSubmit])
 
@@ -142,7 +219,22 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             if (user) {
                 setIsLoading(true)
                 setMessage('')
-                await upsertHighlights(newHighlights, report)
+
+                const refreshedUser = await fetchRefreshedUser()
+
+                if (refreshedUser) {
+                    setUser(refreshedUser)
+                }
+
+                const accessToken = refreshedUser
+                    ? refreshedUser.session.access_token
+                    : user.session.access_token
+
+                await fetchUpsertHighlights({
+                    accessToken: accessToken,
+                    highlights: newHighlights.map(highlight => highlight.class),
+                    report: report
+                })
             }
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "")
@@ -176,7 +268,21 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             setMessage('')
 
             try {
-                supabaseAirport = await insertAirport(icaoId, nextPollNOTAM)
+                const refreshedUser = await fetchRefreshedUser()
+
+                if (refreshedUser) {
+                    setUser(refreshedUser)
+                }
+
+                const accessToken = refreshedUser
+                    ? refreshedUser.session.access_token
+                    : user.session.access_token
+
+                supabaseAirport = await fetchInsertAirport({
+                    accessToken: accessToken,
+                    icaoId: icaoId,
+                    nextPollNOTAM: nextPollNOTAM
+                })
             } catch (error) {
                 setMessage(error instanceof Error ? error.message : "")
             } finally {
@@ -218,8 +324,23 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
             try {
                 const airport = airports.find(airport => airport.id === id)
-                if (!airport) throw new Error(`Could not delete airport with id: ${id}`)
-                await deleteAirport(airport.formValues.icaoId)
+                const icaoId = airport?.formValues.icaoId
+                if (!icaoId) throw new Error(`Could not delete airport with id: ${id}`)
+
+                const refreshedUser = await fetchRefreshedUser()
+
+                if (refreshedUser) {
+                    setUser(refreshedUser)
+                }
+
+                const accessToken = refreshedUser
+                    ? refreshedUser.session.access_token
+                    : user.session.access_token
+
+                await fetchDeleteAirport({
+                    accessToken: accessToken,
+                    icaoId: icaoId
+                })
             } catch (error) {
                 setMessage(error instanceof Error ? error.message : "")
             } finally {
@@ -235,7 +356,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         setMessage('')
 
         try {
-            const user = await signInUser(values);
+            const user = await fetchSignInUser({ ...values });
 
             if (user && !user.user.email_confirmed_at) {
                 throw new Error(`Please follow the link in the confirmation email sent to ${values.email} before logging in`)
@@ -245,7 +366,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             }
 
             setUser(user)
-            await loadUserData();
+            await loadUserData(user.session.access_token);
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "")
         } finally {
@@ -254,21 +375,31 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     }
 
     const handleSignOut = async () => {
+        if (!user) return
+
         setIsLoading(true)
         setMessage('')
 
         try {
-            await signOutUser()
+            const refreshedUser = await fetchRefreshedUser()
+            const accessToken = refreshedUser
+                ? refreshedUser.session.access_token
+                : user.session.access_token
+
+            await fetchSignOutUser({
+                accessToken: accessToken
+            })
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : "")
+        } finally {
+            setIsLoading(false)
             setUser(undefined)
             setAirports([createAirport(searchAirportId)])
             setHighlightsTAF([])
             setHighlightsMETAR([])
             setHighlightsNOTAM([])
             setHighlightsOPERATIONAL_HOURS([])
-        } catch (error) {
-            setMessage(error instanceof Error ? error.message : "")
-        } finally {
-            setIsLoading(false)
+            localStorage.removeItem(sessionStorageKey)
         }
     }
 
@@ -277,7 +408,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         setMessage('')
 
         try {
-            const responseMessage = await signUpUser(values);
+            const responseMessage = await fetchSignUpUser({ ...values });
             setMessage(responseMessage)
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "")

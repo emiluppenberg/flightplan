@@ -1,7 +1,8 @@
-import { deleteNOTAM, selectAirportNOTAM, updateAirportNextPollNOTAM, upsertNOTAM } from "./supabase"
-import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight } from "./types"
+import type { Session } from "@supabase/supabase-js"
+import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight, type AppUser } from "./types"
+import { fetchDeleteNOTAM, fetchInitializeUser, fetchSelectAirportNOTAM, fetchUpdateAirportNextPollNOTAM, fetchUpsertNOTAM } from "./fetch/supabase"
 
-export const PATH_AIRPORTS = "https://airportsapi.com/api/airports"
+export const PATH_AIRPORTS = "/api/airports"
 export const PATH_NOTAM = "/api/reports/notam"
 export const PATH_TAF = '/api/reports/taf'
 export const PATH_METAR = '/api/reports/metar'
@@ -13,7 +14,10 @@ export const SVG_URLS = {
   reload: '/ui/reload-svgrepo-com.svg',
 } as const;
 
+export const sessionStorageKey = "sb-cgllylmfqjwakuhemjxv-auth-token"
 export const searchAirportId = "search-airport"
+
+export const EXPIRES_AT_SAFE_INTERVAL = 30 * 1000;
 export const POLL_INTERVAL_TAF_METAR = 1 * 30 * 1000;
 export const POLL_INTERVAL_NOTAM = 24 * 60 * 60 * 1000
 
@@ -140,14 +144,14 @@ export const captureSyncNOTAM = async (
       : "Airport is missing supabaseId"
   }
 
-  const deleted = await capture(() => deleteNOTAM(airportSupabaseId))
+  const deleted = await capture(() => fetchDeleteNOTAM(airportSupabaseId))
 
   const upserted = !deleted.error
-    ? await capture(() => upsertNOTAM(NOTAM, airportSupabaseId))
+    ? await capture(() => fetchUpsertNOTAM(NOTAM, airportSupabaseId))
     : { data: undefined, error: "" }
 
   const updated = !deleted.error && !upserted.error
-    ? await capture(() => updateAirportNextPollNOTAM(icaoId, nextPollNOTAM))
+    ? await capture(() => fetchUpdateAirportNextPollNOTAM(icaoId, nextPollNOTAM))
     : { data: undefined, error: "" }
 
   return (deleted.error ?? "") + (upserted.error ?? "") + (updated.error ?? "")
@@ -182,7 +186,7 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
       : ""
 
     if (!fetchFreshNOTAM || (fetchFreshNOTAM && !NOTAM.data)) {
-      NOTAM.data = await selectAirportNOTAM(airport.id)
+      NOTAM.data = await fetchSelectAirportNOTAM(airport.id)
     }
 
     return {
@@ -304,4 +308,56 @@ export const parseSkylinkDate = (value: string): number => {
     Number(value.slice(8, 10)),     // hour
     Number(value.slice(10, 12))     // minute
   )
+}
+
+export const getRefreshToken = (): string => {
+  const session = localStorage.getItem(sessionStorageKey)
+
+  if (!session) {
+    throw new Error("Session was not found in localStorage")
+  }
+
+  return (JSON.parse(session) as Session).refresh_token
+}
+
+export const getAccessToken = (): string => {
+  const session = localStorage.getItem(sessionStorageKey)
+
+  if (!session) {
+    throw new Error("Session was not found in localStorage")
+  }
+
+  return (JSON.parse(session) as Session).access_token
+}
+
+export const consumeSupabaseConfirmationLink = async (): Promise<AppUser | undefined> => {
+  const params = new URLSearchParams(window.location.hash.slice(1))
+
+  const hasAuthToken = params.has("access_token") || params.has("refresh_token")
+  const hasAuthError = params.has("error") && (
+    params.has("error_code") || params.has("error_description")
+  )
+
+  if (!hasAuthToken && !hasAuthError) {
+    return undefined
+  }
+
+  window.history.replaceState(
+    window.history.state,
+    document.title,
+    `${window.location.pathname}${window.location.search}`
+  )
+
+  const refreshToken = params.get("refresh_token")
+  const error = params.get("error_description") ?? params.get("error")
+
+  if (error) {
+    throw new Error(error)
+  }
+
+  if (!refreshToken) {
+    throw new Error("Confirmation link is missing a refresh token")
+  }
+
+  return await fetchInitializeUser(refreshToken)
 }
