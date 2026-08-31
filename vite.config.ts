@@ -69,22 +69,6 @@ export default defineConfig({
       '^/api/reports/metar\\?ids=1111(?:&|$)': mockJsonResponse(metar1111),
       '^/api/reports/taf\\?ids=2222(?:&|$)': mockJsonResponse(taf2222),
       '^/api/reports/metar\\?ids=2222(?:&|$)': mockJsonResponse(metar2222),
-      '/api/reports/taf': {
-        target: 'https://aviationweather.gov',
-        changeOrigin: true,
-        headers: {
-          'User-Agent': 'flightplan-dev/0.1',
-        },
-        rewrite: path => path.replace(/^\/api\/reports/, "/api/data")
-      },
-      '/api/reports/metar': {
-        target: 'https://aviationweather.gov',
-        changeOrigin: true,
-        headers: {
-          'User-Agent': 'flightplan-dev/0.1',
-        },
-        rewrite: path => path.replace(/^\/api\/reports/, "/api/data")
-      },
     },
   },
 })

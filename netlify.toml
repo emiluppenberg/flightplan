@@ -9,7 +9,7 @@
   force = true
 
   [redirects.headers]
-    "User-Agent" = "flightplan/0.1"
+    "User-Agent" = "FlyRep/0.1"
 
 [[redirects]]
   from = "/api/reports/metar"
@@ -18,7 +18,25 @@
   force = true
 
   [redirects.headers]
-    "User-Agent" = "flightplan/0.1"
+    "User-Agent" = "FlyRep/0.1"
+
+[[redirects]]
+  from = "/api/airports"
+  to = "https://airportsapi.com/api/airports"
+  status = 200
+  force = true
+
+  [redirects.headers]
+    "User-Agent" = "FlyRep/0.1"
+
+[[redirects]]
+  from = "/api/airports/*"
+  to = "https://airportsapi.com/api/airports/:splat"
+  status = 200
+  force = true
+
+  [redirects.headers]
+    "User-Agent" = "FlyRep/0.1"
 
 [[redirects]]
   from = "/*"
@@ -26,6 +44,11 @@
   status = 200
 
 [dev]
+  framework = "#custom"
+  command = "vite"
+  targetPort = 5173
+  port = 8888
+
   [dev.https]
     certFile = "certs/localhost.pem"
     keyFile = "certs/localhost-key.pem"
