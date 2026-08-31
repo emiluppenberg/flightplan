@@ -2,7 +2,7 @@ import type { Session } from "@supabase/supabase-js"
 import { type TAFJson, type METARJson, type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamsResponse, type NotamEntry, type AirportsResourceResponse, type FetchResult, type SupabaseAirport, type CodeHighlight, type AppUser } from "./types"
 import { fetchDeleteNOTAM, fetchInitializeUser, fetchSelectAirportNOTAM, fetchUpdateAirportNextPollNOTAM, fetchUpsertNOTAM } from "./fetch/supabase"
 
-export const PATH_AIRPORTS = "https://airportsapi.com/api/airports"
+export const PATH_AIRPORTS = "/api/airports"
 export const PATH_NOTAM = "/api/reports/notam"
 export const PATH_TAF = '/api/reports/taf'
 export const PATH_METAR = '/api/reports/metar'
