@@ -55,24 +55,35 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             try {
                 setIsLoading(true)
 
-                const confirmedUser = await consumeSupabaseConfirmationLink()
+                const confirmedUser = await capture(() => consumeSupabaseConfirmationLink())
 
-                if (confirmedUser) {
+                if (confirmedUser.data) {
                     setMessage(`Welcome to FlyRep`)
-                    setUser(confirmedUser)
-                    await loadUserData(confirmedUser.session.access_token)
+                    setUser(confirmedUser.data)
+                    await loadUserData(confirmedUser.data.session.access_token)
                     return
+                }
+                if (confirmedUser.error) {
+                    setMessage(confirmedUser.error)
+                    localStorage.removeItem(sessionStorageKey)
                 }
 
                 const session = localStorage.getItem(sessionStorageKey)
 
                 if (session) {
-                    const user = await fetchInitializeUser()
-                    setUser(user)
-                    await loadUserData(user.session.access_token);
+                    const user = await capture(() => fetchInitializeUser())
+
+                    if (user.data) {
+                        setUser(user.data)
+                        await loadUserData(user.data.session.access_token)
+                    }
+                    if (user.error) {
+                        setMessage(user.error)
+                        localStorage.removeItem(sessionStorageKey)
+                    }
                 }
             } catch (error) {
-                setMessage(error instanceof Error ? error.message : "There was an unexpected error when checking your authentication token")
+                setMessage(error instanceof Error ? error.message : "There was an unexpected error while restoring your session")
             } finally {
                 setInitialized(true);
                 setIsLoading(false)
