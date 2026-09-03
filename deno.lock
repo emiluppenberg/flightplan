@@ -23,6 +23,7 @@
         "npm:eslint-plugin-react-refresh@~0.5.3",
         "npm:eslint@^10.6.0",
         "npm:globals@^17.7.0",
+        "npm:netlify-cli@^27.4.1",
         "npm:react-dom@^19.2.7",
         "npm:react-hook-form@^7.81.0",
         "npm:react@^19.2.7",

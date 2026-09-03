@@ -53,6 +53,7 @@ Thumbs.db
 
 # Local Netlify folder
 .netlify
+/_redirects
 
 # Local Supabase folder
 supabase/*
