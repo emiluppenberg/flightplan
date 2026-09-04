@@ -37,6 +37,7 @@ export interface NotamsResponse {
   icao: string;
   notams: NotamEntry[];
   total: number;
+  error?: string;
 }
 
 export interface AirportsResourceResponse {

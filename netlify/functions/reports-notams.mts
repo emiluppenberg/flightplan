@@ -36,7 +36,7 @@ export default async (request: Request) => {
     return Response.json(await response.json())
 }
 
-export const config: Config = {
-    path: "/api/reports/notam",
-    method: "GET"
-}
+// export const config: Config = {
+//     path: "/api/reports/notam",
+//     method: "GET",
+// }
