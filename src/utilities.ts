@@ -19,7 +19,7 @@ export const searchAirportId = "search-airport"
 
 export const EXPIRES_AT_SAFE_INTERVAL = 30 * 1000;
 export const POLL_INTERVAL_TAF_METAR = 1 * 30 * 1000;
-export const POLL_INTERVAL_NOTAM = 24 * 60 * 60 * 1000
+export const POLL_INTERVAL_NOTAM =  1 * 60 * 30 * 1000
 
 export const fetchTAF = async (values: AirportFormValues): Promise<TAFJson[]> => {
   const params = new URLSearchParams({

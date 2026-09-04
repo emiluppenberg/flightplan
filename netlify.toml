@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api/reports/notam"
-  to = "https://xxx"
+  to = "https://flyrep-notam-api.fly.dev/get-all-notam"
   status = 200
   force = true
 
