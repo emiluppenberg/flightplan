@@ -354,6 +354,20 @@ export const HIGHLIGHTS_OPERATIONAL_HOURS: CodeHighlight[] = [
     priority: 1,
     regEx: /\bQFA(?:AH|AK|AL|AM|AO|AP|AR|AS|AU|AW|AX|LC|LS|LT|)\b/,
   },
+  {
+    report: "NOTAM",
+    label: "APPROACH CONTROL",
+    class: "highlight-operational-hours-approach-control",
+    priority: 1,
+    regEx: /\bQSP(?:AH|AK|AL|AM|AO|AP|AR|AS|AU|AW|AX|LC|LS|LT|)\b/,
+  },
+  {
+    report: "NOTAM",
+    label: "FUEL",
+    class: "highlight-operational-hours-fuel",
+    priority: 1,
+    regEx: /\bQFU(?:AH|AK|AL|AM|AO|AP|AR|AS|AU|AW|AX|LC|LS|LT|)\b/,
+  }
 ]
 
 export const HIGHLIGHTS_NOTAM: CodeHighlight[] = [
