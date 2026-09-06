@@ -216,6 +216,11 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
     const handleSetHighlights = async (newHighlights: CodeHighlight[], report: CodeHighlightReport) => {
         try {
+            if (report === "TAF") setHighlightsTAF(newHighlights)
+            if (report === "METAR") setHighlightsMETAR(newHighlights)
+            if (report === "NOTAM") setHighlightsNOTAM(newHighlights)
+            if (report === "OPERATIONAL HOURS") setHighlightsOPERATIONAL_HOURS(newHighlights)
+                
             if (user) {
                 setIsLoading(true)
                 setMessage('')
@@ -239,10 +244,6 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "")
         } finally {
-            if (report === "TAF") setHighlightsTAF(newHighlights)
-            if (report === "METAR") setHighlightsMETAR(newHighlights)
-            if (report === "NOTAM") setHighlightsNOTAM(newHighlights)
-            if (report === "OPERATIONAL HOURS") setHighlightsOPERATIONAL_HOURS(newHighlights)
             setIsLoading(false)
         }
     }

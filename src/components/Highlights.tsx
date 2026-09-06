@@ -12,22 +12,22 @@ const Highlights = () => {
                     title="METAR"
                     options={HIGHLIGHTS_TAF_METAR}
                     selections={context.highlightsMETAR}
-                    onSelected={(selections) => context.handleSetHighlights(selections, "METAR")} />
+                    onSelected={async (selections) => await context.handleSetHighlights(selections, "METAR")} />
                 <HighlightsField
                     title="TAF"
                     options={HIGHLIGHTS_TAF_METAR}
                     selections={context.highlightsTAF}
-                    onSelected={(selections) => context.handleSetHighlights(selections, "TAF")} />
+                    onSelected={async (selections) => await context.handleSetHighlights(selections, "TAF")} />
                 <HighlightsField
                     title="NOTAM"
                     options={HIGHLIGHTS_NOTAM}
                     selections={context.highlightsNOTAM}
-                    onSelected={(selections) => context.handleSetHighlights(selections, "NOTAM")} />
+                    onSelected={async (selections) => await context.handleSetHighlights(selections, "NOTAM")} />
                 <HighlightsField
                     title="OPR. HOURS"
                     options={HIGHLIGHTS_OPERATIONAL_HOURS}
                     selections={context.highlightsOPERATIONAL_HOURS}
-                    onSelected={(selections) => context.handleSetHighlights(selections, "OPERATIONAL HOURS")} />
+                    onSelected={async (selections) => await context.handleSetHighlights(selections, "OPERATIONAL HOURS")} />
             </div>
         </div>
     )
