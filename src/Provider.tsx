@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState, type PropsWithChildren } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM, consumeSupabaseConfirmationLink, sessionStorageKey } from "./utilities";
-import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./fetch/supabase";
+import { createAirport, refreshAirports, resolveHighlights, searchAirportId, capture,  captureSyncNOTAM,    consumeSupabaseConfirmationLink, sessionStorageKey } from "./utilities";
+import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./api/supabase";
+import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR, POLL_INTERVAL_NOTAM } from "./api/resources";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])

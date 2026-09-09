@@ -1,6 +1,6 @@
 import type { Session } from "@supabase/supabase-js"
 import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, NotamEntry, UpsertNOTAMBody, DeleteNOTAMBody, SelectAirportNOTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues, InitializeUserBody, SignInBody, SignUpBody, SignOutBody } from "../types"
-import { EXPIRES_AT_SAFE_INTERVAL, getAccessToken, getRefreshToken, sessionStorageKey } from "../utilities"
+import { getAccessToken, getRefreshToken, sessionStorageKey } from "../utilities"
 
 export const PATH_INITIALIZE_USER = "/api/supabase/initialize-user"
 export const PATH_SIGN_IN = "/api/supabase/sign-in"
@@ -15,6 +15,8 @@ export const PATH_DELETE_NOTAM = "/api/supabase/delete-notam"
 export const PATH_SELECT_AIRPORT_NOTAM = "/api/supabase/select-airport-notam"
 export const PATH_UPSERT_HIGHLIGHTS = "/api/supabase/upsert-highlights"
 export const PATH_SELECT_HIGHLIGHTS = "/api/supabase/select-highlights"
+
+export const EXPIRES_AT_SAFE_INTERVAL = 30 * 1000;
 
 export const fetchInsertAirport = async (body: InsertAirportBody): Promise<SupabaseAirport> => {
   const response = await fetch(`${PATH_INSERT_AIRPORT}`, {
