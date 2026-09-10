@@ -32,7 +32,7 @@ const AirportRender = (props: AirportRenderProps) => {
 
     const sortedNOTAM = useMemo(() =>
         sortNOTAM([...props.airport.NOTAM, ...props.airport.SNOWTAM], highlightsNOTAM),
-        [props.airport.NOTAM, highlightsNOTAM])
+        [props.airport.NOTAM, props.airport.SNOWTAM, highlightsNOTAM])
 
     const reportsMETAR = [
         ...props.airport.METAR.map((metar, index) => (
