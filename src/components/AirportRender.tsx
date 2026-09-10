@@ -31,7 +31,7 @@ const AirportRender = (props: AirportRenderProps) => {
         [context.highlightsOPERATIONAL_HOURS, context.highlightsNOTAM])
 
     const sortedNOTAM = useMemo(() =>
-        sortNOTAM([...props.airport.NOTAM], highlightsNOTAM),
+        sortNOTAM([...props.airport.NOTAM, ...props.airport.SNOWTAM], highlightsNOTAM),
         [props.airport.NOTAM, highlightsNOTAM])
 
     const reportsMETAR = [

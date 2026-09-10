@@ -1,5 +1,5 @@
 import type { Session } from "@supabase/supabase-js"
-import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, NotamEntry, UpsertSNOWTAMBody, DeleteSNOWTAMBody, SelectAirportSNOWTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues, InitializeUserBody, SignInBody, SignUpBody, SignOutBody } from "../types"
+import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, EntryNOTAM, UpsertSNOWTAMBody, DeleteSNOWTAMBody, SelectAirportSNOWTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues, InitializeUserBody, SignInBody, SignUpBody, SignOutBody, EntrySNOWTAM } from "../types"
 import { getAccessToken, getRefreshToken, sessionStorageKey } from "../utilities"
 
 export const PATH_INITIALIZE_USER = "/api/supabase/initialize-user"
@@ -86,7 +86,7 @@ export const fetchUpdateAirportNextPollSNOWTAM = async (icaoId: string, nextPoll
   }
 }
 
-export const fetchUpsertSNOWTAM = async (SNOWTAM: NotamEntry[], airportSupabaseId: string) => {
+export const fetchUpsertSNOWTAM = async (SNOWTAM: EntrySNOWTAM[], airportSupabaseId: string) => {
   const body: UpsertSNOWTAMBody = {
     accessToken: getAccessToken(),
     SNOWTAM: SNOWTAM,
@@ -125,7 +125,7 @@ export const fetchDeleteSNOWTAM = async (airportSupabaseId: string) => {
   }
 }
 
-export const fetchSelectAirportSNOWTAM = async (airportSupabaseId: string): Promise<NotamEntry[]> => {
+export const fetchSelectAirportSNOWTAM = async (airportSupabaseId: string): Promise<EntryNOTAM[]> => {
   const body: SelectAirportSNOWTAMBody = {
     accessToken: getAccessToken(),
     airportSupabaseId: airportSupabaseId

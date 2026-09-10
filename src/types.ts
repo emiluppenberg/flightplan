@@ -12,30 +12,41 @@ export type FetchResult<T> = {
   error: string | undefined;
 }
 
-export interface NotamEntry {
-  /** Full NOTAM text in standard ICAO format — multi-line, "\n" separated. */
+export interface EntryNOTAM {
   raw: string;
-  notam_id: string | null;
-  notam_id_domestic: string | null;
-  type: string | null;
-  location: string | null;
-  effective: string | null;
-  expiration: string | null;
-  body: string | null;
-  schedule: string | null;
-  lower_limit: string | null;
-  upper_limit: string | null;
-  affected_fir: string | null;
-  q_code: string | null;
-  qline: string | null;
-  scope: string | null;
-  status: string | null;
-  id: string | undefined;
+  notam_id?: string | null;
+  notam_id_domestic?: string | null;
+  type?: string | null;
+  location?: string | null;
+  effective?: string | null;
+  expiration?: string | null;
+  body?: string | null;
+  schedule?: string | null;
+  lower_limit?: string | null;
+  upper_limit?: string | null;
+  affected_fir?: string | null;
+  q_code?: string | null;
+  qline?: string | null;
+  scope?: string | null;
+  status?: string | null;
+  id?: string | undefined;
 }
 
-export interface NotamsResponse {
+export interface EntrySNOWTAM {
+  raw: string;
+  notam_id?: string | null;
+  notam_id_domestic?: string | null;
+  location?: string | null;
+  effective?: string | null;
+  expiration?: string | null;
+  body?: string | null;
+  status?: string | null;
+  id?: string | undefined;
+}
+
+export interface ResponseNOTAM {
   icao: string;
-  notams: NotamEntry[];
+  notams: EntryNOTAM[];
   total: number;
   error?: string;
 }
@@ -73,12 +84,12 @@ export type AirportFormValues = {
   notamIncludeFuture: boolean;
 }
 
-export type TAFJson = {
+export type EntryTAF = {
   icaoId: string;
   rawTAF: string;
 }
 
-export type METARJson = {
+export type EntryMETAR = {
   icaoId: string;
   receiptTime: string;
   rawOb: string;
@@ -87,9 +98,10 @@ export type METARJson = {
 export type AirportData = {
   id: string;
   formValues: AirportFormValues;
-  TAF: TAFJson[];
-  METAR: METARJson[];
-  NOTAM: NotamEntry[];
+  TAF: EntryTAF[];
+  METAR: EntryMETAR[];
+  NOTAM: EntryNOTAM[];
+  SNOWTAM: EntrySNOWTAM[];
   messages: string;
   nextPollReports: number;
   nextPollSNOWTAM: number;
@@ -476,7 +488,7 @@ export type SelectAllAirportsBody = {
 
 export type UpsertSNOWTAMBody = {
   accessToken: string;
-  SNOWTAM: NotamEntry[];
+  SNOWTAM: EntrySNOWTAM[];
   airportSupabaseId: string;
 }
 

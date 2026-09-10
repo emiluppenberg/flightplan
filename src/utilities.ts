@@ -1,5 +1,5 @@
 import type { Session } from "@supabase/supabase-js"
-import { type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamEntry, type FetchResult, type SupabaseAirport, type CodeHighlight, type AppUser } from "./types"
+import { type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type EntryNOTAM, type FetchResult, type SupabaseAirport, type CodeHighlight, type AppUser, type EntrySNOWTAM } from "./types"
 import { fetchDeleteSNOWTAM, fetchInitializeUser, fetchSelectAirportSNOWTAM, fetchUpdateAirportNextPollSNOWTAM, fetchUpsertSNOWTAM } from "./api/supabase"
 import { fetchTAF, fetchMETAR, fetchNOTAM, fetchSNOWTAM, POLL_INTERVAL_SNOWTAM, POLL_INTERVAL_TAF_METAR_NOTAM } from "./api/resources";
 
@@ -33,7 +33,7 @@ export const capture = async<T>(
 }
 
 export const captureSyncSNOWTAM = async (
-  SNOWTAM: NotamEntry[],
+  SNOWTAM: EntrySNOWTAM[],
   airportSupabaseId: string | undefined,
   icaoId: string,
   nextPollSNOWTAM: number,
@@ -91,17 +91,14 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
       SNOWTAM.data = await fetchSelectAirportSNOWTAM(airport.id)
     }
 
-    if (!NOTAM.data) NOTAM.data = []
-    if (!SNOWTAM.data) SNOWTAM.data = []
-    const mergedNOTAM_SNOWTAM = [ ...NOTAM.data, ...SNOWTAM.data ]
-
     return {
       id: crypto.randomUUID(),
       icaoId: airport.icao,
       formValues: formValues,
       TAF: TAF.data ? TAF.data : [],
       METAR: METAR.data ? METAR.data : [],
-      NOTAM: mergedNOTAM_SNOWTAM,
+      NOTAM: NOTAM.data ? NOTAM.data : [],
+      SNOWTAM: SNOWTAM.data ? SNOWTAM.data : [],
       messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + (SNOWTAM.error ?? "") + synced,
       nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM,
       nextPollSNOWTAM: nextPollSNOWTAM,
@@ -124,6 +121,7 @@ export const createAirport = (id: string): AirportData => {
     TAF: [],
     METAR: [],
     NOTAM: [],
+    SNOWTAM: [],
     messages: "",
     nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM,
     nextPollSNOWTAM: Date.now(),
@@ -134,7 +132,7 @@ export const createAirport = (id: string): AirportData => {
 export const resolveHighlights = (classes: string[], highlightCollection: CodeHighlight[]) => highlightCollection.filter(highlight => classes.includes(highlight.class));
 
 export const matchesNotamHighlight = (
-  notam: NotamEntry,
+  notam: EntryNOTAM,
   highlight: CodeHighlight
 ): boolean => [notam.q_code, notam.raw].some(value => value != null && highlight.regEx.test(value))
 
@@ -166,7 +164,7 @@ export const formatRawCodes = (raw: string) => {
 };
 
 export const getOperationalHours = (
-  notams: NotamEntry[],
+  notams: EntryNOTAM[],
   targetDate: number,
   highlightsOPERATIONAL_HOURS: CodeHighlight[]
 ): string[] => {
@@ -197,7 +195,7 @@ export const getOperationalHours = (
       : [""]
 }
 
-export const sortNOTAM = (notams: NotamEntry[], highlights: CodeHighlight[]): NotamEntry[] => {
+export const sortNOTAM = (notams: EntryNOTAM[], highlights: CodeHighlight[]): EntryNOTAM[] => {
   return notams.sort((a, b) => {
     const aIsHighlighted = highlights.some(highlight => matchesNotamHighlight(a, highlight))
     const bIsHighlighted = highlights.some(highlight => matchesNotamHighlight(b, highlight))

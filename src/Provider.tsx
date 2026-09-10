@@ -133,25 +133,21 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 setUser(refreshedUser.data)
             }
 
-            if (!NOTAM.data) NOTAM.data = []
-            if (!SNOWTAM.data) SNOWTAM.data = []
-            const mergedNOTAM = [...NOTAM.data, ...SNOWTAM.data]
-
             setAirports(current => current.map(_airport => {
                 if (_airport.id === airport.id) {
                     // matches preserve data during failed fetch AND prevents searchAirport from displaying reports for multiple icaoId
-                    const matchTAF = _airport.TAF.some(taf => taf.icaoId === airport.formValues.icaoId)
-                    const matchMETAR = _airport.METAR.some(metar => metar.icaoId === airport.formValues.icaoId)
-                    const matchNOTAM = _airport.NOTAM.some(notam => notam.location === airport.formValues.icaoId)
+                    const hasTAF = _airport.TAF.some(taf => taf.icaoId === airport.formValues.icaoId)
+                    const hasMETAR = _airport.METAR.some(metar => metar.icaoId === airport.formValues.icaoId)
+                    const hasNOTAM = _airport.NOTAM.some(notam => notam.location === airport.formValues.icaoId)
+                    const hasSNOWTAM = _airport.SNOWTAM.some(snowtam => snowtam.location === airport.formValues.icaoId)
 
                     return {
                         ..._airport,
                         icaoId: airport.formValues.icaoId,
-                        TAF: TAF.data ?? (matchTAF ? _airport.TAF : []),
-                        METAR: METAR.data ?? (matchMETAR ? _airport.METAR : []),
-                        NOTAM: mergedNOTAM.length > 0
-                            ? mergedNOTAM
-                            : (matchNOTAM ? _airport.NOTAM : []),
+                        TAF: TAF.data ?? (hasTAF ? _airport.TAF : []),
+                        METAR: METAR.data ?? (hasMETAR ? _airport.METAR : []),
+                        NOTAM: NOTAM.data ?? (hasNOTAM ? _airport.NOTAM : []),
+                        SNOWTAM: SNOWTAM.data ?? (hasSNOWTAM ? _airport.SNOWTAM : []),
                         messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + (SNOWTAM.error ?? "") + (refreshedUser?.error ?? "") + synced,
                         nextPollReports: nextPollReports,
                         nextPollSNOWTAM: fetchFreshSNOWTAM && SNOWTAM.data
@@ -201,8 +197,8 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                     airport.nextPollReports <= now
 
                 if (pollReports) {
-                    const pollNOTAM = airport.nextPollSNOWTAM <= now
-                    handleSubmit(airport, pollNOTAM)
+                    const pollSNOWTAM = airport.nextPollSNOWTAM <= now
+                    handleSubmit(airport, pollSNOWTAM)
                 }
             }
         } catch (error) {
@@ -303,13 +299,14 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         const hasTAF = searchAirport.TAF.some(taf => taf.icaoId === icaoId)
         const hasMETAR = searchAirport.METAR.some(metar => metar.icaoId === icaoId)
         const hasNOTAM = searchAirport.NOTAM.some(notam => notam.location === icaoId)
+        const hasSNOWTAM = searchAirport.SNOWTAM.some(snowtam => snowtam.location === icaoId)
 
-        nextPollSNOWTAM = user && hasNOTAM
+        nextPollSNOWTAM = user && hasSNOWTAM
             ? nextPollSNOWTAM + POLL_INTERVAL_SNOWTAM
             : nextPollSNOWTAM
 
-        const synced = user && hasNOTAM
-            ? await captureSyncSNOWTAM(searchAirport.NOTAM, supabaseAirport?.id, icaoId, nextPollSNOWTAM)
+        const synced = user && hasSNOWTAM
+            ? await captureSyncSNOWTAM(searchAirport.SNOWTAM, supabaseAirport?.id, icaoId, nextPollSNOWTAM)
             : ""
 
         setAirports(current => [...current, {
@@ -319,6 +316,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             TAF: hasTAF ? [...searchAirport.TAF] : [],
             METAR: hasMETAR ? [...searchAirport.METAR] : [],
             NOTAM: hasNOTAM ? [...searchAirport.NOTAM] : [],
+            SNOWTAM: hasSNOWTAM ? [...searchAirport.SNOWTAM] : [],
             nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM,
             nextPollSNOWTAM: nextPollSNOWTAM,
             messages: synced,

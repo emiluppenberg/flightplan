@@ -1,4 +1,4 @@
-import { type AirportFormValues, type TAFJson, type METARJson, type NotamEntry, type NotamsResponse, type AirportsResourceResponse, HIGHLIGHTS_NOTAM } from "../types"
+import { type AirportFormValues, type EntryTAF, type EntryMETAR, type EntryNOTAM, type ResponseNOTAM, type AirportsResourceResponse, HIGHLIGHTS_NOTAM, type EntrySNOWTAM } from "../types"
 import { matchesNotamHighlight } from "../utilities"
 
 export const PATH_AIRPORTS = "/api/airports"
@@ -10,7 +10,7 @@ export const PATH_METAR = '/api/reports/metar'
 export const POLL_INTERVAL_TAF_METAR_NOTAM = 5 * 60 * 1000
 export const POLL_INTERVAL_SNOWTAM = 60 * 60 * 1000
 
-export const fetchTAF = async (values: AirportFormValues): Promise<TAFJson[]> => {
+export const fetchTAF = async (values: AirportFormValues): Promise<EntryTAF[]> => {
   const params = new URLSearchParams({
     ids: values.icaoId,
     format: "json",
@@ -30,7 +30,7 @@ export const fetchTAF = async (values: AirportFormValues): Promise<TAFJson[]> =>
   return await response.json()
 }
 
-export const fetchMETAR = async (values: AirportFormValues): Promise<METARJson[]> => {
+export const fetchMETAR = async (values: AirportFormValues): Promise<EntryMETAR[]> => {
   const params = new URLSearchParams({
     ids: values.icaoId,
     format: "json",
@@ -47,7 +47,7 @@ export const fetchMETAR = async (values: AirportFormValues): Promise<METARJson[]
     throw new Error(`METAR request for ${values.icaoId} failed with status ${response.status}\n`)
   }
 
-  const METAR: METARJson[] = await response.json()
+  const METAR: EntryMETAR[] = await response.json()
 
   return METAR.toSorted((a, b) => {
     const aTime = Date.parse(a.receiptTime)
@@ -61,7 +61,7 @@ export const fetchMETAR = async (values: AirportFormValues): Promise<METARJson[]
   })
 }
 
-export const fetchNOTAM = async (values: AirportFormValues): Promise<NotamEntry[]> => {
+export const fetchNOTAM = async (values: AirportFormValues): Promise<EntryNOTAM[]> => {
   const params = new URLSearchParams({
     icao: values.icaoId,
   })
@@ -72,11 +72,11 @@ export const fetchNOTAM = async (values: AirportFormValues): Promise<NotamEntry[
     throw new Error(await response.text())
   }
 
-  const result: NotamsResponse = await response.json();
+  const result: ResponseNOTAM = await response.json();
   return result.notams
 }
 
-export const fetchSNOWTAM = async (values: AirportFormValues): Promise<NotamEntry[]> => {
+export const fetchSNOWTAM = async (values: AirportFormValues): Promise<EntrySNOWTAM[]> => {
   const params = new URLSearchParams({
     icao: values.icaoId,
     includeFIR: String(values.notamIncludeFIR),
@@ -95,8 +95,8 @@ export const fetchSNOWTAM = async (values: AirportFormValues): Promise<NotamEntr
     throw new Error("Unable to load highlightSNOWTAM")
   }
 
-  const result: NotamsResponse = await response.json();
-  const SNOWTAM = result.notams.filter(notam => matchesNotamHighlight(notam, highlightSNOWTAM))
+  const result: ResponseNOTAM = await response.json();
+  const SNOWTAM: EntrySNOWTAM[] = result.notams.filter(notam => matchesNotamHighlight(notam, highlightSNOWTAM))
   return SNOWTAM
 }
 
