@@ -1,5 +1,5 @@
 import type { Session } from "@supabase/supabase-js"
-import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, NotamEntry, UpsertNOTAMBody, DeleteNOTAMBody, SelectAirportNOTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues, InitializeUserBody, SignInBody, SignUpBody, SignOutBody } from "../types"
+import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, NotamEntry, UpsertSNOWTAMBody, DeleteSNOWTAMBody, SelectAirportSNOWTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues, InitializeUserBody, SignInBody, SignUpBody, SignOutBody } from "../types"
 import { getAccessToken, getRefreshToken, sessionStorageKey } from "../utilities"
 
 export const PATH_INITIALIZE_USER = "/api/supabase/initialize-user"
@@ -9,10 +9,10 @@ export const PATH_SIGN_OUT = "/api/supabase/sign-out"
 export const PATH_INSERT_AIRPORT = "/api/supabase/insert-airport"
 export const PATH_DELETE_AIRPORT = "/api/supabase/delete-airport"
 export const PATH_SELECT_ALL_AIRPORTS = "/api/supabase/select-all-airports"
-export const PATH_UPDATE_AIRPORT_NEXT_POLL_NOTAM = "/api/supabase/update-airport-next-poll-notam"
-export const PATH_UPSERT_NOTAM = "/api/supabase/upsert-notam"
-export const PATH_DELETE_NOTAM = "/api/supabase/delete-notam"
-export const PATH_SELECT_AIRPORT_NOTAM = "/api/supabase/select-airport-notam"
+export const PATH_UPDATE_AIRPORT_NEXT_POLL_SNOWTAM = "/api/supabase/update-airport-next-poll-snowtam"
+export const PATH_UPSERT_SNOWTAM = "/api/supabase/upsert-snowtam"
+export const PATH_DELETE_SNOWTAM = "/api/supabase/delete-snowtam"
+export const PATH_SELECT_AIRPORT_SNOWTAM = "/api/supabase/select-airport-snowtam"
 export const PATH_UPSERT_HIGHLIGHTS = "/api/supabase/upsert-highlights"
 export const PATH_SELECT_HIGHLIGHTS = "/api/supabase/select-highlights"
 
@@ -66,14 +66,14 @@ export const fetchSelectAllAirports = async (body: SelectAllAirportsBody): Promi
   return await response.json()
 }
 
-export const fetchUpdateAirportNextPollNOTAM = async (icaoId: string, nextPollNOTAM: number) => {
+export const fetchUpdateAirportNextPollSNOWTAM = async (icaoId: string, nextPollSNOWTAM: number) => {
   const body: UpdateAirportBody = {
     accessToken: getAccessToken(),
     icaoId: icaoId,
-    nextPollNOTAM: nextPollNOTAM
+    nextPollSNOWTAM: nextPollSNOWTAM
   }
 
-  const response = await fetch(`${PATH_UPDATE_AIRPORT_NEXT_POLL_NOTAM}`, {
+  const response = await fetch(`${PATH_UPDATE_AIRPORT_NEXT_POLL_SNOWTAM}`, {
     method: "POST",
     body: JSON.stringify(body),
     headers: {
@@ -86,14 +86,14 @@ export const fetchUpdateAirportNextPollNOTAM = async (icaoId: string, nextPollNO
   }
 }
 
-export const fetchUpsertNOTAM = async (notam: NotamEntry[], airportSupabaseId: string) => {
-  const body: UpsertNOTAMBody = {
+export const fetchUpsertSNOWTAM = async (SNOWTAM: NotamEntry[], airportSupabaseId: string) => {
+  const body: UpsertSNOWTAMBody = {
     accessToken: getAccessToken(),
-    notam: notam,
+    SNOWTAM: SNOWTAM,
     airportSupabaseId: airportSupabaseId
   }
 
-  const response = await fetch(`${PATH_UPSERT_NOTAM}`, {
+  const response = await fetch(`${PATH_UPSERT_SNOWTAM}`, {
     method: "POST",
     body: JSON.stringify(body),
     headers: {
@@ -106,13 +106,13 @@ export const fetchUpsertNOTAM = async (notam: NotamEntry[], airportSupabaseId: s
   }
 }
 
-export const fetchDeleteNOTAM = async (airportSupabaseId: string) => {
-  const body: DeleteNOTAMBody = {
+export const fetchDeleteSNOWTAM = async (airportSupabaseId: string) => {
+  const body: DeleteSNOWTAMBody = {
     accessToken: getAccessToken(),
     airportSupabaseId: airportSupabaseId
   }
 
-  const response = await fetch(`${PATH_DELETE_NOTAM}`, {
+  const response = await fetch(`${PATH_DELETE_SNOWTAM}`, {
     method: "POST",
     body: JSON.stringify(body),
     headers: {
@@ -125,13 +125,13 @@ export const fetchDeleteNOTAM = async (airportSupabaseId: string) => {
   }
 }
 
-export const fetchSelectAirportNOTAM = async (airportSupabaseId: string): Promise<NotamEntry[]> => {
-  const body: SelectAirportNOTAMBody = {
+export const fetchSelectAirportSNOWTAM = async (airportSupabaseId: string): Promise<NotamEntry[]> => {
+  const body: SelectAirportSNOWTAMBody = {
     accessToken: getAccessToken(),
     airportSupabaseId: airportSupabaseId
   }
 
-  const response = await fetch(`${PATH_SELECT_AIRPORT_NOTAM}`, {
+  const response = await fetch(`${PATH_SELECT_AIRPORT_SNOWTAM}`, {
     method: "POST",
     body: JSON.stringify(body),
     headers: {

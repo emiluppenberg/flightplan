@@ -3,7 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 export interface SupabaseAirport {
   icao: string
   id: string
-  next_poll_notam: number
+  next_poll_snowtam: number
   user_id: string
 }
 
@@ -92,7 +92,7 @@ export type AirportData = {
   NOTAM: NotamEntry[];
   messages: string;
   nextPollReports: number;
-  nextPollNOTAM: number;
+  nextPollSNOWTAM: number;
   isLoading: boolean;
   supabaseId?: string;
 }
@@ -456,7 +456,7 @@ export type AppUser = {
 export type InsertAirportBody = {
   accessToken: string;
   icaoId: string;
-  nextPollNOTAM: number;
+  nextPollSNOWTAM: number;
 }
 
 export type DeleteAirportBody = {
@@ -467,25 +467,25 @@ export type DeleteAirportBody = {
 export type UpdateAirportBody = {
   accessToken: string;
   icaoId: string;
-  nextPollNOTAM: number;
+  nextPollSNOWTAM: number;
 }
 
 export type SelectAllAirportsBody = {
   accessToken: string;
 }
 
-export type UpsertNOTAMBody = {
+export type UpsertSNOWTAMBody = {
   accessToken: string;
-  notam: NotamEntry[];
+  SNOWTAM: NotamEntry[];
   airportSupabaseId: string;
 }
 
-export type DeleteNOTAMBody = {
+export type DeleteSNOWTAMBody = {
   accessToken: string;
   airportSupabaseId: string;
 }
 
-export type SelectAirportNOTAMBody = {
+export type SelectAirportSNOWTAMBody = {
   accessToken: string;
   airportSupabaseId: string;
 }

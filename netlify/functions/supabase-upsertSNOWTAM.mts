@@ -1,18 +1,22 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import type { UpdateAirportBody } from "../../src/types"
+import type { UpsertSNOWTAMBody } from "../../src/types"
 
 export default async (request: Request) => {
-    let body: UpdateAirportBody
+    let body: UpsertSNOWTAMBody
 
     try {
-        body = await request.json() as UpdateAirportBody;
+        body = await request.json() as UpsertSNOWTAMBody;
     } catch {
         return new Response(
-            "Invalid UpdateAirportBody",
+            "Invalid UpsertSNOWTAMBody",
             { status: 400 },
         );
+    }
+
+    if (body.SNOWTAM.length === 0) {
+        return new Response(null, { status: 204 })
     }
 
     const supabase = createClient<Database>(
@@ -29,9 +33,11 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_airports")
-        .update({ "next_poll_notam": body.nextPollNOTAM })
-        .eq("icao", body.icaoId)
+        .from("user_airports_notam")
+        .upsert(body.SNOWTAM.map(notam => ({
+            ...notam, airport_id: body.airportSupabaseId
+        })), { onConflict: "id" })
+        .select()
 
     if (!response.success) {
         console.error(response.error.message)
@@ -45,6 +51,6 @@ export default async (request: Request) => {
 }
 
 export const config: Config = {
-    path: "/api/supabase/update-airport-next-poll-notam",
+    path: "/api/supabase/upsert-snowtam",
     method: "POST"
 }

@@ -1,4 +1,5 @@
-import type { AirportFormValues, TAFJson, METARJson, NotamEntry, NotamsResponse, AirportsResourceResponse } from "../types"
+import { type AirportFormValues, type TAFJson, type METARJson, type NotamEntry, type NotamsResponse, type AirportsResourceResponse, HIGHLIGHTS_NOTAM } from "../types"
+import { matchesNotamHighlight } from "../utilities"
 
 export const PATH_AIRPORTS = "/api/airports"
 export const PATH_NOTAM = "/api/reports/notam"
@@ -6,8 +7,8 @@ export const PATH_SNOWTAM = "/api/reports/snowtam"
 export const PATH_TAF = '/api/reports/taf'
 export const PATH_METAR = '/api/reports/metar'
 
-export const POLL_INTERVAL_TAF_METAR = 1 * 30 * 1000
-export const POLL_INTERVAL_NOTAM =  1 * 30 * 60 * 1000
+export const POLL_INTERVAL_TAF_METAR_NOTAM = 5 * 60 * 1000
+export const POLL_INTERVAL_SNOWTAM = 60 * 60 * 1000
 
 export const fetchTAF = async (values: AirportFormValues): Promise<TAFJson[]> => {
   const params = new URLSearchParams({
@@ -63,8 +64,6 @@ export const fetchMETAR = async (values: AirportFormValues): Promise<METARJson[]
 export const fetchNOTAM = async (values: AirportFormValues): Promise<NotamEntry[]> => {
   const params = new URLSearchParams({
     icao: values.icaoId,
-    includeFIR: String(values.notamIncludeFIR),
-    includeFuture: String(values.notamIncludeFuture)
   })
 
   const response = await fetch(`${PATH_NOTAM}?${params}`)
@@ -75,6 +74,30 @@ export const fetchNOTAM = async (values: AirportFormValues): Promise<NotamEntry[
 
   const result: NotamsResponse = await response.json();
   return result.notams
+}
+
+export const fetchSNOWTAM = async (values: AirportFormValues): Promise<NotamEntry[]> => {
+  const params = new URLSearchParams({
+    icao: values.icaoId,
+    includeFIR: String(values.notamIncludeFIR),
+    includeFuture: String(values.notamIncludeFuture)
+  })
+
+  const response = await fetch(`${PATH_SNOWTAM}?${params}`)
+
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+
+  const highlightSNOWTAM = HIGHLIGHTS_NOTAM.find(highlight => highlight.label === "SNOWTAM")
+
+  if (!highlightSNOWTAM) {
+    throw new Error("Unable to load highlightSNOWTAM")
+  }
+
+  const result: NotamsResponse = await response.json();
+  const SNOWTAM = result.notams.filter(notam => matchesNotamHighlight(notam, highlightSNOWTAM))
+  return SNOWTAM
 }
 
 export const fetchAirports = async (name: string): Promise<AirportsResourceResponse> => {

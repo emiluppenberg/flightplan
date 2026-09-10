@@ -1,7 +1,7 @@
 import type { Session } from "@supabase/supabase-js"
 import { type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type NotamEntry, type FetchResult, type SupabaseAirport, type CodeHighlight, type AppUser } from "./types"
-import { fetchDeleteNOTAM, fetchInitializeUser, fetchSelectAirportNOTAM, fetchUpdateAirportNextPollNOTAM, fetchUpsertNOTAM } from "./api/supabase"
-import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_NOTAM, POLL_INTERVAL_TAF_METAR } from "./api/resources";
+import { fetchDeleteSNOWTAM, fetchInitializeUser, fetchSelectAirportSNOWTAM, fetchUpdateAirportNextPollSNOWTAM, fetchUpsertSNOWTAM } from "./api/supabase"
+import { fetchTAF, fetchMETAR, fetchNOTAM, fetchSNOWTAM, POLL_INTERVAL_SNOWTAM, POLL_INTERVAL_TAF_METAR_NOTAM } from "./api/resources";
 
 export const SVG_URLS = {
   logo: '/flygvader-logo.svg',
@@ -32,11 +32,11 @@ export const capture = async<T>(
   }
 }
 
-export const captureSyncNOTAM = async (
-  NOTAM: NotamEntry[],
+export const captureSyncSNOWTAM = async (
+  SNOWTAM: NotamEntry[],
   airportSupabaseId: string | undefined,
   icaoId: string,
-  nextPollNOTAM: number,
+  nextPollSNOWTAM: number,
   airportId: string = ""
 ): Promise<string> => {
   if (!airportSupabaseId) {
@@ -45,14 +45,14 @@ export const captureSyncNOTAM = async (
       : "Airport is missing supabaseId"
   }
 
-  const deleted = await capture(() => fetchDeleteNOTAM(airportSupabaseId))
+  const deleted = await capture(() => fetchDeleteSNOWTAM(airportSupabaseId))
 
   const upserted = !deleted.error
-    ? await capture(() => fetchUpsertNOTAM(NOTAM, airportSupabaseId))
+    ? await capture(() => fetchUpsertSNOWTAM(SNOWTAM, airportSupabaseId))
     : { data: undefined, error: "" }
 
   const updated = !deleted.error && !upserted.error
-    ? await capture(() => fetchUpdateAirportNextPollNOTAM(icaoId, nextPollNOTAM))
+    ? await capture(() => fetchUpdateAirportNextPollSNOWTAM(icaoId, nextPollSNOWTAM))
     : { data: undefined, error: "" }
 
   return (deleted.error ?? "") + (upserted.error ?? "") + (updated.error ?? "")
@@ -68,27 +68,32 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
       notamIncludeFuture: true
     }
 
-    const fetchFreshNOTAM = airport.next_poll_notam <= now
+    const fetchFreshSNOWTAM = airport.next_poll_snowtam <= now
 
-    const [TAF, METAR, NOTAM] = await Promise.all([
+    const [TAF, METAR, NOTAM, SNOWTAM] = await Promise.all([
       capture(() => fetchTAF(formValues)),
       capture(() => fetchMETAR(formValues)),
-      fetchFreshNOTAM
-        ? capture(() => fetchNOTAM(formValues))
+      capture(() => fetchNOTAM(formValues)),
+      fetchFreshSNOWTAM
+        ? capture(() => fetchSNOWTAM(formValues))
         : Promise.resolve({ data: undefined, error: "" }),
     ])
 
-    const nextPollNOTAM = fetchFreshNOTAM && NOTAM.data
-      ? now + POLL_INTERVAL_NOTAM
-      : airport.next_poll_notam
+    const nextPollSNOWTAM = fetchFreshSNOWTAM && SNOWTAM.data
+      ? now + POLL_INTERVAL_SNOWTAM
+      : airport.next_poll_snowtam
 
-    const synced = fetchFreshNOTAM && NOTAM.data
-      ? await captureSyncNOTAM(NOTAM.data, airport.id, airport.icao, nextPollNOTAM)
+    const synced = fetchFreshSNOWTAM && SNOWTAM.data
+      ? await captureSyncSNOWTAM(SNOWTAM.data, airport.id, airport.icao, nextPollSNOWTAM)
       : ""
 
-    if (!fetchFreshNOTAM || (fetchFreshNOTAM && !NOTAM.data)) {
-      NOTAM.data = await fetchSelectAirportNOTAM(airport.id)
+    if (!fetchFreshSNOWTAM || (fetchFreshSNOWTAM && !SNOWTAM.data)) {
+      SNOWTAM.data = await fetchSelectAirportSNOWTAM(airport.id)
     }
+
+    if (!NOTAM.data) NOTAM.data = []
+    if (!SNOWTAM.data) SNOWTAM.data = []
+    const mergedNOTAM_SNOWTAM = [ ...NOTAM.data, ...SNOWTAM.data ]
 
     return {
       id: crypto.randomUUID(),
@@ -96,10 +101,10 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
       formValues: formValues,
       TAF: TAF.data ? TAF.data : [],
       METAR: METAR.data ? METAR.data : [],
-      NOTAM: NOTAM.data ? NOTAM.data : [],
-      messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + synced,
-      nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR,
-      nextPollNOTAM: nextPollNOTAM,
+      NOTAM: mergedNOTAM_SNOWTAM,
+      messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + (SNOWTAM.error ?? "") + synced,
+      nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM,
+      nextPollSNOWTAM: nextPollSNOWTAM,
       isLoading: false,
       supabaseId: airport.id
     }
@@ -120,8 +125,8 @@ export const createAirport = (id: string): AirportData => {
     METAR: [],
     NOTAM: [],
     messages: "",
-    nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR,
-    nextPollNOTAM: Date.now(),
+    nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM,
+    nextPollSNOWTAM: Date.now(),
     isLoading: false
   }
 }

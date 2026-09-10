@@ -18,19 +18,19 @@ export type Database = {
         Row: {
           icao: string
           id: string
-          next_poll_notam: number
+          next_poll_snowtam: number
           user_id: string
         }
         Insert: {
           icao: string
           id?: string
-          next_poll_notam?: number
+          next_poll_snowtam?: number
           user_id?: string
         }
         Update: {
           icao?: string
           id?: string
-          next_poll_notam?: number
+          next_poll_snowtam?: number
           user_id?: string
         }
         Relationships: []
