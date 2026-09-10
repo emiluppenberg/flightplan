@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import { useFlightPathContext } from "../Context";
-import type { NotamEntry } from "../types";
+import type { EntryNOTAM } from "../types";
 import { matchesNotamHighlight } from "../utilities";
 
 type NotamRenderProps = {
-    notam: NotamEntry;
+    notam: EntryNOTAM;
 }
 
 const NotamRender = (props: NotamRenderProps) => {

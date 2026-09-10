@@ -30,7 +30,7 @@ export default async (request: Request) => {
 
     const response = await supabase
         .from("user_airports")
-        .insert({ icao: body.icaoId, next_poll_notam: body.nextPollNOTAM })
+        .insert({ icao: body.icaoId, next_poll_snowtam: body.nextPollSNOWTAM })
         .select()
 
     if (!response.success) {

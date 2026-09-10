@@ -9,7 +9,7 @@ export type FlightPathState = {
     highlightsNOTAM: CodeHighlight[];
     handleSubmit: (airport: AirportData, fetchNotam: boolean) => void;
     handleSetFormValues: (newValues: AirportFormValues, id: string) => void;
-    handleSetHighlights: (newHighlights: CodeHighlight[], report: CodeHighlightReport) => void;
+    handleSetHighlights: (newHighlights: CodeHighlight[], report: CodeHighlightReport) => Promise<void>;
     handleAddAirport: (icaoId: string) => void;
     handleDeleteAirport: (id: string) => void;
     handleSignIn: (values: UserFormValues) => void;

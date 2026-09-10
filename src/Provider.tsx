@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState, type PropsWithChildren } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAirport, refreshAirports, resolveHighlights, POLL_INTERVAL_TAF_METAR, searchAirportId, capture, POLL_INTERVAL_NOTAM, captureSyncNOTAM, fetchTAF, fetchMETAR, fetchNOTAM, consumeSupabaseConfirmationLink, sessionStorageKey } from "./utilities";
-import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./fetch/supabase";
+import { createAirport, refreshAirports, resolveHighlights, searchAirportId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey } from "./utilities";
+import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./api/supabase";
+import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 
 export const FlightPathProvider = ({ children }: PropsWithChildren) => {
     const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])
@@ -95,7 +96,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
     const handleSubmit = useCallback(async (
         airport: AirportData,
-        fetchNotam: boolean,
+        fetchFreshSNOWTAM: boolean,
     ) => {
         if (airport.formValues.icaoId.length === 0) return;
 
@@ -108,23 +109,24 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
         try {
 
-            const [TAF, METAR, NOTAM] = await Promise.all([
+            const [TAF, METAR, NOTAM, SNOWTAM] = await Promise.all([
                 capture(() => fetchTAF(airport.formValues)),
                 capture(() => fetchMETAR(airport.formValues)),
-                fetchNotam
-                    ? capture(() => fetchNOTAM(airport.formValues))
+                capture(() => fetchNOTAM(airport.formValues)),
+                fetchFreshSNOWTAM
+                    ? capture(() => fetchSNOWTAM(airport.formValues))
                     : Promise.resolve({ data: undefined, error: "" }),
             ])
 
-            const nextPollReports = Date.now() + POLL_INTERVAL_TAF_METAR;
-            const nextPollNOTAM = Date.now() + POLL_INTERVAL_NOTAM;
+            const nextPollReports = Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM;
+            const nextPollSNOWTAM = Date.now() + POLL_INTERVAL_SNOWTAM;
 
             const refreshedUser = user
                 ? await capture(() => fetchRefreshedUser())
                 : undefined
 
-            const synced = ((refreshedUser && refreshedUser.data) || user) && NOTAM.data
-                ? await captureSyncNOTAM(NOTAM.data, airport.supabaseId, airport.formValues.icaoId, nextPollNOTAM, airport.id)
+            const synced = ((refreshedUser && refreshedUser.data) || user) && SNOWTAM.data
+                ? await captureSyncSNOWTAM(SNOWTAM.data, airport.supabaseId, airport.formValues.icaoId, nextPollSNOWTAM, airport.id)
                 : ""
 
             if (refreshedUser && refreshedUser.data) {
@@ -133,21 +135,24 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
             setAirports(current => current.map(_airport => {
                 if (_airport.id === airport.id) {
-                    const matchTAF = _airport.TAF.some(taf => taf.icaoId === airport.formValues.icaoId)
-                    const matchMETAR = _airport.METAR.some(metar => metar.icaoId === airport.formValues.icaoId)
-                    const matchNOTAM = _airport.NOTAM.some(notam => notam.location === airport.formValues.icaoId)
+                    // matches preserve data during failed fetch AND prevents searchAirport from displaying reports for multiple icaoId
+                    const hasTAF = _airport.TAF.some(taf => taf.icaoId === airport.formValues.icaoId)
+                    const hasMETAR = _airport.METAR.some(metar => metar.icaoId === airport.formValues.icaoId)
+                    const hasNOTAM = _airport.NOTAM.some(notam => notam.location === airport.formValues.icaoId)
+                    const hasSNOWTAM = _airport.SNOWTAM.some(snowtam => snowtam.location === airport.formValues.icaoId)
 
                     return {
                         ..._airport,
                         icaoId: airport.formValues.icaoId,
-                        TAF: TAF.data ?? (matchTAF ? _airport.TAF : []),
-                        METAR: METAR.data ?? (matchMETAR ? _airport.METAR : []),
-                        NOTAM: fetchNotam
-                            ? NOTAM.data ?? (matchNOTAM ? _airport.NOTAM : [])
-                            : (matchNOTAM ? _airport.NOTAM : []),
-                        messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + (refreshedUser?.error ?? "") + synced,
+                        TAF: TAF.data ?? (hasTAF ? _airport.TAF : []),
+                        METAR: METAR.data ?? (hasMETAR ? _airport.METAR : []),
+                        NOTAM: NOTAM.data ?? (hasNOTAM ? _airport.NOTAM : []),
+                        SNOWTAM: SNOWTAM.data ?? (hasSNOWTAM ? _airport.SNOWTAM : []),
+                        messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + (SNOWTAM.error ?? "") + (refreshedUser?.error ?? "") + synced,
                         nextPollReports: nextPollReports,
-                        nextPollNOTAM: fetchNotam && NOTAM.data ? nextPollNOTAM : _airport.nextPollNOTAM,
+                        nextPollSNOWTAM: fetchFreshSNOWTAM && SNOWTAM.data
+                            ? nextPollSNOWTAM
+                            : _airport.nextPollSNOWTAM,
                         isLoading: false
                     }
                 } else {
@@ -192,8 +197,8 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                     airport.nextPollReports <= now
 
                 if (pollReports) {
-                    const pollNOTAM = airport.nextPollNOTAM <= now
-                    handleSubmit(airport, pollNOTAM)
+                    const pollSNOWTAM = airport.nextPollSNOWTAM <= now
+                    handleSubmit(airport, pollSNOWTAM)
                 }
             }
         } catch (error) {
@@ -216,6 +221,11 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
 
     const handleSetHighlights = async (newHighlights: CodeHighlight[], report: CodeHighlightReport) => {
         try {
+            if (report === "TAF") setHighlightsTAF(newHighlights)
+            if (report === "METAR") setHighlightsMETAR(newHighlights)
+            if (report === "NOTAM") setHighlightsNOTAM(newHighlights)
+            if (report === "OPERATIONAL HOURS") setHighlightsOPERATIONAL_HOURS(newHighlights)
+
             if (user) {
                 setIsLoading(true)
                 setMessage('')
@@ -239,10 +249,6 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "")
         } finally {
-            if (report === "TAF") setHighlightsTAF(newHighlights)
-            if (report === "METAR") setHighlightsMETAR(newHighlights)
-            if (report === "NOTAM") setHighlightsNOTAM(newHighlights)
-            if (report === "OPERATIONAL HOURS") setHighlightsOPERATIONAL_HOURS(newHighlights)
             setIsLoading(false)
         }
     }
@@ -251,7 +257,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         if (icaoId.length === 0) return
 
         let supabaseAirport: SupabaseAirport | undefined = undefined
-        let nextPollNOTAM = Date.now()
+        let nextPollSNOWTAM = Date.now()
         const searchAirport = airports.find(airport => airport.id === searchAirportId) ?? createAirport(searchAirportId)
         const isDuplicate = airports.some(airport =>
             airport.formValues.icaoId === icaoId &&
@@ -281,7 +287,7 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 supabaseAirport = await fetchInsertAirport({
                     accessToken: accessToken,
                     icaoId: icaoId,
-                    nextPollNOTAM: nextPollNOTAM
+                    nextPollSNOWTAM: nextPollSNOWTAM
                 })
             } catch (error) {
                 setMessage(error instanceof Error ? error.message : "")
@@ -293,13 +299,14 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
         const hasTAF = searchAirport.TAF.some(taf => taf.icaoId === icaoId)
         const hasMETAR = searchAirport.METAR.some(metar => metar.icaoId === icaoId)
         const hasNOTAM = searchAirport.NOTAM.some(notam => notam.location === icaoId)
+        const hasSNOWTAM = searchAirport.SNOWTAM.some(snowtam => snowtam.location === icaoId)
 
-        nextPollNOTAM = user && hasNOTAM
-            ? nextPollNOTAM + POLL_INTERVAL_NOTAM
-            : nextPollNOTAM
+        nextPollSNOWTAM = user && hasSNOWTAM
+            ? nextPollSNOWTAM + POLL_INTERVAL_SNOWTAM
+            : nextPollSNOWTAM
 
-        const synced = user && hasNOTAM
-            ? await captureSyncNOTAM(searchAirport.NOTAM, supabaseAirport?.id, icaoId, nextPollNOTAM)
+        const synced = user && hasSNOWTAM
+            ? await captureSyncSNOWTAM(searchAirport.SNOWTAM, supabaseAirport?.id, icaoId, nextPollSNOWTAM)
             : ""
 
         setAirports(current => [...current, {
@@ -309,8 +316,9 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
             TAF: hasTAF ? [...searchAirport.TAF] : [],
             METAR: hasMETAR ? [...searchAirport.METAR] : [],
             NOTAM: hasNOTAM ? [...searchAirport.NOTAM] : [],
-            nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR,
-            nextPollNOTAM: nextPollNOTAM,
+            SNOWTAM: hasSNOWTAM ? [...searchAirport.SNOWTAM] : [],
+            nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM,
+            nextPollSNOWTAM: nextPollSNOWTAM,
             messages: synced,
             isLoading: false,
             supabaseId: supabaseAirport?.id

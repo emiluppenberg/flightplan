@@ -1,18 +1,18 @@
-"/api/supabase/select-airport-notam"
+"/api/supabase/delete-notam"
 
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import type { SelectAirportNOTAMBody } from "../../src/types"
+import type { DeleteSNOWTAMBody } from "../../src/types"
 
 export default async (request: Request) => {
-    let body: SelectAirportNOTAMBody
+    let body: DeleteSNOWTAMBody
 
     try {
-        body = await request.json() as SelectAirportNOTAMBody;
+        body = await request.json() as DeleteSNOWTAMBody;
     } catch {
         return new Response(
-            "Invalid SelectAirportNOTAMBody",
+            "Invalid DeleteSNOWTAMBody",
             { status: 400 },
         );
     }
@@ -32,8 +32,8 @@ export default async (request: Request) => {
 
     const response = await supabase
         .from("user_airports_notam")
-        .select()
-        .eq("airport_id", body.airportSupabaseId)
+        .delete()
+        .in("airport_id", [body.airportSupabaseId])
 
     if (!response.success) {
         console.error(response.error.message)
@@ -43,10 +43,10 @@ export default async (request: Request) => {
         )
     }
 
-    return Response.json(response.data)
+    return new Response(null, { status: 204 })
 }
 
 export const config: Config = {
-    path: "/api/supabase/select-airport-notam",
+    path: "/api/supabase/delete-snowtam",
     method: "POST"
 }

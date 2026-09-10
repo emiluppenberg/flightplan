@@ -1,20 +1,22 @@
-"/api/supabase/delete-notam"
-
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import type { DeleteNOTAMBody } from "../../src/types"
+import type { UpsertSNOWTAMBody } from "../../src/types"
 
 export default async (request: Request) => {
-    let body: DeleteNOTAMBody
+    let body: UpsertSNOWTAMBody
 
     try {
-        body = await request.json() as DeleteNOTAMBody;
+        body = await request.json() as UpsertSNOWTAMBody;
     } catch {
         return new Response(
-            "Invalid DeleteNOTAMBody",
+            "Invalid UpsertSNOWTAMBody",
             { status: 400 },
         );
+    }
+
+    if (body.SNOWTAM.length === 0) {
+        return new Response(null, { status: 204 })
     }
 
     const supabase = createClient<Database>(
@@ -32,8 +34,10 @@ export default async (request: Request) => {
 
     const response = await supabase
         .from("user_airports_notam")
-        .delete()
-        .in("airport_id", [body.airportSupabaseId])
+        .upsert(body.SNOWTAM.map(snowtam => ({
+            ...snowtam, airport_id: body.airportSupabaseId
+        })), { onConflict: "id" })
+        .select()
 
     if (!response.success) {
         console.error(response.error.message)
@@ -47,6 +51,6 @@ export default async (request: Request) => {
 }
 
 export const config: Config = {
-    path: "/api/supabase/delete-notam",
+    path: "/api/supabase/upsert-snowtam",
     method: "POST"
 }

@@ -28,7 +28,7 @@ export default async (request: Request) => {
     if (!response.ok) {
         console.error(`Skylink request failed: ${await response.text()}`)
         return new Response(
-            `NOTAM request for ${icao} failed with status ${response.status}`,
+            `SNOWTAM request for ${icao} failed with status ${response.status}`,
             { status: response.status }
         );
     }
@@ -36,7 +36,7 @@ export default async (request: Request) => {
     return Response.json(await response.json())
 }
 
-// export const config: Config = {
-//     path: "/api/reports/notam",
-//     method: "GET",
-// }
+export const config: Config = {
+    path: "/api/reports/snowtam",
+    method: "GET",
+}

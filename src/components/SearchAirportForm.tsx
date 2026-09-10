@@ -2,9 +2,10 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRe
 import { FormProvider, useForm } from "react-hook-form"
 import { useFlightPathContext } from "../Context"
 import type { AirportFormValues, AirportsResourceResponse } from "../types"
-import { fetchAirportsPage, fetchAirports, SVG_URLS, searchAirportId, PATH_AIRPORTS } from "../utilities"
+import { SVG_URLS, searchAirportId } from "../utilities"
 import Expand from "./Expand"
 import AirportRender from "./AirportRender"
+import { fetchAirports, fetchAirportsPage, PATH_AIRPORTS } from "../api/resources"
 
 export type SearchAirportFormHandle = {
     onOpen: () => void;
