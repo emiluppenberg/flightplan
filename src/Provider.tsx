@@ -5,7 +5,7 @@ import { createAirport, refreshAirports, resolveHighlights, searchAirportId, cap
 import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
-import { Outlet, useNavigate } from "react-router";
+import { Outlet, useLocation, useNavigate } from "react-router";
 
 export const FlightPathProvider = () => {
     const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])
@@ -19,6 +19,7 @@ export const FlightPathProvider = () => {
     const [user, setUser] = useState<AppUser>()
     const [initialized, setInitialized] = useState(false);
     const navigate = useNavigate()
+    const location = useLocation()
 
     const loadUserData = async (accessToken: string): Promise<boolean> => {
         const supabaseAirports = await fetchSelectAllAirports({
@@ -96,14 +97,14 @@ export const FlightPathProvider = () => {
                 setInitialized(true);
                 setIsLoading(false)
 
-                if (!hasAerodromes) {
+                if (!hasAerodromes && location.pathname === "/") {
                     navigate(`/${ROUTES.search}`)
                 }
             }
         }
 
         void restoreSession();
-    }, [])
+    }, [location.pathname])
 
     const handleSubmit = useCallback(async (
         airport: AirportData,
