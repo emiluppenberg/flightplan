@@ -213,7 +213,7 @@ const SearchAirportForm = () => {
                             ? (<button
                                 type="button"
                                 onClick={() => context.handleAddAirport(searchAirport.icaoId)}>
-                                Save
+                                Save {searchAirport.icaoId}
                             </button>)
                             : (<p className="message">No data</p>)}
                     </div>

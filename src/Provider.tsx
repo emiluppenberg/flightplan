@@ -198,7 +198,7 @@ export const FlightPathProvider = () => {
         try {
             for (const airport of airports) {
                 const pollReports =
-                    airport.formValues.icaoId.trim().length > 0 &&
+                    airport.icaoId &&
                     !airport.isLoading &&
                     airport.id !== searchAirportId &&
                     airport.nextPollReports <= now
@@ -267,7 +267,7 @@ export const FlightPathProvider = () => {
         let nextPollSNOWTAM = Date.now()
         const searchAirport = airports.find(airport => airport.id === searchAirportId) ?? createAirport(searchAirportId)
         const isDuplicate = airports.some(airport =>
-            airport.formValues.icaoId === icaoId &&
+            airport.icaoId === icaoId &&
             airport.id !== searchAirportId
         );
 
@@ -320,7 +320,7 @@ export const FlightPathProvider = () => {
             ...searchAirport,
             id: crypto.randomUUID(),
             icaoId: icaoId,
-            formValues: { ...searchAirport.formValues },
+            formValues: { ...searchAirport.formValues, icaoId: icaoId },
             TAF: hasTAF ? [...searchAirport.TAF] : [],
             METAR: hasMETAR ? [...searchAirport.METAR] : [],
             NOTAM: hasNOTAM ? [...searchAirport.NOTAM] : [],
