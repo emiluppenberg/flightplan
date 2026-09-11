@@ -387,14 +387,16 @@ export const FlightPathProvider = () => {
 
             setUser(user)
             hasAerodromes = await loadUserData(user.session.access_token);
+
+            if (!hasAerodromes) {
+                navigate(`/${ROUTES.search}`)
+            } else {
+                navigate("/")
+            }
         } catch (error) {
             setError(error instanceof Error ? error.message : "")
         } finally {
             setIsLoading(false)
-
-            if (!hasAerodromes) {
-                navigate(`/${ROUTES.search}`)
-            }
         }
     }
 
@@ -435,6 +437,7 @@ export const FlightPathProvider = () => {
         try {
             const responseMessage = await fetchSignUpUser({ ...values });
             setMessage(responseMessage)
+            navigate("/")
         } catch (error) {
             setError(error instanceof Error ? error.message : "")
         } finally {
