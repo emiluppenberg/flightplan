@@ -20,46 +20,30 @@ const AppHeader = () => {
                         onClick={() => setShowHighlights(value => !value)}>
                         <img src={SVG_URLS.highlight} width="20" />
                     </button>
-                    <NavLink to="/search">
-                        {({ isActive }) => (
-                            <button
-                                type="button"
-                                className={`btn-search ${isActive && "open"}`}>
-                                <img src={SVG_URLS.search} width="20" />
-                            </button>
-                        )}
+                    <NavLink
+                        to="/search"
+                        className={({ isActive }) => `btn-search ${isActive && "open"}`}>
+                        <img src={SVG_URLS.search} width="20" />
                     </NavLink>
-                    <NavLink to="/">
-                        {({ isActive }) => (
-                            <button
-                                type="button"
-                                className={`btn-airports ${isActive && "open"}`}>
-                                <img src={SVG_URLS.airports} width="20" />
-                            </button>
-                        )}
+                    <NavLink
+                        to="/"
+                        className={({ isActive }) => `btn-airports ${isActive && "open"}`}>
+                        <img src={SVG_URLS.airports} width="20" />
                     </NavLink>
                 </div>
                 <AppLogo />
                 <div className="top-buttons right">
                     {!context.user && (
                         <>
-                            <NavLink to="/sign-in">
-                                {({ isActive }) => (
-                                    <button
-                                        type="button"
-                                        className={`${isActive && "open"}`}>
-                                        Sign in
-                                    </button>
-                                )}
+                            <NavLink
+                                to="/sign-in"
+                                className={({ isActive }) => `${isActive && "open"}`}>
+                                Sign in
                             </NavLink>
-                            <NavLink to="/sign-up">
-                                {({ isActive }) => (
-                                    <button
-                                        type="button"
-                                        className={`${isActive && "open"}`}>
-                                        Sign up
-                                    </button>
-                                )}
+                            <NavLink
+                                to="/sign-up"
+                                className={({ isActive }) => `${isActive && "open"}`}>
+                                Sign up
                             </NavLink>
                         </>
                     )}
