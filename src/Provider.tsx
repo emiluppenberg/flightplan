@@ -104,7 +104,7 @@ export const FlightPathProvider = () => {
         }
 
         void restoreSession();
-    }, [location.pathname])
+    }, [])
 
     const handleSubmit = useCallback(async (
         airport: AirportData,
