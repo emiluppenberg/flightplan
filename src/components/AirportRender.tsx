@@ -73,8 +73,8 @@ const AirportRender = (props: AirportRenderProps) => {
 
     const tafMetarDisabled = props.airport.METAR.length === 0 && props.airport.TAF.length === 0
     const notamsDisabled = props.airport.NOTAM.length === 0
-    const dateDisabled = props.airport.icaoId !== null
-    const operationalHoursDisabled = props.airport.icaoId !== null
+    const dateDisabled = props.airport.icaoId === null
+    const operationalHoursDisabled = props.airport.icaoId === null
 
     return (
         <FormProvider {...form}>
