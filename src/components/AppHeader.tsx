@@ -29,7 +29,7 @@ const AppHeader = () => {
                             </button>
                         )}
                     </NavLink>
-                    <NavLink to="/all">
+                    <NavLink to="/">
                         {({ isActive }) => (
                             <button
                                 type="button"

@@ -12,6 +12,12 @@ export const SVG_URLS = {
   airports: '/ui/globe-svgrepo-com.svg'
 } as const;
 
+export const ROUTES = {
+  search: 'search',
+  signIn: "sign-in",
+  signUp: "sign-up",
+}
+
 export const sessionStorageKey = "sb-cgllylmfqjwakuhemjxv-auth-token"
 export const searchAirportId = "search-airport"
 

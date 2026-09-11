@@ -9,7 +9,7 @@ const SignIn = () => {
 
     const handleSignIn = async (values: UserFormValues) => {
         await context.handleSignIn(values)
-        navigate("/all")
+        navigate(`/`)
     }
     
     return (

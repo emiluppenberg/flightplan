@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAirport, refreshAirports, resolveHighlights, searchAirportId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey } from "./utilities";
+import { createAirport, refreshAirports, resolveHighlights, searchAirportId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES } from "./utilities";
 import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
-import { Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
 
 export const FlightPathProvider = () => {
     const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])
@@ -17,6 +17,7 @@ export const FlightPathProvider = () => {
     const [message, setMessage] = useState("")
     const [user, setUser] = useState<AppUser>()
     const [initialized, setInitialized] = useState(false);
+    const navigate = useNavigate()
 
     const loadUserData = async (accessToken: string) => {
         const supabaseAirports = await fetchSelectAllAirports({
@@ -90,6 +91,10 @@ export const FlightPathProvider = () => {
             } finally {
                 setInitialized(true);
                 setIsLoading(false)
+
+                if (airports.length === 1) {
+                    navigate(`/${ROUTES.search}`)
+                }
             }
         }
 

@@ -18,7 +18,7 @@ createRoot(rootElement).render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<FlightPathProvider />}>
-        <Route index path="all" element={<Airports />} />
+        <Route index element={<Airports />} />
         <Route path="search" element={<Search />} />
         <Route path="sign-in" element={<SignIn />} />
         <Route path="sign-up" element={<SignUp />} />
