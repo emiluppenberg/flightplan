@@ -1,9 +1,14 @@
+import { Navigate } from "react-router"
 import UserForm from "../components/UserForm"
 import { useFlightPathContext } from "../Context"
 import type { UserFormValues } from "../types"
 
 const SignIn = () => {
     const context = useFlightPathContext()
+
+    if (context.user) {
+        return <Navigate to="/" replace />
+    }
 
     const handleSignIn = async (values: UserFormValues) => {
         await context.handleSignIn(values)
