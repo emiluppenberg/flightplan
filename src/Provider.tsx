@@ -260,8 +260,8 @@ export const FlightPathProvider = () => {
         }
     }
 
-    const handleAddAirport = async (icaoId: string) => {
-        if (icaoId.length === 0) return
+    const handleAddAirport = async (icaoId: string | null) => {
+        if (!icaoId) return
 
         let supabaseAirport: SupabaseAirport | undefined = undefined
         let nextPollSNOWTAM = Date.now()
@@ -319,6 +319,7 @@ export const FlightPathProvider = () => {
         setAirports(current => [...current, {
             ...searchAirport,
             id: crypto.randomUUID(),
+            icaoId: icaoId,
             formValues: { ...searchAirport.formValues },
             TAF: hasTAF ? [...searchAirport.TAF] : [],
             METAR: hasMETAR ? [...searchAirport.METAR] : [],

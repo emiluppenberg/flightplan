@@ -118,6 +118,7 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
 export const createAirport = (id: string): AirportData => {
   return {
     id: id,
+    icaoId: null,
     formValues: {
       icaoId: "",
       date: "",

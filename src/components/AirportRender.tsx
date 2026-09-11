@@ -17,7 +17,7 @@ type AirportRenderProps = {
 
 const AirportRender = (props: AirportRenderProps) => {
     const context = useFlightPathContext()
-    const [reportsOpen, setReportsOpen] = useState(false)
+    const [tafMetarOpen, setTafMetarOpen] = useState(false)
     const [notamsOpen, setNotamsOpen] = useState(false)
     const [dateOpen, setDateOpen] = useState(false)
     const [operationalHoursOpen, setOperationalHoursOpen] = useState(false)
@@ -44,7 +44,7 @@ const AirportRender = (props: AirportRenderProps) => {
                 highlights={context.highlightsMETAR}
                 isMostRecentMETAR={index === 0} />
         )),
-    ];
+    ]
     const reportsTAF = [
         ...props.airport.TAF.map((taf, index) => (
             <ReportRender
@@ -56,7 +56,7 @@ const AirportRender = (props: AirportRenderProps) => {
         ))
     ]
     const reportsNOTAM = [
-        sortedNOTAM.map((notam, index) => (
+        ...sortedNOTAM.map((notam, index) => (
             <NotamRender
                 key={`${props.airport.id}-notam-${index}`}
                 notam={notam} />
@@ -71,17 +71,26 @@ const AirportRender = (props: AirportRenderProps) => {
 
     const airportOpeningHours = getOperationalHours(props.airport.NOTAM, targetDate, context.highlightsOPERATIONAL_HOURS)
 
+    const tafMetarDisabled = props.airport.METAR.length === 0 && props.airport.TAF.length === 0
+    const notamsDisabled = props.airport.NOTAM.length === 0
+    const dateDisabled = props.airport.icaoId !== null
+    const operationalHoursDisabled = props.airport.icaoId !== null
+
     return (
         <FormProvider {...form}>
             <div className="airport-render-container">
                 <div className="airport-header-container">
                     <AirportHeaderButtons
                         airport={props.airport}
-                        reportsOpen={reportsOpen}
+                        tafMetarOpen={tafMetarOpen}
                         notamsOpen={notamsOpen}
                         dateOpen={dateOpen}
                         operationalHoursOpen={operationalHoursOpen}
-                        setReportsOpen={setReportsOpen}
+                        tafMetarDisabled={tafMetarDisabled}
+                        notamsDisabled={notamsDisabled}
+                        dateDisabled={dateDisabled}
+                        operationalHoursDisabled={operationalHoursDisabled}
+                        setTafMetarOpen={setTafMetarOpen}
                         setNotamsOpen={setNotamsOpen}
                         setDateOpen={setDateOpen}
                         setOperationalHoursOpen={setOperationalHoursOpen}
@@ -115,9 +124,9 @@ const AirportRender = (props: AirportRenderProps) => {
                         </div>
                     </Expand>
                     {reportsMETAR[0]}
-                    {!reportsOpen && reportsTAF[0]}
+                    {!tafMetarOpen && reportsTAF[0]}
                     <Expand
-                        isOpen={reportsOpen}
+                        isOpen={tafMetarOpen}
                         rows={1}>
                         <div>
                             {reportsMETAR.slice(1)}

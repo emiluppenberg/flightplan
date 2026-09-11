@@ -51,15 +51,19 @@ export interface ResponseNOTAM {
   error?: string;
 }
 
-export interface AirportsResourceResponse {
-  data: AirportResource[];
+export interface AerodromesResourceResponse {
+  data: AerodromeResource[];
   links: {
     prev?: string;
     next?: string;
   }
 }
 
-export interface AirportResource {
+export interface AerodromeResourceResponse {
+  data: AerodromeResource
+}
+
+export interface AerodromeResource {
   id: string;
   type: string;
   attributes: {
@@ -97,6 +101,7 @@ export type EntryMETAR = {
 
 export type AirportData = {
   id: string;
+  icaoId: string | null;
   formValues: AirportFormValues;
   TAF: EntryTAF[];
   METAR: EntryMETAR[];
