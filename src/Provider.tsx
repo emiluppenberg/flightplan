@@ -387,6 +387,10 @@ export const FlightPathProvider = () => {
             setError(error instanceof Error ? error.message : "")
         } finally {
             setIsLoading(false)
+
+            if (airports.length === 1) {
+                navigate(`/${ROUTES.search}`)
+            }
         }
     }
 
@@ -423,7 +427,7 @@ export const FlightPathProvider = () => {
         setIsLoading(true)
         setMessage("")
         setError("")
-        
+
         try {
             const responseMessage = await fetchSignUpUser({ ...values });
             setMessage(responseMessage)
