@@ -20,54 +20,65 @@ export const FlightPathProvider = () => {
     const [initialized, setInitialized] = useState(false)
     const navigate = useNavigate()
     const location = useLocation()
+
     const preventRestoreSession = useRef(false)
     const pathname = useRef(location.pathname)
-
+    const hasAerodromes = useRef(airports.length > 1)
     useEffect(() => {
         pathname.current = location.pathname
     }, [location.pathname])
+    useEffect(() => {
+        hasAerodromes.current = airports.length > 1
+    }, [airports.length])
 
-    const loadUserData = async (accessToken: string): Promise<boolean> => {
-        const supabaseAirports = await fetchSelectAllAirports({
-            accessToken: accessToken
-        })
+    const loadUserData = async (accessToken: string) => {
+        const [
+            airports,
+            highlightsTAF,
+            highlightsMETAR,
+            highlightsOPERATIONAL_HOURS,
+            highlightsNOTAM] = await Promise.all([
+                capture(() => fetchSelectAllAirports({ accessToken: accessToken })
+                    .then(async (supabaseAirports) => await refreshAirports(supabaseAirports))),
+                capture(() => fetchSelectHighlights({
+                    accessToken: accessToken,
+                    report: "TAF"
+                })),
+                capture(() => fetchSelectHighlights({
+                    accessToken: accessToken,
+                    report: "METAR"
+                })),
+                capture(() => fetchSelectHighlights({
+                    accessToken: accessToken,
+                    report: "OPERATIONAL HOURS"
+                })),
+                capture(() => fetchSelectHighlights({
+                    accessToken: accessToken,
+                    report: "NOTAM"
+                }))
+            ])
 
-        const airports = await refreshAirports(supabaseAirports)
-        setAirports([...airports, createAirport(searchAirportId)])
+        if (airports.data) {
+            hasAerodromes.current = airports.data.length > 0
+        }
 
-        const highlightsTAF = await fetchSelectHighlights({
-            accessToken: accessToken,
-            report: "TAF"
-        })
-        setHighlightsTAF(resolveHighlights(highlightsTAF, HIGHLIGHTS_TAF_METAR))
+        airports.data && setAirports([...airports.data, createAirport(searchAirportId)])
+        highlightsTAF.data && setHighlightsTAF(resolveHighlights(highlightsTAF.data, HIGHLIGHTS_TAF_METAR))
+        highlightsMETAR.data && setHighlightsMETAR(resolveHighlights(highlightsMETAR.data, HIGHLIGHTS_TAF_METAR))
+        highlightsOPERATIONAL_HOURS.data && setHighlightsOPERATIONAL_HOURS(resolveHighlights(highlightsOPERATIONAL_HOURS.data, HIGHLIGHTS_OPERATIONAL_HOURS))
+        highlightsNOTAM.data && setHighlightsNOTAM(resolveHighlights(highlightsNOTAM.data, HIGHLIGHTS_NOTAM))
 
-        const highlightsMETAR = await fetchSelectHighlights({
-            accessToken: accessToken,
-            report: "METAR"
-        })
-        setHighlightsMETAR(resolveHighlights(highlightsMETAR, HIGHLIGHTS_TAF_METAR))
+        const mergedError = (airports.error ?? "") + (highlightsTAF.error ?? "") + (highlightsMETAR.error ?? "") + (highlightsOPERATIONAL_HOURS.error ?? "") + (highlightsNOTAM.error ?? "")
 
-        const highlightsOPERATIONAL_HOURS = await fetchSelectHighlights({
-            accessToken: accessToken,
-            report: "OPERATIONAL HOURS"
-        })
-        setHighlightsOPERATIONAL_HOURS(resolveHighlights(highlightsOPERATIONAL_HOURS, HIGHLIGHTS_OPERATIONAL_HOURS))
-
-        const highlightsNOTAM = await fetchSelectHighlights({
-            accessToken: accessToken,
-            report: "NOTAM"
-        })
-        setHighlightsNOTAM(resolveHighlights(highlightsNOTAM, HIGHLIGHTS_NOTAM))
-
-        return airports.length > 0
+        if (mergedError.length > 0) {
+            throw new Error(mergedError)
+        }
     }
 
     useEffect(() => {
         if (initialized) return;
 
         const restoreSession = async () => {
-            let hasAerodromes = false
-
             try {
                 setIsLoading(true)
 
@@ -76,7 +87,7 @@ export const FlightPathProvider = () => {
                 if (confirmedUser.data) {
                     setMessage(`Welcome to FlyRep`)
                     setUser(confirmedUser.data)
-                    hasAerodromes = await loadUserData(confirmedUser.data.session.access_token)
+                    await loadUserData(confirmedUser.data.session.access_token)
                 }
                 if (confirmedUser.error) {
                     setError(confirmedUser.error)
@@ -90,7 +101,7 @@ export const FlightPathProvider = () => {
 
                     if (user.data) {
                         setUser(user.data)
-                        hasAerodromes = await loadUserData(user.data.session.access_token)
+                        await loadUserData(user.data.session.access_token)
                     }
                     if (user.error) {
                         setError(user.error)
@@ -103,7 +114,7 @@ export const FlightPathProvider = () => {
                 setInitialized(true);
                 setIsLoading(false)
 
-                if (!hasAerodromes && pathname.current === "/") {
+                if (!hasAerodromes.current && pathname.current === "/") {
                     navigate(`/${ROUTES.search}`)
                 }
             }
@@ -385,7 +396,6 @@ export const FlightPathProvider = () => {
     const handleSignIn = async (values: UserFormValues) => {
         setIsLoading(true)
         setError('')
-        let hasAerodromes = false
 
         try {
             const user = await fetchSignInUser({ ...values });
@@ -398,9 +408,14 @@ export const FlightPathProvider = () => {
             }
 
             setUser(user)
-            hasAerodromes = await loadUserData(user.session.access_token);
 
-            if (!hasAerodromes) {
+            try {
+                await loadUserData(user.session.access_token);
+            } catch (error) {
+                setError(error instanceof Error ? error.message : "")    
+            }
+
+            if (!hasAerodromes.current) {
                 navigate(`/${ROUTES.search}`)
             } else {
                 navigate("/")
@@ -431,6 +446,7 @@ export const FlightPathProvider = () => {
             setError(error instanceof Error ? error.message : "")
         } finally {
             setIsLoading(false)
+            setMessage("")
             setUser(undefined)
             setAirports([createAirport(searchAirportId)])
             setHighlightsTAF([])
