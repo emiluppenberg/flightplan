@@ -18,9 +18,8 @@ const Airports = () => {
 
   return (
     <>
-      {context.message.length > 0 && (
-        <p className="message warning">{context.message}</p>
-      )}
+      {context.message.length > 0 && (<p className="message">{context.message}</p>)}
+      {context.error.length > 0 && (<p className="message warning">{context.error}</p>)}
       <div className={`airports-container ${splitRender && "split"}`}>
         <div className={`renders-container ${splitRender && "split"}`}>
           {airports.map((airport, index) => {

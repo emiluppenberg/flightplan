@@ -3,7 +3,7 @@ import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, t
 import { FlightPathContext } from "./Context";
 import { createAirport, refreshAirports, resolveHighlights, searchAirportId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES } from "./utilities";
 import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./api/supabase";
-import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
+import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, fetchAerodromeIcaoId, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
 import { Outlet, useNavigate } from "react-router";
 
@@ -15,6 +15,7 @@ export const FlightPathProvider = () => {
     const [highlightsNOTAM, setHighlightsNOTAM] = useState<CodeHighlight[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [message, setMessage] = useState("")
+    const [error, setError] = useState("")
     const [user, setUser] = useState<AppUser>()
     const [initialized, setInitialized] = useState(false);
     const navigate = useNavigate()
@@ -68,7 +69,7 @@ export const FlightPathProvider = () => {
                     return
                 }
                 if (confirmedUser.error) {
-                    setMessage(confirmedUser.error)
+                    setError(confirmedUser.error)
                     localStorage.removeItem(sessionStorageKey)
                 }
 
@@ -82,12 +83,12 @@ export const FlightPathProvider = () => {
                         await loadUserData(user.data.session.access_token)
                     }
                     if (user.error) {
-                        setMessage(user.error)
+                        setError(user.error)
                         localStorage.removeItem(sessionStorageKey)
                     }
                 }
             } catch (error) {
-                setMessage(error instanceof Error ? error.message : "There was an unexpected error while restoring your session")
+                setError(error instanceof Error ? error.message : "There was an unexpected error while restoring your session")
             } finally {
                 setInitialized(true);
                 setIsLoading(false)
@@ -115,7 +116,6 @@ export const FlightPathProvider = () => {
         )))
 
         try {
-
             const [TAF, METAR, NOTAM, SNOWTAM] = await Promise.all([
                 capture(() => fetchTAF(airport.formValues)),
                 capture(() => fetchMETAR(airport.formValues)),
@@ -167,7 +167,7 @@ export const FlightPathProvider = () => {
                 }
             }))
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : `There was an unexpected error while fetch data for ${airport.formValues.icaoId}`)
+            setError(error instanceof Error ? error.message : `There was an unexpected error while fetch data for ${airport.formValues.icaoId}`)
             setAirports(current => current.map((_airport) => (
                 _airport.id === airport.id
                     ? { ..._airport, isLoading: false }
@@ -192,7 +192,7 @@ export const FlightPathProvider = () => {
                 setUser(refreshedUser)
             }
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "There was an unexpected error while polling")
+            setError(error instanceof Error ? error.message : "There was an unexpected error while polling")
         }
 
         try {
@@ -209,7 +209,7 @@ export const FlightPathProvider = () => {
                 }
             }
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "There was an unexpected error while polling")
+            setError(error instanceof Error ? error.message : "There was an unexpected error while polling")
         }
     }, [airports, handleSubmit])
 
@@ -235,7 +235,7 @@ export const FlightPathProvider = () => {
 
             if (user) {
                 setIsLoading(true)
-                setMessage('')
+                setError('')
 
                 const refreshedUser = await fetchRefreshedUser()
 
@@ -254,7 +254,7 @@ export const FlightPathProvider = () => {
                 })
             }
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "")
+            setError(error instanceof Error ? error.message : "")
         } finally {
             setIsLoading(false)
         }
@@ -278,7 +278,7 @@ export const FlightPathProvider = () => {
 
         if (user) {
             setIsLoading(true)
-            setMessage('')
+            setError('')
 
             try {
                 const refreshedUser = await fetchRefreshedUser()
@@ -297,7 +297,7 @@ export const FlightPathProvider = () => {
                     nextPollSNOWTAM: nextPollSNOWTAM
                 })
             } catch (error) {
-                setMessage(error instanceof Error ? error.message : "")
+                setError(error instanceof Error ? error.message : "")
             } finally {
                 setIsLoading(false)
             }
@@ -336,7 +336,7 @@ export const FlightPathProvider = () => {
     const handleDeleteAirport = async (id: string) => {
         if (user) {
             setIsLoading(true)
-            setMessage('')
+            setError('')
 
             try {
                 const airport = airports.find(airport => airport.id === id)
@@ -358,7 +358,7 @@ export const FlightPathProvider = () => {
                     icaoId: icaoId
                 })
             } catch (error) {
-                setMessage(error instanceof Error ? error.message : "")
+                setError(error instanceof Error ? error.message : "")
             } finally {
                 setIsLoading(false)
             }
@@ -369,7 +369,7 @@ export const FlightPathProvider = () => {
 
     const handleSignIn = async (values: UserFormValues) => {
         setIsLoading(true)
-        setMessage('')
+        setError('')
 
         try {
             const user = await fetchSignInUser({ ...values });
@@ -384,7 +384,7 @@ export const FlightPathProvider = () => {
             setUser(user)
             await loadUserData(user.session.access_token);
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "")
+            setError(error instanceof Error ? error.message : "")
         } finally {
             setIsLoading(false)
         }
@@ -394,7 +394,7 @@ export const FlightPathProvider = () => {
         if (!user) return
 
         setIsLoading(true)
-        setMessage('')
+        setError('')
 
         try {
             const refreshedUser = await fetchRefreshedUser()
@@ -406,7 +406,7 @@ export const FlightPathProvider = () => {
                 accessToken: accessToken
             })
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "")
+            setError(error instanceof Error ? error.message : "")
         } finally {
             setIsLoading(false)
             setUser(undefined)
@@ -421,13 +421,14 @@ export const FlightPathProvider = () => {
 
     const handleSignUp = async (values: UserFormValues) => {
         setIsLoading(true)
-        setMessage('')
-
+        setMessage("")
+        setError("")
+        
         try {
             const responseMessage = await fetchSignUpUser({ ...values });
             setMessage(responseMessage)
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "")
+            setError(error instanceof Error ? error.message : "")
         } finally {
             setIsLoading(false)
         }
@@ -451,6 +452,7 @@ export const FlightPathProvider = () => {
                 handleSignUp,
                 isLoading,
                 message,
+                error,
                 user
             }}>
             <main className="page">

@@ -6,9 +6,8 @@ const Search = () => {
 
     return (
         <>
-            {context.message.length > 0 && (
-                <p className="message warning">{context.message}</p>
-            )}
+            {context.message.length > 0 && (<p className="message">{context.message}</p>)}
+            {context.error.length > 0 && (<p className="message warning">{context.error}</p>)}
             <div className="search-container">
                 <SearchAirportForm />
             </div>

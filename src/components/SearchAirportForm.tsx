@@ -63,7 +63,7 @@ const SearchAirportForm = () => {
         }
     }
 
-    const searchInterval = useCallback(async () => {
+    const handleSearchInterval = useCallback(async () => {
         if (previousSearchParam.current === searchParam) return
 
         previousSearchParam.current = searchParam
@@ -71,9 +71,9 @@ const SearchAirportForm = () => {
     }, [searchParam])
 
     useEffect(() => {
-        const intervalId = setInterval(searchInterval, 1000)
+        const intervalId = setInterval(handleSearchInterval, 1000)
         return (() => clearInterval(intervalId))
-    }, [searchInterval])
+    }, [handleSearchInterval])
 
     const handlePagination = async (page: string) => {
         setError("")

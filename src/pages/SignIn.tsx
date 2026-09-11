@@ -11,13 +11,17 @@ const SignIn = () => {
         await context.handleSignIn(values)
         navigate(`/`)
     }
-    
+
     return (
-        <div className="sign-in-container">
-            <UserForm
-                onSubmit={(values) => handleSignIn(values)}
-                submitText="Sign in" />
-        </div>
+        <>
+            {context.message.length > 0 && (<p className="message">{context.message}</p>)}
+            {context.error.length > 0 && (<p className="message warning">{context.error}</p>)}
+            <div className="sign-in-container">
+                <UserForm
+                    onSubmit={(values) => handleSignIn(values)}
+                    submitText="Sign in" />
+            </div>
+        </>
     )
 }
 

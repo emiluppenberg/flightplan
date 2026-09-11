@@ -17,6 +17,7 @@ export type FlightPathState = {
     handleSignUp: (values: UserFormValues) => Promise<void>;
     isLoading: boolean;
     message: string;
+    error: string;
     user: AppUser | undefined;
 }
 
