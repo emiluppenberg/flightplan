@@ -13,8 +13,7 @@ const SearchAirportForm = () => {
     const form = useForm<AirportFormValues>({
         defaultValues: searchAirport?.formValues
     })
-    const { register, getValues, setValue, watch, handleSubmit: formSubmit } = form;
-    const selectedIcaoId = watch("icaoId")
+    const { register, getValues, setValue, handleSubmit: formSubmit } = form;
 
     const [error, setError] = useState("")
     const [searchResponse, setSearchResponse] = useState<AerodromesResourceResponse>()
@@ -179,7 +178,7 @@ const SearchAirportForm = () => {
                                         key={`${searchAirportId}-airport-${index}`}
                                         type="button"
                                         disabled={searchAirport?.isLoading ? true : false}
-                                        className={`btn-search-item ${selectedIcaoId === airport.attributes.code ? "open" : ""}`}
+                                        className={`btn-search-item ${searchAirport?.formValues.icaoId === airport.attributes.code ? "open" : ""}`}
                                         onClick={() => handleSelectSearchItem(airport.attributes.code)}>
                                         <span className="search-item-icao">{airport.attributes.code}</span>
                                         <span className="search-item-name">{airport.attributes.name}</span>
