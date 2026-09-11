@@ -1,17 +1,14 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import AppLogo from "./AppLogo"
 import Highlights from "./Highlights";
-import SearchAirportForm, { type SearchAirportFormHandle } from "./SearchAirportForm";
 import Expand from "./Expand";
 import { SVG_URLS } from "../utilities";
-import Dialog from "./Dialog";
-import UserForm from "./UserForm";
 import { useFlightPathContext } from "../Context";
+import { NavLink } from "react-router";
 
 const AppHeader = () => {
     const context = useFlightPathContext()
     const [showHighlights, setShowHighlights] = useState(false)
-    const searchFormRef = useRef<SearchAirportFormHandle>(null)
 
     return (
         <div className="app-header">
@@ -23,44 +20,51 @@ const AppHeader = () => {
                         onClick={() => setShowHighlights(value => !value)}>
                         <img src={SVG_URLS.highlight} width="20" />
                     </button>
-                    <Dialog
-                        title="Search"
-                        buttonClassName="btn-search"
-                        buttonInlineElement={<img src={SVG_URLS.search} width="20" />}
-                        onOpen={() => searchFormRef.current?.onOpen()}>
-                        {() => (
-                            <SearchAirportForm ref={searchFormRef} />
+                    <NavLink to="/search">
+                        {({ isActive }) => (
+                            <button
+                                type="button"
+                                className={`btn-search ${isActive && "open"}`}>
+                                <img src={SVG_URLS.search} width="20" />
+                            </button>
                         )}
-                    </Dialog>
+                    </NavLink>
+                    <NavLink to="/all">
+                        {({ isActive }) => (
+                            <button
+                                type="button"
+                                className={`btn-airports ${isActive && "open"}`}>
+                                <img src={SVG_URLS.airports} width="20" />
+                            </button>
+                        )}
+                    </NavLink>
                 </div>
                 <AppLogo />
                 <div className="top-buttons right">
                     {!context.user && (
                         <>
-                            <Dialog
-                                title="Sign Up"
-                                buttonInlineElement="Sign Up">
-                                {(closeDialog) => (
-                                    <UserForm
-                                        onClose={closeDialog}
-                                        onSubmit={context.handleSignUp}
-                                        submitText="Sign Up" />
+                            <NavLink to="/sign-in">
+                                {({ isActive }) => (
+                                    <button
+                                        type="button"
+                                        className={`${isActive && "open"}`}>
+                                        Sign in
+                                    </button>
                                 )}
-                            </Dialog>
-                            <Dialog
-                                title="Log In"
-                                buttonInlineElement="Log In">
-                                {(closeDialog) => (
-                                    <UserForm
-                                        onClose={closeDialog}
-                                        onSubmit={context.handleSignIn}
-                                        submitText="Log In" />
+                            </NavLink>
+                            <NavLink to="/sign-up">
+                                {({ isActive }) => (
+                                    <button
+                                        type="button"
+                                        className={`${isActive && "open"}`}>
+                                        Sign up
+                                    </button>
                                 )}
-                            </Dialog>
+                            </NavLink>
                         </>
                     )}
                     {context.user && (
-                        <button type="button" onClick={context.handleSignOut}>Log Out</button>
+                        <button type="button" onClick={context.handleSignOut}>Sign Out</button>
                     )}
                 </div>
             </div>

@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useState, type PropsWithChildren } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
 import { createAirport, refreshAirports, resolveHighlights, searchAirportId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey } from "./utilities";
 import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
+import AppHeader from "./components/AppHeader";
+import { Outlet } from "react-router";
 
-export const FlightPathProvider = ({ children }: PropsWithChildren) => {
+export const FlightPathProvider = () => {
     const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])
     const [highlightsTAF, setHighlightsTAF] = useState<CodeHighlight[]>([])
     const [highlightsMETAR, setHighlightsMETAR] = useState<CodeHighlight[]>([])
@@ -445,7 +447,10 @@ export const FlightPathProvider = ({ children }: PropsWithChildren) => {
                 message,
                 user
             }}>
-            {children}
+            <main className="page">
+                <AppHeader />
+                <Outlet />
+            </main>
         </FlightPathContext>
     )
 }

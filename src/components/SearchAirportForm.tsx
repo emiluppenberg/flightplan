@@ -1,30 +1,20 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useFlightPathContext } from "../Context"
 import type { AirportFormValues, AirportsResourceResponse } from "../types"
-import { SVG_URLS, searchAirportId } from "../utilities"
+import { searchAirportId } from "../utilities"
 import Expand from "./Expand"
 import AirportRender from "./AirportRender"
 import { fetchAirports, fetchAirportsPage, PATH_AIRPORTS } from "../api/resources"
 
-export type SearchAirportFormHandle = {
-    onOpen: () => void;
-}
-
-const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
+const SearchAirportForm = () => {
     const context = useFlightPathContext()
     const searchAirport = context.airports.find(airport => airport.id === searchAirportId)
     const form = useForm<AirportFormValues>({
         defaultValues: searchAirport?.formValues
     })
-    const { register, getValues, setFocus, setValue, watch, handleSubmit: formSubmit } = form;
-    const selectedIcaoId = watch("icaoId");
-
-    const onOpen = useCallback(() => {
-        setFocus("icaoId");
-    }, [setFocus]);
-
-    useImperativeHandle(ref, () => ({ onOpen }), [onOpen]);
+    const { register, getValues, setValue, watch, handleSubmit: formSubmit } = form;
+    const selectedIcaoId = watch("icaoId")
 
     const [searchResponse, setSearchResponse] = useState<AirportsResourceResponse>()
     const [searchOpen, setSearchOpen] = useState(false)
@@ -147,14 +137,14 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
     return (
         <FormProvider {...form}>
             <form onSubmit={formSubmit(handleSubmit)}>
-                <div className="airport-render-container search">
-                    <div className="airport-header-container search">
+                <div className="airport-render-container">
+                    <div className="airport-header-container">
                         {searchAirport && (
                             <div className="airport-header-buttons">
                                 <input
                                     type="text"
                                     className="input-search"
-                                    placeholder="Search airport by ICAO"
+                                    placeholder="Search aerodrome by ICAO"
                                     value={searchAirport.formValues.icaoId}
                                     {...register("icaoId", {
                                         required: true,
@@ -165,15 +155,13 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
                                     ref={searchInputRef}
                                     type="text"
                                     className="input-search"
-                                    placeholder="Search airports by name or city"
+                                    placeholder="Search aerodromes by name or city"
                                     value={searchParam}
                                     onChange={(e) => setSearchParam(e.target.value)}
                                     onFocus={() => setSearchOpen(true)} />
                                 <button
-                                    type="submit"
-                                    className={`btn-search ${searchAirport.isLoading ? "loading" : ""}`}>
-                                    <img src={SVG_URLS.search} width="20" />
-                                </button>
+                                    hidden={true}
+                                    type="submit" />
                             </div>
                         )}
                         <Expand
@@ -221,13 +209,13 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
                             type="button"
                             disabled={selectedIcaoId.length === 0}
                             onClick={handleAddAirport}>
-                            Add to My Airports
+                            Save
                         </button>
                     </div>
                 </div>
             </form>
         </FormProvider >
     )
-})
+}
 
 export default SearchAirportForm;

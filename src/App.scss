@@ -94,7 +94,10 @@ img {
   }
 }
 
-.app-display,
+.airports-container,
+.search-container,
+.sign-in-container,
+.sign-out-container,
 .renders-container {
   position: relative;
   display: flex;
@@ -102,7 +105,7 @@ img {
   overflow-y: auto;
 }
 
-.app-display {
+.airports-container {
   padding: 1rem 0 1rem 0;
 
   &.split {
@@ -127,6 +130,16 @@ img {
   &.split:nth-of-type(2) {
     scrollbar-gutter: stable;
   }
+}
+
+.search-container {
+  padding: 1rem;
+}
+
+.sign-in-container,
+.sign-out-container {
+  padding: 1rem;
+  align-items: center;
 }
 
 dialog {
@@ -170,7 +183,7 @@ dialog {
   align-items: center;
   justify-content: center;
   border-radius: 0;
-  border-bottom: 1px solid $color-search;
+  border-bottom: 1px solid;
   width: 100%;
   padding: 0;
 
@@ -201,7 +214,8 @@ fieldset {
   &.btn-highlight,
   &.btn-delete,
   &.btn-refetch,
-  &.btn-search {
+  &.btn-search,
+  &.btn-airports {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -432,15 +446,6 @@ h2 {
   background: $color-background;
   width: 100%;
 
-  &.search {
-    border-color: $color-search;
-    border-bottom: 0;
-
-    .airport-search-container {
-      min-height: 40vh;
-    }
-  }
-
   .airport-header-container {
     position: sticky;
     top: 0;
@@ -452,10 +457,6 @@ h2 {
       padding-top: 0.5rem;
       background: $color-third;
       border-bottom: 1px solid $color-first-border;
-    }
-
-    &.search {
-      border-color: $color-search;
     }
 
     .airport-header-search {

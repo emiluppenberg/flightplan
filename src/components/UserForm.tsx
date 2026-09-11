@@ -2,7 +2,6 @@ import { FormProvider, useForm } from "react-hook-form";
 import type { UserFormValues } from "../types";
 
 type UserFormProps = {
-    onClose: () => void;
     onSubmit: (values: UserFormValues) => void | Promise<void>;
     submitText: string;
 }
@@ -13,7 +12,6 @@ const UserForm = (props: UserFormProps) => {
 
     const handleFormSubmit = handleSubmit(async values => {
         await props.onSubmit(values)
-        props.onClose()
     })
 
     return (

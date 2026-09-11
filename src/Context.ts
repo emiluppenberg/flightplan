@@ -12,9 +12,9 @@ export type FlightPathState = {
     handleSetHighlights: (newHighlights: CodeHighlight[], report: CodeHighlightReport) => Promise<void>;
     handleAddAirport: (icaoId: string) => void;
     handleDeleteAirport: (id: string) => void;
-    handleSignIn: (values: UserFormValues) => void;
+    handleSignIn: (values: UserFormValues) => Promise<void>;
     handleSignOut: () => void;
-    handleSignUp: (values: UserFormValues) => void;
+    handleSignUp: (values: UserFormValues) => Promise<void>;
     isLoading: boolean;
     message: string;
     user: AppUser | undefined;
