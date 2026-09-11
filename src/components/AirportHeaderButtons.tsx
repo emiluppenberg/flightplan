@@ -42,7 +42,7 @@ const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
                         type="button"
                         className="btn-delete"
                         onClick={handleDelete}>
-                        <img src={SVG_URLS.close} width="20" />
+                        <img src={SVG_URLS.trash} width="20" />
                     </button>
                     <div className="airport-header-icao">
                         <h4>{props.airport.formValues.icaoId}</h4>

@@ -9,7 +9,8 @@ export const SVG_URLS = {
   search: '/ui/browse-svgrepo-com.svg',
   close: '/ui/close-lg-svgrepo-com.svg',
   reload: '/ui/reload-svgrepo-com.svg',
-  airports: '/ui/globe-svgrepo-com.svg'
+  airports: '/ui/globe-svgrepo-com.svg',
+  trash: '/ui/trash-svgrepo-com.svg'
 } as const;
 
 export const ROUTES = {
