@@ -94,7 +94,10 @@ img {
   }
 }
 
-.app-display,
+.airports-container,
+.search-container,
+.sign-in-container,
+.sign-out-container,
 .renders-container {
   position: relative;
   display: flex;
@@ -102,7 +105,7 @@ img {
   overflow-y: auto;
 }
 
-.app-display {
+.airports-container {
   padding: 1rem 0 1rem 0;
 
   &.split {
@@ -129,38 +132,14 @@ img {
   }
 }
 
-dialog {
-  color: inherit;
+.search-container {
+  padding: 1rem;
+}
 
-  &[open] {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    width: 100%;
-
-    h2 {
-      margin-bottom: 1rem;
-    }
-
-    .btn-close {
-      margin: auto;
-      margin-bottom: 1rem;
-    }
-
-    .dialog-content {
-      min-height: 70vh;
-      overflow-y: auto;
-    }
-
-    &::backdrop {
-      background: rgba(black, 0.72);
-      backdrop-filter: blur(2px);
-    }
-  }
+.sign-in-container,
+.sign-out-container {
+  padding: 1rem;
+  align-items: center;
 }
 
 .sticky {
@@ -170,7 +149,7 @@ dialog {
   align-items: center;
   justify-content: center;
   border-radius: 0;
-  border-bottom: 1px solid $color-search;
+  border-bottom: 1px solid;
   width: 100%;
   padding: 0;
 
@@ -184,6 +163,12 @@ dialog {
   }
 }
 
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a,
 input,
 button,
 fieldset {
@@ -201,7 +186,8 @@ fieldset {
   &.btn-highlight,
   &.btn-delete,
   &.btn-refetch,
-  &.btn-search {
+  &.btn-search,
+  &.btn-airports {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -432,15 +418,6 @@ h2 {
   background: $color-background;
   width: 100%;
 
-  &.search {
-    border-color: $color-search;
-    border-bottom: 0;
-
-    .airport-search-container {
-      min-height: 40vh;
-    }
-  }
-
   .airport-header-container {
     position: sticky;
     top: 0;
@@ -452,10 +429,6 @@ h2 {
       padding-top: 0.5rem;
       background: $color-third;
       border-bottom: 1px solid $color-first-border;
-    }
-
-    &.search {
-      border-color: $color-search;
     }
 
     .airport-header-search {

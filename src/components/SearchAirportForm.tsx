@@ -1,35 +1,24 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useFlightPathContext } from "../Context"
-import type { AirportFormValues, AirportsResourceResponse } from "../types"
-import { SVG_URLS, searchAirportId } from "../utilities"
+import type { AirportFormValues, AerodromesResourceResponse } from "../types"
+import { searchAirportId } from "../utilities"
 import Expand from "./Expand"
 import AirportRender from "./AirportRender"
-import { fetchAirports, fetchAirportsPage, PATH_AIRPORTS } from "../api/resources"
+import { fetchAerodromes, fetchAerodromesPage, fetchAerodromeIcaoId } from "../api/resources"
 
-export type SearchAirportFormHandle = {
-    onOpen: () => void;
-}
-
-const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
+const SearchAirportForm = () => {
     const context = useFlightPathContext()
     const searchAirport = context.airports.find(airport => airport.id === searchAirportId)
     const form = useForm<AirportFormValues>({
         defaultValues: searchAirport?.formValues
     })
-    const { register, getValues, setFocus, setValue, watch, handleSubmit: formSubmit } = form;
-    const selectedIcaoId = watch("icaoId");
+    const { register, getValues, setValue, handleSubmit: formSubmit } = form;
 
-    const onOpen = useCallback(() => {
-        setFocus("icaoId");
-    }, [setFocus]);
-
-    useImperativeHandle(ref, () => ({ onOpen }), [onOpen]);
-
-    const [searchResponse, setSearchResponse] = useState<AirportsResourceResponse>()
+    const [error, setError] = useState("")
+    const [searchResponse, setSearchResponse] = useState<AerodromesResourceResponse>()
     const [searchOpen, setSearchOpen] = useState(false)
     const [searchParam, setSearchParam] = useState("")
-    const [searchMessage, setSearchMessage] = useState("")
 
     const searchInputRef = useRef<HTMLInputElement>(null)
     const searchPanelRef = useRef<HTMLDivElement>(null)
@@ -61,19 +50,19 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
     const previousSearchId = useRef(0)
     const handleSearch = async () => {
         try {
-            setSearchMessage("")
+            setError("")
             const searchId = ++previousSearchId.current
-            const response = await fetchAirports(searchParam);
+            const response = await fetchAerodromes(searchParam);
 
             if (searchId < previousSearchId.current) return
 
             setSearchResponse(response)
         } catch (error) {
-            setSearchMessage(error instanceof Error ? error.message : "There was an unexpected error during search")
+            setError(error instanceof Error ? error.message : "There was an unexpected error during search")
         }
     }
 
-    const searchInterval = useCallback(async () => {
+    const handleSearchInterval = useCallback(async () => {
         if (previousSearchParam.current === searchParam) return
 
         previousSearchParam.current = searchParam
@@ -81,62 +70,64 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
     }, [searchParam])
 
     useEffect(() => {
-        const intervalId = setInterval(searchInterval, 1000)
+        const intervalId = setInterval(handleSearchInterval, 1000)
         return (() => clearInterval(intervalId))
-    }, [searchInterval])
+    }, [handleSearchInterval])
 
     const handlePagination = async (page: string) => {
-        setSearchMessage("")
+        setError("")
+
         try {
-            const response = await fetchAirportsPage(page);
+            const response = await fetchAerodromesPage(page);
             setSearchResponse(response)
         } catch (error) {
-            setSearchMessage(error instanceof Error ? error.message : "There was an unexpected error during pagination")
+            setError(error instanceof Error ? error.message : "There was an unexpected error during pagination")
         }
     }
 
-    const handleSelectSearchItem = (icao: string) => {
-        const values: AirportFormValues = {
-            ...getValues(),
-            icaoId: icao.trim().toUpperCase(),
-        };
-
-        setValue("icaoId", values.icaoId, {
-            shouldDirty: true,
-            shouldValidate: true,
-        });
-
-        context.handleSetFormValues(values, searchAirportId);
-
-        if (searchAirport) {
-            context.handleSubmit({ ...searchAirport, formValues: values }, true);
-        }
-    }
-
-    const handleSubmit = () => {
-        if (searchAirport && !searchAirport.isLoading) {
-            context.handleSubmit(searchAirport, true);
-        }
-    }
-
-    const handleAddAirport = async () => {
-        if (!searchAirport) return
+    const handleSelectSearchItem = (icaoId: string) => {
+        setError("")
 
         try {
-            const response = await fetch(`${PATH_AIRPORTS}/${selectedIcaoId}`)
+            if (searchAirport) {
+                const values: AirportFormValues = {
+                    ...getValues(),
+                    icaoId: icaoId.trim().toUpperCase(),
+                }
 
-            if (!response.ok) {
-                throw new Error(`Received status code ${response.status} while verifying ICAO code ${selectedIcaoId}`)
+                setValue("icaoId", values.icaoId, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                })
+
+                context.handleSetFormValues(values, searchAirportId);
+                context.handleSubmit({ ...searchAirport, formValues: values }, true);
             }
-
-            context.handleAddAirport(selectedIcaoId)
+        } catch (error) {
+            setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for ICAO: ${icaoId}`)
         }
-        catch (error) {
-            const message = error instanceof Error
-                ? error.message
-                : `There was an unexpected error while verifying ICAO code ${selectedIcaoId}`
+    }
 
-            setSearchMessage(message)
+    const handleSubmit = async () => {
+        setError("")
+
+        try {
+            if (searchAirport && !searchAirport.isLoading) {
+                const values: AirportFormValues = {
+                    ...getValues(),
+                    icaoId: await fetchAerodromeIcaoId(searchAirport.formValues.icaoId),
+                }
+
+                setValue("icaoId", values.icaoId, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                })
+
+                context.handleSetFormValues(values, searchAirportId);
+                context.handleSubmit({ ...searchAirport, formValues: values }, true);
+            }
+        } catch (error) {
+            setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for ICAO: ${searchAirport?.formValues.icaoId}`)
         }
     }
 
@@ -144,17 +135,19 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
         searchAirport && <AirportRender airport={searchAirport} form={form} />,
         [searchAirport])
 
+    const hasSearched = searchAirport && searchAirport.icaoId
+
     return (
         <FormProvider {...form}>
             <form onSubmit={formSubmit(handleSubmit)}>
-                <div className="airport-render-container search">
-                    <div className="airport-header-container search">
+                <div className="airport-render-container">
+                    <div className="airport-header-container">
                         {searchAirport && (
                             <div className="airport-header-buttons">
                                 <input
                                     type="text"
                                     className="input-search"
-                                    placeholder="Search airport by ICAO"
+                                    placeholder="Search aerodrome by ICAO"
                                     value={searchAirport.formValues.icaoId}
                                     {...register("icaoId", {
                                         required: true,
@@ -165,15 +158,13 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
                                     ref={searchInputRef}
                                     type="text"
                                     className="input-search"
-                                    placeholder="Search airports by name or city"
+                                    placeholder="Search aerodromes by name or city"
                                     value={searchParam}
                                     onChange={(e) => setSearchParam(e.target.value)}
                                     onFocus={() => setSearchOpen(true)} />
                                 <button
-                                    type="submit"
-                                    className={`btn-search ${searchAirport.isLoading ? "loading" : ""}`}>
-                                    <img src={SVG_URLS.search} width="20" />
-                                </button>
+                                    hidden={true}
+                                    type="submit" />
                             </div>
                         )}
                         <Expand
@@ -187,7 +178,7 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
                                         key={`${searchAirportId}-airport-${index}`}
                                         type="button"
                                         disabled={searchAirport?.isLoading ? true : false}
-                                        className={`btn-search-item ${selectedIcaoId === airport.attributes.code ? "open" : ""}`}
+                                        className={`btn-search-item ${searchAirport?.formValues.icaoId === airport.attributes.code ? "open" : ""}`}
                                         onClick={() => handleSelectSearchItem(airport.attributes.code)}>
                                         <span className="search-item-icao">{airport.attributes.code}</span>
                                         <span className="search-item-name">{airport.attributes.name}</span>
@@ -213,21 +204,22 @@ const SearchAirportForm = forwardRef<SearchAirportFormHandle>((_, ref) => {
                         </Expand>
                     </div>
                     {airportRender && (airportRender)}
-                    {searchMessage.length > 0 && (
-                        <p className="message warning">{searchMessage}</p>
+                    {error.length > 0 && (
+                        <p className="message warning">{error}</p>
                     )}
                     <div className="sticky">
-                        <button
-                            type="button"
-                            disabled={selectedIcaoId.length === 0}
-                            onClick={handleAddAirport}>
-                            Add to My Airports
-                        </button>
+                        {hasSearched
+                            ? (<button
+                                type="button"
+                                onClick={() => context.handleAddAirport(searchAirport.icaoId)}>
+                                Save {searchAirport.icaoId}
+                            </button>)
+                            : (<p className="message">No data</p>)}
                     </div>
                 </div>
             </form>
         </FormProvider >
     )
-})
+}
 
 export default SearchAirportForm;

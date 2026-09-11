@@ -5,11 +5,15 @@ import { searchAirportId, SVG_URLS } from "../utilities";
 
 type AirportHeaderButtonsProps = {
     airport: AirportData;
-    reportsOpen: boolean;
+    tafMetarOpen: boolean;
     notamsOpen: boolean;
     dateOpen: boolean;
     operationalHoursOpen: boolean;
-    setReportsOpen: Dispatch<SetStateAction<boolean>>;
+    tafMetarDisabled: boolean;
+    notamsDisabled: boolean;
+    dateDisabled: boolean;
+    operationalHoursDisabled: boolean;
+    setTafMetarOpen: Dispatch<SetStateAction<boolean>>;
     setNotamsOpen: Dispatch<SetStateAction<boolean>>;
     setDateOpen: Dispatch<SetStateAction<boolean>>;
     setOperationalHoursOpen: Dispatch<SetStateAction<boolean>>;
@@ -38,7 +42,7 @@ const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
                         type="button"
                         className="btn-delete"
                         onClick={handleDelete}>
-                        <img src={SVG_URLS.close} width="20" />
+                        <img src={SVG_URLS.trash} width="20" />
                     </button>
                     <div className="airport-header-icao">
                         <h4>{props.airport.formValues.icaoId}</h4>
@@ -54,24 +58,28 @@ const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
             <div className="airport-header-buttons">
                 <button
                     type="button"
-                    className={`btn-taf-metar ${props.reportsOpen ? "open" : ""}`}
-                    onClick={() => props.setReportsOpen(value => !value)}>
+                    disabled={props.tafMetarDisabled}
+                    className={`btn-taf-metar ${props.tafMetarOpen ? "open" : ""}`}
+                    onClick={() => props.setTafMetarOpen(value => !value)}>
                     <h4>TAF/METAR</h4>
                 </button>
                 <button
                     type="button"
+                    disabled={props.notamsDisabled}
                     className={`btn-notam ${props.notamsOpen ? "open" : ""}`}
                     onClick={() => props.setNotamsOpen(value => !value)}>
                     <h4>NOTAM</h4>
                 </button>
                 <button
                     type="button"
+                    disabled={props.dateDisabled}
                     className={`btn-date ${props.dateOpen ? "open" : ""}`}
                     onClick={() => props.setDateOpen(value => !value)}>
                     <h4>DATE</h4>
                 </button>
                 <button
                     type="button"
+                    disabled={props.operationalHoursDisabled}
                     className={`btn-operational-hours ${props.operationalHoursOpen ? "open" : ""}`}
                     onClick={() => props.setOperationalHoursOpen(value => !value)}>
                     <h4>O. HOURS</h4>

@@ -4,7 +4,7 @@ import { useFlightPathContext } from '../Context'
 import { useWindowWidth } from '../hooks'
 import { searchAirportId } from '../utilities'
 
-const AppDisplay = () => {
+const Airports = () => {
   const context = useFlightPathContext()
   const splitRender = useWindowWidth() >= 500
 
@@ -18,10 +18,9 @@ const AppDisplay = () => {
 
   return (
     <>
-      {context.message.length > 0 && (
-        <p className="message warning">{context.message}</p>
-      )}
-      <div className={`app-display ${splitRender && "split"}`}>
+      {context.message.length > 0 && (<p className="message">{context.message}</p>)}
+      {context.error.length > 0 && (<p className="message warning">{context.error}</p>)}
+      <div className={`airports-container ${splitRender && "split"}`}>
         <div className={`renders-container ${splitRender && "split"}`}>
           {airports.map((airport, index) => {
             if (splitRender && index >= splitAirportsIndex) return
@@ -51,4 +50,4 @@ const AppDisplay = () => {
   )
 }
 
-export default AppDisplay
+export default Airports

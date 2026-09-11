@@ -1,5 +1,5 @@
 import type { Session } from "@supabase/supabase-js"
-import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, EntryNOTAM, UpsertSNOWTAMBody, DeleteSNOWTAMBody, SelectAirportSNOWTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, UserFormValues, InitializeUserBody, SignInBody, SignUpBody, SignOutBody, EntrySNOWTAM } from "../types"
+import type { InsertAirportBody, SupabaseAirport, DeleteAirportBody, SelectAllAirportsBody, UpdateAirportBody, EntryNOTAM, UpsertSNOWTAMBody, DeleteSNOWTAMBody, SelectAirportSNOWTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, InitializeUserBody, SignInBody, SignUpBody, SignOutBody, EntrySNOWTAM } from "../types"
 import { getAccessToken, getRefreshToken, sessionStorageKey } from "../utilities"
 
 export const PATH_INITIALIZE_USER = "/api/supabase/initialize-user"

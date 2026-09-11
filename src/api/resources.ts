@@ -1,4 +1,4 @@
-import { type AirportFormValues, type EntryTAF, type EntryMETAR, type EntryNOTAM, type ResponseNOTAM, type AirportsResourceResponse, HIGHLIGHTS_NOTAM, type EntrySNOWTAM } from "../types"
+import { type AirportFormValues, type EntryTAF, type EntryMETAR, type EntryNOTAM, type ResponseNOTAM, type AerodromesResourceResponse, HIGHLIGHTS_NOTAM, type EntrySNOWTAM, type AerodromeResourceResponse } from "../types"
 import { matchesNotamHighlight } from "../utilities"
 
 export const PATH_AIRPORTS = "/api/airports"
@@ -100,7 +100,22 @@ export const fetchSNOWTAM = async (values: AirportFormValues): Promise<EntrySNOW
   return SNOWTAM
 }
 
-export const fetchAirports = async (name: string): Promise<AirportsResourceResponse> => {
+export const fetchAerodromeIcaoId = async (formIcaoId: string) => {
+  const response = await fetch(`${PATH_AIRPORTS}/${formIcaoId}`)
+
+  if (!response.ok){
+    if (response.status === 404) {
+      throw new Error(`No aerodrome found for ICAO: ${formIcaoId}`)
+    } else {
+      throw new Error(`There was an unexpected error while fetching ${formIcaoId}: ${response.statusText}`)
+    }
+  }
+
+  const result: AerodromeResourceResponse = await response.json()
+  return result.data.attributes.code.trim().toUpperCase()
+}
+
+export const fetchAerodromes = async (name: string): Promise<AerodromesResourceResponse> => {
   const params = new URLSearchParams({
     "filter[name]": name
   })
@@ -114,7 +129,7 @@ export const fetchAirports = async (name: string): Promise<AirportsResourceRespo
   return await response.json()
 }
 
-export const fetchAirportsPage = async (link: string): Promise<AirportsResourceResponse> => {
+export const fetchAerodromesPage = async (link: string): Promise<AerodromesResourceResponse> => {
   const response = await fetch(link)
 
   if (!response.ok) {

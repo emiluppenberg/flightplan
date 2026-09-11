@@ -9,7 +9,15 @@ export const SVG_URLS = {
   search: '/ui/browse-svgrepo-com.svg',
   close: '/ui/close-lg-svgrepo-com.svg',
   reload: '/ui/reload-svgrepo-com.svg',
+  airports: '/ui/globe-svgrepo-com.svg',
+  trash: '/ui/trash-svgrepo-com.svg'
 } as const;
+
+export const ROUTES = {
+  search: 'search',
+  signIn: "sign-in",
+  signUp: "sign-up",
+}
 
 export const sessionStorageKey = "sb-cgllylmfqjwakuhemjxv-auth-token"
 export const searchAirportId = "search-airport"
@@ -111,6 +119,7 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
 export const createAirport = (id: string): AirportData => {
   return {
     id: id,
+    icaoId: null,
     formValues: {
       icaoId: "",
       date: "",
