@@ -20,7 +20,7 @@ export const FlightPathProvider = () => {
     const [initialized, setInitialized] = useState(false);
     const navigate = useNavigate()
 
-    const loadUserData = async (accessToken: string) => {
+    const loadUserData = async (accessToken: string): Promise<boolean> => {
         const supabaseAirports = await fetchSelectAllAirports({
             accessToken: accessToken
         })
@@ -51,12 +51,16 @@ export const FlightPathProvider = () => {
             report: "NOTAM"
         })
         setHighlightsNOTAM(resolveHighlights(highlightsNOTAM, HIGHLIGHTS_NOTAM))
+
+        return airports.length > 0
     }
 
     useEffect(() => {
         if (initialized) return;
 
         const restoreSession = async () => {
+            let hasAerodromes = false
+
             try {
                 setIsLoading(true)
 
@@ -65,8 +69,7 @@ export const FlightPathProvider = () => {
                 if (confirmedUser.data) {
                     setMessage(`Welcome to FlyRep`)
                     setUser(confirmedUser.data)
-                    await loadUserData(confirmedUser.data.session.access_token)
-                    return
+                    hasAerodromes = await loadUserData(confirmedUser.data.session.access_token)
                 }
                 if (confirmedUser.error) {
                     setError(confirmedUser.error)
@@ -75,12 +78,12 @@ export const FlightPathProvider = () => {
 
                 const session = localStorage.getItem(sessionStorageKey)
 
-                if (session) {
+                if (session && !confirmedUser.data) {
                     const user = await capture(() => fetchInitializeUser())
 
                     if (user.data) {
                         setUser(user.data)
-                        await loadUserData(user.data.session.access_token)
+                        hasAerodromes = await loadUserData(user.data.session.access_token)
                     }
                     if (user.error) {
                         setError(user.error)
@@ -93,7 +96,7 @@ export const FlightPathProvider = () => {
                 setInitialized(true);
                 setIsLoading(false)
 
-                if (airports.length === 1) {
+                if (!hasAerodromes) {
                     navigate(`/${ROUTES.search}`)
                 }
             }
@@ -370,6 +373,7 @@ export const FlightPathProvider = () => {
     const handleSignIn = async (values: UserFormValues) => {
         setIsLoading(true)
         setError('')
+        let hasAerodromes = false
 
         try {
             const user = await fetchSignInUser({ ...values });
@@ -382,13 +386,13 @@ export const FlightPathProvider = () => {
             }
 
             setUser(user)
-            await loadUserData(user.session.access_token);
+            hasAerodromes = await loadUserData(user.session.access_token);
         } catch (error) {
             setError(error instanceof Error ? error.message : "")
         } finally {
             setIsLoading(false)
 
-            if (airports.length === 1) {
+            if (!hasAerodromes) {
                 navigate(`/${ROUTES.search}`)
             }
         }
