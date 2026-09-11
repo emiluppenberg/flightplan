@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
 import { createAirport, refreshAirports, resolveHighlights, searchAirportId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES } from "./utilities";
@@ -17,9 +17,15 @@ export const FlightPathProvider = () => {
     const [message, setMessage] = useState("")
     const [error, setError] = useState("")
     const [user, setUser] = useState<AppUser>()
-    const [initialized, setInitialized] = useState(false);
+    const [initialized, setInitialized] = useState(false)
     const navigate = useNavigate()
     const location = useLocation()
+    const preventRestoreSession = useRef(false)
+    const pathname = useRef(location.pathname)
+
+    useEffect(() => {
+        pathname.current = location.pathname
+    }, [location.pathname])
 
     const loadUserData = async (accessToken: string): Promise<boolean> => {
         const supabaseAirports = await fetchSelectAllAirports({
@@ -97,14 +103,19 @@ export const FlightPathProvider = () => {
                 setInitialized(true);
                 setIsLoading(false)
 
-                if (!hasAerodromes && location.pathname === "/") {
+                if (!hasAerodromes && pathname.current === "/") {
                     navigate(`/${ROUTES.search}`)
                 }
             }
         }
 
-        void restoreSession();
-    }, [])
+        if (!preventRestoreSession.current) {
+            preventRestoreSession.current = true
+            void restoreSession().finally(() => {
+                preventRestoreSession.current = false
+            });
+        }
+    }, [location.pathname])
 
     const handleSubmit = useCallback(async (
         airport: AirportData,
