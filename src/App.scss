@@ -94,7 +94,7 @@ img {
   }
 }
 
-.airports-container,
+.aerodromes-container,
 .search-container,
 .sign-in-container,
 .sign-out-container,
@@ -105,7 +105,7 @@ img {
   overflow-y: auto;
 }
 
-.airports-container {
+.aerodromes-container {
   padding: 1rem 0 1rem 0;
 
   &.split {
@@ -187,7 +187,7 @@ fieldset {
   &.btn-delete,
   &.btn-refetch,
   &.btn-search,
-  &.btn-airports {
+  &.btn-aerodromes {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -406,7 +406,7 @@ h2 {
   }
 }
 
-.airport-render-container {
+.aerodrome-render-container {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -417,20 +417,20 @@ h2 {
   background: $color-background;
   width: 100%;
 
-  .airport-header-container {
+  .aerodrome-header-container {
     position: sticky;
     top: 0;
     display: flex;
     flex-direction: column;
     border-top: 1px solid $color-border-light;
 
-    .airport-operational-hours {
+    .aerodrome-operational-hours {
       padding-top: 0.5rem;
       background: $color-third;
       border-bottom: 1px solid $color-first-border;
     }
 
-    .airport-header-search {
+    .aerodrome-header-search {
       display: flex;
       flex-direction: column;
       max-height: 40vh;
@@ -456,11 +456,11 @@ h2 {
       }
     }
 
-    .airport-header-buttons {
+    .aerodrome-header-buttons {
       display: flex;
       border-radius: 0;
 
-      .airport-header-icao {
+      .aerodrome-header-icao {
         font: inherit;
         padding: 0.5rem;
         background: $color-first;
@@ -468,7 +468,7 @@ h2 {
         user-select: none;
       }
 
-      .airport-header-icao,
+      .aerodrome-header-icao,
       .input-search,
       .btn-notam,
       .btn-taf-metar,
@@ -487,7 +487,7 @@ h2 {
         }
       }
 
-      .airport-header-icao>h4 {
+      .aerodrome-header-icao>h4 {
         font-size: 1.5rem;
       }
 
@@ -506,7 +506,7 @@ h2 {
         border-top-right-radius: 0.5rem;
       }
 
-      .airport-header-icao,
+      .aerodrome-header-icao,
       .btn-refetch,
       .btn-search {
         border-left: 1px solid $color-first-border;
@@ -514,23 +514,23 @@ h2 {
     }
   }
 
-  .airport-report-container,
-  .airport-notam-container {
+  .aerodrome-report-container,
+  .aerodrome-notam-container {
     display: flex;
     flex-direction: row;
     padding: 0.5rem 1rem 0.5rem 1rem;
 
-    .airport-report-type {
+    .aerodrome-report-type {
       min-width: 4rem;
       text-align: start;
     }
 
-    .airport-report-icao {
+    .aerodrome-report-icao {
       min-width: 3rem;
       text-align: start;
     }
 
-    .airport-report-codes {
+    .aerodrome-report-codes {
       display: flex;
       flex-direction: row;
       flex-wrap: wrap;

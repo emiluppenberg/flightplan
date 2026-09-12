@@ -31,9 +31,9 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_airports_notam")
+        .from("user_aerodromes_notam")
         .delete()
-        .in("airport_id", [body.airportSupabaseId])
+        .in("aerodrome_id", [body.aerodromeSupabaseId])
 
     if (!response.success) {
         console.error(response.error.message)

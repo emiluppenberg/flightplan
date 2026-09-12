@@ -33,9 +33,9 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_airports_notam")
+        .from("user_aerodromes_notam")
         .upsert(body.SNOWTAM.map(snowtam => ({
-            ...snowtam, airport_id: body.airportSupabaseId
+            ...snowtam, aerodrome_id: body.aerodromeSupabaseId
         })), { onConflict: "id" })
         .select()
 

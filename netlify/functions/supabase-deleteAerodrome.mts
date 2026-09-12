@@ -1,16 +1,16 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import type { DeleteAirportBody } from "../../src/types"
+import type { DeleteAerodromeBody } from "../../src/types"
 
 export default async (request: Request) => {
-    let body: DeleteAirportBody
+    let body: DeleteAerodromeBody
 
     try {
-        body = await request.json() as DeleteAirportBody;
+        body = await request.json() as DeleteAerodromeBody;
     } catch {
         return new Response(
-            "Invalid DeleteAirportBody",
+            "Invalid DeleteAerodromeBody",
             { status: 400 },
         );
     }
@@ -29,7 +29,7 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_airports")
+        .from("user_aerodromes")
         .delete()
         .eq("icao", body.icaoId)
         .select()
@@ -46,6 +46,6 @@ export default async (request: Request) => {
 }
 
 export const config: Config = {
-    path: "/api/supabase/delete-airport",
+    path: "/api/supabase/delete-aerodrome",
     method: "POST"
 }

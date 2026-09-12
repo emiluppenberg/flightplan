@@ -1,6 +1,6 @@
 import type { Session } from "@supabase/supabase-js"
-import { type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type EntryNOTAM, type FetchResult, type SupabaseAirport, type CodeHighlight, type AppUser, type EntrySNOWTAM } from "./types"
-import { fetchDeleteSNOWTAM, fetchInitializeUser, fetchSelectAirportSNOWTAM, fetchUpdateAirportNextPollSNOWTAM, fetchUpsertSNOWTAM } from "./api/supabase"
+import { type AerodromeFormValues, type AerodromeData, HIGHLIGHTS_TAF_METAR, type EntryNOTAM, type FetchResult, type SupabaseAerodrome, type CodeHighlight, type AppUser, type EntrySNOWTAM } from "./types"
+import { fetchDeleteSNOWTAM, fetchInitializeUser, fetchSelectSNOWTAM, fetchUpdateAerodromeNextPollSNOWTAM, fetchUpsertSNOWTAM } from "./api/supabase"
 import { fetchTAF, fetchMETAR, fetchNOTAM, fetchSNOWTAM, POLL_INTERVAL_SNOWTAM, POLL_INTERVAL_TAF_METAR_NOTAM } from "./api/resources";
 
 export const SVG_URLS = {
@@ -9,7 +9,7 @@ export const SVG_URLS = {
   search: '/ui/browse-svgrepo-com.svg',
   close: '/ui/close-lg-svgrepo-com.svg',
   reload: '/ui/reload-svgrepo-com.svg',
-  airports: '/ui/globe-svgrepo-com.svg',
+  aerodromes: '/ui/globe-svgrepo-com.svg',
   trash: '/ui/trash-svgrepo-com.svg'
 } as const;
 
@@ -20,7 +20,7 @@ export const ROUTES = {
 }
 
 export const sessionStorageKey = "sb-cgllylmfqjwakuhemjxv-auth-token"
-export const searchAirportId = "search-airport"
+export const searchAerodromeId = "search-aerodrome"
 
 export const capture = async<T>(
   request: () => Promise<T>
@@ -42,41 +42,41 @@ export const capture = async<T>(
 
 export const captureSyncSNOWTAM = async (
   SNOWTAM: EntrySNOWTAM[],
-  airportSupabaseId: string | undefined,
+  aerodromeSupabaseId: string | undefined,
   icaoId: string,
   nextPollSNOWTAM: number,
-  airportId: string = ""
+  aerodromeId: string = ""
 ): Promise<string> => {
-  if (!airportSupabaseId) {
-    return airportId === searchAirportId
+  if (!aerodromeSupabaseId) {
+    return aerodromeId === searchAerodromeId
       ? ""
-      : "Airport is missing supabaseId"
+      : "Aerodrome is missing supabaseId"
   }
 
-  const deleted = await capture(() => fetchDeleteSNOWTAM(airportSupabaseId))
+  const deleted = await capture(() => fetchDeleteSNOWTAM(aerodromeSupabaseId))
 
   const upserted = !deleted.error
-    ? await capture(() => fetchUpsertSNOWTAM(SNOWTAM, airportSupabaseId))
+    ? await capture(() => fetchUpsertSNOWTAM(SNOWTAM, aerodromeSupabaseId))
     : { data: undefined, error: "" }
 
   const updated = !deleted.error && !upserted.error
-    ? await capture(() => fetchUpdateAirportNextPollSNOWTAM(icaoId, nextPollSNOWTAM))
+    ? await capture(() => fetchUpdateAerodromeNextPollSNOWTAM(icaoId, nextPollSNOWTAM))
     : { data: undefined, error: "" }
 
   return (deleted.error ?? "") + (upserted.error ?? "") + (updated.error ?? "")
 }
 
-export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Promise<AirportData[]> => {
+export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[]): Promise<AerodromeData[]> => {
   const now = Date.now()
 
-  return await Promise.all(supabaseAirports.map(async airport => {
-    const formValues: AirportFormValues = {
-      icaoId: airport.icao,
+  return await Promise.all(supabaseAerodromes.map(async aerodrome => {
+    const formValues: AerodromeFormValues = {
+      icaoId: aerodrome.icao,
       notamIncludeFIR: false,
       notamIncludeFuture: true
     }
 
-    const fetchFreshSNOWTAM = airport.next_poll_snowtam <= now
+    const fetchFreshSNOWTAM = aerodrome.next_poll_snowtam <= now
 
     const [TAF, METAR, NOTAM, SNOWTAM] = await Promise.all([
       capture(() => fetchTAF(formValues)),
@@ -89,19 +89,19 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
 
     const nextPollSNOWTAM = fetchFreshSNOWTAM && SNOWTAM.data
       ? now + POLL_INTERVAL_SNOWTAM
-      : airport.next_poll_snowtam
+      : aerodrome.next_poll_snowtam
 
     const synced = fetchFreshSNOWTAM && SNOWTAM.data
-      ? await captureSyncSNOWTAM(SNOWTAM.data, airport.id, airport.icao, nextPollSNOWTAM)
+      ? await captureSyncSNOWTAM(SNOWTAM.data, aerodrome.id, aerodrome.icao, nextPollSNOWTAM)
       : ""
 
     if (!fetchFreshSNOWTAM || (fetchFreshSNOWTAM && !SNOWTAM.data)) {
-      SNOWTAM.data = await fetchSelectAirportSNOWTAM(airport.id)
+      SNOWTAM.data = await fetchSelectSNOWTAM(aerodrome.id)
     }
 
     return {
       id: crypto.randomUUID(),
-      icaoId: airport.icao,
+      icaoId: aerodrome.icao,
       formValues: formValues,
       TAF: TAF.data ? TAF.data : [],
       METAR: METAR.data ? METAR.data : [],
@@ -111,12 +111,12 @@ export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Prom
       nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM,
       nextPollSNOWTAM: nextPollSNOWTAM,
       isLoading: false,
-      supabaseId: airport.id
+      supabaseId: aerodrome.id
     }
   }))
 }
 
-export const createAirport = (id: string): AirportData => {
+export const createAerodrome = (id: string): AerodromeData => {
   return {
     id: id,
     icaoId: null,

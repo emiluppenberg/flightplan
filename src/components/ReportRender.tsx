@@ -11,10 +11,10 @@ type ReportRenderProps = {
 const ReportRender = (props: ReportRenderProps) => {
 
     return (
-        <div className="airport-report-container">
-            <div className="airport-report-type">{props.codes[0]}</div>
-            <div className="airport-report-icao">{props.codes[1]}</div>
-            <div className="airport-report-codes">
+        <div className="aerodrome-report-container">
+            <div className="aerodrome-report-type">{props.codes[0]}</div>
+            <div className="aerodrome-report-icao">{props.codes[1]}</div>
+            <div className="aerodrome-report-codes">
                 {props.codes.map((code, index) => {
                     if (index === 0 || index === 1) return;
 
@@ -37,7 +37,7 @@ const ReportRender = (props: ReportRenderProps) => {
                     ].filter(Boolean).join(" ")
 
                     return (
-                        <pre key={`airport-${props.icaoId}-${props.report}-report-${index}`}>
+                        <pre key={`aerodrome-${props.icaoId}-${props.report}-report-${index}`}>
                             <span className={className}>{code} </span>
                         </pre>
                     )

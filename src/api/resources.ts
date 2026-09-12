@@ -1,7 +1,7 @@
-import { type AirportFormValues, type EntryTAF, type EntryMETAR, type EntryNOTAM, type ResponseNOTAM, type AerodromesResourceResponse, HIGHLIGHTS_NOTAM, type EntrySNOWTAM, type AerodromeResourceResponse } from "../types"
+import { type AerodromeFormValues, type EntryTAF, type EntryMETAR, type EntryNOTAM, type ResponseNOTAM, type AerodromesResourceResponse, HIGHLIGHTS_NOTAM, type EntrySNOWTAM, type AerodromeResourceResponse } from "../types"
 import { matchesNotamHighlight } from "../utilities"
 
-export const PATH_AIRPORTS = "/api/airports"
+export const PATH_AERODROMES = "/api/aerodromes"
 export const PATH_NOTAM = "/api/reports/notam"
 export const PATH_SNOWTAM = "/api/reports/snowtam"
 export const PATH_TAF = '/api/reports/taf'
@@ -10,7 +10,7 @@ export const PATH_METAR = '/api/reports/metar'
 export const POLL_INTERVAL_TAF_METAR_NOTAM = 5 * 60 * 1000
 export const POLL_INTERVAL_SNOWTAM = 60 * 60 * 1000
 
-export const fetchTAF = async (values: AirportFormValues): Promise<EntryTAF[]> => {
+export const fetchTAF = async (values: AerodromeFormValues): Promise<EntryTAF[]> => {
   const params = new URLSearchParams({
     ids: values.icaoId,
     format: "json",
@@ -30,7 +30,7 @@ export const fetchTAF = async (values: AirportFormValues): Promise<EntryTAF[]> =
   return await response.json()
 }
 
-export const fetchMETAR = async (values: AirportFormValues): Promise<EntryMETAR[]> => {
+export const fetchMETAR = async (values: AerodromeFormValues): Promise<EntryMETAR[]> => {
   const params = new URLSearchParams({
     ids: values.icaoId,
     format: "json",
@@ -61,7 +61,7 @@ export const fetchMETAR = async (values: AirportFormValues): Promise<EntryMETAR[
   })
 }
 
-export const fetchNOTAM = async (values: AirportFormValues): Promise<EntryNOTAM[]> => {
+export const fetchNOTAM = async (values: AerodromeFormValues): Promise<EntryNOTAM[]> => {
   const params = new URLSearchParams({
     icao: values.icaoId,
   })
@@ -76,7 +76,7 @@ export const fetchNOTAM = async (values: AirportFormValues): Promise<EntryNOTAM[
   return result.notams
 }
 
-export const fetchSNOWTAM = async (values: AirportFormValues): Promise<EntrySNOWTAM[]> => {
+export const fetchSNOWTAM = async (values: AerodromeFormValues): Promise<EntrySNOWTAM[]> => {
   const params = new URLSearchParams({
     icao: values.icaoId,
     includeFIR: String(values.notamIncludeFIR),
@@ -101,7 +101,7 @@ export const fetchSNOWTAM = async (values: AirportFormValues): Promise<EntrySNOW
 }
 
 export const fetchAerodromeIcaoId = async (formIcaoId: string) => {
-  const response = await fetch(`${PATH_AIRPORTS}/${formIcaoId}`)
+  const response = await fetch(`${PATH_AERODROMES}/${formIcaoId}`)
 
   if (!response.ok){
     if (response.status === 404) {
@@ -120,7 +120,7 @@ export const fetchAerodromes = async (name: string): Promise<AerodromesResourceR
     "filter[name]": name
   })
 
-  const response = await fetch(`${PATH_AIRPORTS}?${params}`)
+  const response = await fetch(`${PATH_AERODROMES}?${params}`)
 
   if (!response.ok) {
     throw new Error(await response.text())

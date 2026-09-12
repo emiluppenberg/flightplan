@@ -1,16 +1,16 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import type { SelectAirportSNOWTAMBody } from "../../src/types"
+import type { InsertAerodromeBody } from "../../src/types"
 
 export default async (request: Request) => {
-    let body: SelectAirportSNOWTAMBody
+    let body: InsertAerodromeBody
 
     try {
-        body = await request.json() as SelectAirportSNOWTAMBody;
+        body = await request.json() as InsertAerodromeBody;
     } catch {
         return new Response(
-            "Invalid SelectAirportSNOWTAMBody",
+            "Invalid InsertAerodromeBody",
             { status: 400 },
         );
     }
@@ -29,9 +29,9 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_airports_notam")
+        .from("user_aerodromes")
+        .insert({ icao: body.icaoId, next_poll_snowtam: body.nextPollSNOWTAM })
         .select()
-        .eq("airport_id", body.airportSupabaseId)
 
     if (!response.success) {
         console.error(response.error.message)
@@ -41,10 +41,10 @@ export default async (request: Request) => {
         )
     }
 
-    return Response.json(response.data)
+    return Response.json(response.data[0])
 }
 
 export const config: Config = {
-    path: "/api/supabase/select-airport-snowtam",
+    path: "/api/supabase/insert-aerodrome",
     method: "POST"
 }

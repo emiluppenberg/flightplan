@@ -1,16 +1,16 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import type { SelectAllAirportsBody } from "../../src/types"
+import type { SelectAllAerodromesBody } from "../../src/types"
 
 export default async (request: Request) => {
-    let body: SelectAllAirportsBody
+    let body: SelectAllAerodromesBody
 
     try {
-        body = await request.json() as SelectAllAirportsBody;
+        body = await request.json() as SelectAllAerodromesBody;
     } catch {
         return new Response(
-            "Invalid SelectAllAirportsBody",
+            "Invalid SelectAllAerodromesBody",
             { status: 400 },
         );
     }
@@ -29,7 +29,7 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_airports")
+        .from("user_aerodromes")
         .select()
 
     if (!response.success) {
@@ -44,6 +44,6 @@ export default async (request: Request) => {
 }
 
 export const config: Config = {
-    path: "/api/supabase/select-all-airports",
+    path: "/api/supabase/select-aerodromes",
     method: "POST"
 }

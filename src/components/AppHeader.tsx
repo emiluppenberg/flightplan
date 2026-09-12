@@ -27,8 +27,8 @@ const AppHeader = () => {
                     </NavLink>
                     <NavLink
                         to="/"
-                        className={({ isActive }) => `btn-airports ${isActive && "open"}`}>
-                        <img src={SVG_URLS.airports} width="20" />
+                        className={({ isActive }) => `btn-aerodromes ${isActive && "open"}`}>
+                        <img src={SVG_URLS.aerodromes} width="20" />
                     </NavLink>
                 </div>
                 <AppLogo />

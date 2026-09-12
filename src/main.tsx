@@ -3,7 +3,7 @@ import './index.scss'
 import './App.scss'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import { FlightPathProvider } from './Provider'
-import Airports from './pages/Airports'
+import Aerodromes from './pages/Aerodromes'
 import Search from './pages/Search'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
@@ -18,7 +18,7 @@ createRoot(rootElement).render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<FlightPathProvider />}>
-        <Route index element={<Airports />} />
+        <Route index element={<Aerodromes />} />
         <Route path="search" element={<Search />} />
         <Route path="sign-in" element={<SignIn />} />
         <Route path="sign-up" element={<SignUp />} />

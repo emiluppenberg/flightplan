@@ -1,13 +1,13 @@
 import { useFormContext } from "react-hook-form";
-import type { AirportFormValues } from "../types";
+import type { AerodromeFormValues } from "../types";
 import { useFlightPathContext } from "../Context";
 
-type AirportDatetimeFormProps = {
+type AerodromeDatetimeFormProps = {
     id: string;
 }
 
-const AirportDatetimeForm = (props: AirportDatetimeFormProps) => {
-    const { register, getValues, setValue } = useFormContext<AirportFormValues>();
+const AerodromeDatetimeForm = (props: AerodromeDatetimeFormProps) => {
+    const { register, getValues, setValue } = useFormContext<AerodromeFormValues>();
     const context = useFlightPathContext()
 
     const clearDatetime = () => {
@@ -44,4 +44,4 @@ const AirportDatetimeForm = (props: AirportDatetimeFormProps) => {
     )
 }
 
-export default AirportDatetimeForm;
+export default AerodromeDatetimeForm;
