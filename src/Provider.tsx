@@ -415,23 +415,26 @@ export const FlightPathProvider = () => {
         setError('')
 
         try {
-            const user = await fetchSignInUser({ ...values });
+            const user = await capture(() => fetchSignInUser({ ...values }))
 
-            if (user && !user.user.email_confirmed_at) {
-                throw new Error(`Please follow the link in the confirmation email sent to ${values.email} before logging in`)
-            }
-            if (!user) {
-                throw new Error(`No user exists with email ${values.email} and your provided password`)
+            if (user.error) {
+                throw new Error(user.error)
             }
 
-            setUser(user)
+            if (user.data) {
+                setUser(user.data)
 
-            await loadUserData(user.session.access_token);
+                const loaded = await capture(() => loadUserData(user.data!.session.access_token))
 
-            if (!hasAerodromes.current) {
-                navigate(`/${ROUTES.search}`)
-            } else {
-                navigate("/")
+                if (loaded.error) {
+                    setError(loaded.error)
+                }
+
+                if (!hasAerodromes.current) {
+                    navigate(`/${ROUTES.search}`)
+                } else {
+                    navigate("/")
+                }
             }
         } catch (error) {
             setError(error instanceof Error ? error.message : "There was an unexpected error while signing in")
