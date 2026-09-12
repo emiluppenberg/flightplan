@@ -1,7 +1,7 @@
 import type { Session } from "@supabase/supabase-js"
-import type { InsertAerodromeBody, SupabaseAerodrome, DeleteAerodromeBody, SelectAllAerodromesBody, UpdateAerodromeBody, EntryNOTAM, UpsertSNOWTAMBody, DeleteSNOWTAMBody, SelectSNOWTAMBody, UpsertHighlightsBody, SelectHighlightsBody, AppUser, InitializeUserBody, SignInBody, SignUpBody, SignOutBody, EntrySNOWTAM } from "../types"
+import type {  SupabaseAerodrome, EntryNOTAM,  AppUser, EntrySNOWTAM } from "../types"
 import { getAccessToken, getRefreshToken, sessionStorageKey } from "../utilities"
-import type { PostgrestResponseFailure } from "@supabase/postgrest-js"
+import type { InsertAerodromeBody, DeleteAerodromeBody, SelectAllAerodromesBody, UpdateAerodromeBody, UpsertSNOWTAMBody, DeleteSNOWTAMBody, SelectSNOWTAMBody, UpsertHighlightsBody, SelectHighlightsBody, InitializeUserBody, SignInBody, SignUpBody, SignOutBody } from "../shared"
 
 export const PATH_INITIALIZE_USER = "/api/supabase/initialize-user"
 export const PATH_SIGN_IN = "/api/supabase/sign-in"
@@ -265,17 +265,4 @@ export const fetchRefreshedUser = async (): Promise<AppUser | undefined> => {
   }
 
   return undefined
-}
-
-export const handlePostgrestResponseFailure = (response: PostgrestResponseFailure): Response => {
-  console.error(response.error.message)
-
-  const status = response.status >= 400 && response.status <= 599
-    ? response.status
-    : 500
-
-  return new Response(
-    response.error.message,
-    { status }
-  )
 }

@@ -1,8 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import type { SelectAllAerodromesBody } from "../../src/types"
-import { handlePostgrestResponseFailure } from "../../src/api/supabase"
+import { type SelectAllAerodromesBody, handlePostgrestResponseFailure } from "../../src/shared"
 
 export default async (request: Request) => {
     let body: SelectAllAerodromesBody
