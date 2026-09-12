@@ -49,6 +49,11 @@ export type SelectHighlightsBody = {
   report: CodeHighlightReport;
 }
 
+export type UpsertQueryMetarPreviousHoursBody = {
+  accessToken: string;
+  queryMetarPreviousHours: number;
+}
+
 export type SignInBody = {
   email: string;
   password: string;

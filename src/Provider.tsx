@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AerodromeData, type AerodromeFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAerodrome, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
 import { createAerodrome, refreshAerodromes, resolveHighlights, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors } from "./utilities";
-import { fetchSelectAllAerodromes, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUserAccessToken, fetchSignOutUser } from "./api/supabase";
+import { fetchSelectAllAerodromes, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUserAccessToken, fetchSignOutUser, fetchUpsertQueryMetarPreviousHours } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
 import { Outlet, useLocation, useNavigate } from "react-router";
@@ -295,9 +295,9 @@ export const FlightPathProvider = () => {
         }
     }
 
-    const handleSetQueryMetarHoursBack = async (newValue: string) => {
+    const handleSetQueryMetarHoursBack = async (newValue: number) => {
         try {
-            setQueryMetarHoursBack(Number(newValue))
+            setQueryMetarHoursBack(newValue)
 
             if (user) {
                 setIsLoading(true)
@@ -308,6 +308,11 @@ export const FlightPathProvider = () => {
                 if (refreshedUser) {
                     setUser(refreshedUser)
                 }
+
+                await fetchUpsertQueryMetarPreviousHours({
+                    accessToken: accessToken,
+                    queryMetarPreviousHours: newValue
+                })
             }
         } catch (error) {
             setError(error instanceof Error ? error.message : "There was an unexpected error while updating: Query previous METAR hours")

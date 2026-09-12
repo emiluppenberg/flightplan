@@ -1,7 +1,7 @@
 import type { Session } from "@supabase/supabase-js"
 import type { SupabaseAerodrome, EntryNOTAM, AppUser, EntrySNOWTAM } from "../types"
 import { getAccessToken, getRefreshToken, sessionStorageKey } from "../utilities"
-import type { InsertAerodromeBody, DeleteAerodromeBody, SelectAllAerodromesBody, UpdateAerodromeBody, UpsertSNOWTAMBody, DeleteSNOWTAMBody, SelectSNOWTAMBody, UpsertHighlightsBody, SelectHighlightsBody, InitializeUserBody, SignInBody, SignUpBody, SignOutBody } from "../shared"
+import type { InsertAerodromeBody, DeleteAerodromeBody, SelectAllAerodromesBody, UpdateAerodromeBody, UpsertSNOWTAMBody, DeleteSNOWTAMBody, SelectSNOWTAMBody, UpsertHighlightsBody, SelectHighlightsBody, InitializeUserBody, SignInBody, SignUpBody, SignOutBody, UpsertQueryMetarPreviousHoursBody } from "../shared"
 
 export const PATH_INITIALIZE_USER = "/api/supabase/initialize-user"
 export const PATH_SIGN_IN = "/api/supabase/sign-in"
@@ -16,6 +16,7 @@ export const PATH_DELETE_SNOWTAM = "/api/supabase/delete-snowtam"
 export const PATH_SELECT_SNOWTAM = "/api/supabase/select-snowtam"
 export const PATH_UPSERT_HIGHLIGHTS = "/api/supabase/upsert-highlights"
 export const PATH_SELECT_HIGHLIGHTS = "/api/supabase/select-highlights"
+export const PATH_UPSERT_QUERY_METAR_PREVIOUS_HOURS = "/api/supabase/upsert-query-metar-previous-hours"
 
 export const EXPIRES_AT_SAFE_INTERVAL = 30 * 1000;
 
@@ -175,6 +176,20 @@ export const fetchSelectHighlights = async (body: SelectHighlightsBody): Promise
   }
 
   return await response.json()
+}
+
+export const fetchUpsertQueryMetarPreviousHours = async (body: UpsertQueryMetarPreviousHoursBody) => {
+  const response = await fetch(`${PATH_UPSERT_QUERY_METAR_PREVIOUS_HOURS}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
 }
 
 export const fetchInitializeUser = async (refreshToken?: string): Promise<AppUser> => {

@@ -112,6 +112,24 @@ export type Database = {
           },
         ]
       }
+      user_config: {
+        Row: {
+          id: string
+          query_metar_previous_hours: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          query_metar_previous_hours?: number
+          user_id?: string
+        }
+        Update: {
+          id?: string
+          query_metar_previous_hours?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_highlights: {
         Row: {
           highlights: string[]
