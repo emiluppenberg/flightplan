@@ -214,7 +214,7 @@ const AerodromeSearchForm = () => {
                                 onClick={() => context.handleAddAerodrome(searchAerodrome.icaoId)}>
                                 Save {searchAerodrome.icaoId}
                             </button>)
-                            : (<p className="message">No data</p>)}
+                            : (<p className="message info">Search aerodrome to display data</p>)}
                     </div>
                 </div>
             </form>

@@ -451,6 +451,7 @@ export const FlightPathProvider = () => {
 
         try {
             const refreshedUser = await fetchRefreshedUser()
+            
             const accessToken = refreshedUser
                 ? refreshedUser.session.access_token
                 : user.session.access_token

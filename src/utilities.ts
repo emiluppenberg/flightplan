@@ -300,7 +300,7 @@ export const getReportError = <T>(
   if (fetchResult.data === undefined ||
     fetchResult.data.length === 0
   ) {
-    return `No ${report} available`
+    return `${report} not available`
   }
 
   return undefined

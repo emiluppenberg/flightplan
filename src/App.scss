@@ -5,7 +5,7 @@ $color-fourth: #2b2b3f;
 $color-open: #303064;
 $color-disabled: #15151d;
 $color-danger: #943838;
-$color-success: #10571c;
+$color-success: #51c957;
 $color-warning: #c9c935;
 $color-first-border: #34346d;
 $color-second-border: #28285a;
@@ -88,6 +88,11 @@ img {
     margin-bottom: 0.5rem;
   }
 
+  &.info {
+    font-style: normal;
+    font-size: 1rem;
+    padding: 0.5rem;
+  }
 
   &.warning {
     color: $color-warning;
