@@ -36,7 +36,7 @@ export default async (request: Request) => {
         console.error(response.error.message)
         return new Response(
             response.error.message,
-            { status: 500 }
+            { status: response.status }
         )
     }
 
