@@ -35,7 +35,7 @@ export const capture = async<T>(
       data: undefined,
       error: error instanceof Error
         ? error.message
-        : `There was unexpected error while executing ${request.name}`
+        : `There was an unexpected error while executing a request`
     };
   }
 }
@@ -46,24 +46,28 @@ export const captureSyncSNOWTAM = async (
   icaoId: string,
   nextPollSNOWTAM: number,
   aerodromeId: string = ""
-): Promise<string> => {
+): Promise<string[]> => {
   if (!aerodromeSupabaseId) {
     return aerodromeId === searchAerodromeId
-      ? ""
-      : "Aerodrome is missing supabaseId"
+      ? []
+      : ["Aerodrome is missing supabaseId"]
   }
 
   const deleted = await capture(() => fetchDeleteSNOWTAM(aerodromeSupabaseId))
 
   const upserted = !deleted.error
     ? await capture(() => fetchUpsertSNOWTAM(SNOWTAM, aerodromeSupabaseId))
-    : { data: undefined, error: "" }
+    : { data: undefined, error: undefined }
 
   const updated = !deleted.error && !upserted.error
     ? await capture(() => fetchUpdateAerodromeNextPollSNOWTAM(icaoId, nextPollSNOWTAM))
-    : { data: undefined, error: "" }
+    : { data: undefined, error: undefined }
 
-  return (deleted.error ?? "") + (upserted.error ?? "") + (updated.error ?? "")
+  return [
+    deleted.error,
+    upserted.error,
+    updated.error
+  ].filter(error => error !== undefined)
 }
 
 export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[]): Promise<AerodromeData[]> => {
@@ -84,7 +88,7 @@ export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[])
       capture(() => fetchNOTAM(formValues)),
       fetchFreshSNOWTAM
         ? capture(() => fetchSNOWTAM(formValues))
-        : Promise.resolve({ data: undefined, error: "" }),
+        : Promise.resolve({ data: undefined, error: undefined }),
     ])
 
     const nextPollSNOWTAM = fetchFreshSNOWTAM && SNOWTAM.data
@@ -93,11 +97,21 @@ export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[])
 
     const synced = fetchFreshSNOWTAM && SNOWTAM.data
       ? await captureSyncSNOWTAM(SNOWTAM.data, aerodrome.id, aerodrome.icao, nextPollSNOWTAM)
-      : ""
+      : []
 
     if (!fetchFreshSNOWTAM || (fetchFreshSNOWTAM && !SNOWTAM.data)) {
       SNOWTAM.data = await fetchSelectSNOWTAM(aerodrome.id)
     }
+
+    const mergedError = mergeErrors(
+      getReportError(TAF, "TAF"),
+      getReportError(METAR, "METAR"),
+      getReportError(NOTAM, "NOTAM"),
+      fetchFreshSNOWTAM
+        ? getReportError(SNOWTAM, "SNOWTAM")
+        : undefined,
+      ...synced
+    )
 
     return {
       id: crypto.randomUUID(),
@@ -107,7 +121,7 @@ export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[])
       METAR: METAR.data ? METAR.data : [],
       NOTAM: NOTAM.data ? NOTAM.data : [],
       SNOWTAM: SNOWTAM.data ? SNOWTAM.data : [],
-      messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + (SNOWTAM.error ?? "") + synced,
+      messages: mergedError,
       nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM,
       nextPollSNOWTAM: nextPollSNOWTAM,
       isLoading: false,
@@ -273,4 +287,28 @@ export const consumeSupabaseConfirmationLink = async (): Promise<AppUser | undef
   }
 
   return await fetchInitializeUser(refreshToken)
+}
+
+export const getReportError = <T>(
+  fetchResult: FetchResult<Array<T>>,
+  report: "TAF" | "METAR" | "NOTAM" | "SNOWTAM")
+  : string | undefined => {
+  if (fetchResult.error) {
+    return fetchResult.error
+  }
+
+  if (fetchResult.data === undefined ||
+    fetchResult.data.length === 0
+  ) {
+    return `No ${report} available`
+  }
+
+  return undefined
+}
+
+export const mergeErrors = (...errors: Array<string | undefined>) => {
+  return errors
+    .map(error => error?.trim())
+    .filter((error): error is string => Boolean(error))
+    .join("\n")
 }

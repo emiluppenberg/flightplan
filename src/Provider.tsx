@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AerodromeData, type AerodromeFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAerodrome, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAerodrome, refreshAerodromes, resolveHighlights, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES } from "./utilities";
+import { createAerodrome, refreshAerodromes, resolveHighlights, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors } from "./utilities";
 import { fetchSelectAllAerodromes, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
@@ -68,7 +68,13 @@ export const FlightPathProvider = () => {
         highlightsOPERATIONAL_HOURS.data && setHighlightsOPERATIONAL_HOURS(resolveHighlights(highlightsOPERATIONAL_HOURS.data, HIGHLIGHTS_OPERATIONAL_HOURS))
         highlightsNOTAM.data && setHighlightsNOTAM(resolveHighlights(highlightsNOTAM.data, HIGHLIGHTS_NOTAM))
 
-        const mergedError = (aerodromes.error ?? "") + (highlightsTAF.error ?? "") + (highlightsMETAR.error ?? "") + (highlightsOPERATIONAL_HOURS.error ?? "") + (highlightsNOTAM.error ?? "")
+        const mergedError = mergeErrors(
+            aerodromes.error,
+            highlightsTAF.error,
+            highlightsMETAR.error,
+            highlightsOPERATIONAL_HOURS.error,
+            highlightsNOTAM.error
+        )
 
         if (mergedError.length > 0) {
             throw new Error(mergedError)
@@ -148,7 +154,7 @@ export const FlightPathProvider = () => {
                 capture(() => fetchNOTAM(aerodrome.formValues)),
                 fetchFreshSNOWTAM
                     ? capture(() => fetchSNOWTAM(aerodrome.formValues))
-                    : Promise.resolve({ data: undefined, error: "" }),
+                    : Promise.resolve({ data: undefined, error: undefined }),
             ])
 
             const nextPollReports = Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM;
@@ -160,11 +166,22 @@ export const FlightPathProvider = () => {
 
             const synced = ((refreshedUser && refreshedUser.data) || user) && SNOWTAM.data
                 ? await captureSyncSNOWTAM(SNOWTAM.data, aerodrome.supabaseId, aerodrome.formValues.icaoId, nextPollSNOWTAM, aerodrome.id)
-                : ""
+                : []
 
             if (refreshedUser && refreshedUser.data) {
                 setUser(refreshedUser.data)
             }
+
+            const mergedError = mergeErrors(
+                refreshedUser?.error,
+                getReportError(TAF, "TAF"),
+                getReportError(METAR, "METAR"),
+                getReportError(NOTAM, "NOTAM"),
+                fetchFreshSNOWTAM
+                    ? getReportError(SNOWTAM, "SNOWTAM")
+                    : undefined,
+                ...synced
+            )
 
             setAerodromes(current => current.map(currentAerodrome => {
                 if (currentAerodrome.id === aerodrome.id) {
@@ -181,7 +198,7 @@ export const FlightPathProvider = () => {
                         METAR: METAR.data ?? (hasMETAR ? currentAerodrome.METAR : []),
                         NOTAM: NOTAM.data ?? (hasNOTAM ? currentAerodrome.NOTAM : []),
                         SNOWTAM: SNOWTAM.data ?? (hasSNOWTAM ? currentAerodrome.SNOWTAM : []),
-                        messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + (SNOWTAM.error ?? "") + (refreshedUser?.error ?? "") + synced,
+                        messages: mergedError,
                         nextPollReports: nextPollReports,
                         nextPollSNOWTAM: fetchFreshSNOWTAM && SNOWTAM.data
                             ? nextPollSNOWTAM
@@ -280,7 +297,7 @@ export const FlightPathProvider = () => {
                 })
             }
         } catch (error) {
-            setError(error instanceof Error ? error.message : "")
+            setError(error instanceof Error ? error.message : "There was an unexpected error while updating highlights")
         } finally {
             setIsLoading(false)
         }
@@ -323,7 +340,7 @@ export const FlightPathProvider = () => {
                     nextPollSNOWTAM: nextPollSNOWTAM
                 })
             } catch (error) {
-                setError(error instanceof Error ? error.message : "")
+                setError(error instanceof Error ? error.message : "There was an unexpected error while saving aerodrome")
             } finally {
                 setIsLoading(false)
             }
@@ -340,7 +357,7 @@ export const FlightPathProvider = () => {
 
         const synced = user && hasSNOWTAM
             ? await captureSyncSNOWTAM(searchAerodrome.SNOWTAM, supabaseAerodrome?.id, icaoId, nextPollSNOWTAM)
-            : ""
+            : []
 
         setAerodromes(current => [...current, {
             ...searchAerodrome,
@@ -353,7 +370,7 @@ export const FlightPathProvider = () => {
             SNOWTAM: hasSNOWTAM ? [...searchAerodrome.SNOWTAM] : [],
             nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM,
             nextPollSNOWTAM: nextPollSNOWTAM,
-            messages: synced,
+            messages: mergeErrors(...synced),
             isLoading: false,
             supabaseId: supabaseAerodrome?.id
         }])
@@ -384,7 +401,7 @@ export const FlightPathProvider = () => {
                     icaoId: icaoId
                 })
             } catch (error) {
-                setError(error instanceof Error ? error.message : "")
+                setError(error instanceof Error ? error.message : "There was an unexpected error while deleting aerodrome")
             } finally {
                 setIsLoading(false)
             }
@@ -409,11 +426,7 @@ export const FlightPathProvider = () => {
 
             setUser(user)
 
-            try {
-                await loadUserData(user.session.access_token);
-            } catch (error) {
-                setError(error instanceof Error ? error.message : "")    
-            }
+            await loadUserData(user.session.access_token);
 
             if (!hasAerodromes.current) {
                 navigate(`/${ROUTES.search}`)
@@ -421,7 +434,7 @@ export const FlightPathProvider = () => {
                 navigate("/")
             }
         } catch (error) {
-            setError(error instanceof Error ? error.message : "")
+            setError(error instanceof Error ? error.message : "There was an unexpected error while signing in")
         } finally {
             setIsLoading(false)
         }
@@ -443,7 +456,7 @@ export const FlightPathProvider = () => {
                 accessToken: accessToken
             })
         } catch (error) {
-            setError(error instanceof Error ? error.message : "")
+            setError(error instanceof Error ? error.message : "There was an unexpected error while signing out")
         } finally {
             setIsLoading(false)
             setMessage("")
@@ -467,7 +480,7 @@ export const FlightPathProvider = () => {
             setMessage(responseMessage)
             navigate("/")
         } catch (error) {
-            setError(error instanceof Error ? error.message : "")
+            setError(error instanceof Error ? error.message : "There was an unexpected error while signing up")
         } finally {
             setIsLoading(false)
         }

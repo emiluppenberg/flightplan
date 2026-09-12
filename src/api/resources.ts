@@ -20,11 +20,11 @@ export const fetchTAF = async (values: AerodromeFormValues): Promise<EntryTAF[]>
   const response = await fetch(`${PATH_TAF}?${params}`)
 
   if (response.status === 204) {
-    throw new Error(`No TAF available for ${values.icaoId}${values.date && values.time ? ` at ${values.date} ${values.time}` : ""}\n`)
+    throw new Error(`No TAF available${(values.date && values.time) ? ` for ${values.date} ${values.time}` : ""}`)
   }
 
   if (!response.ok) {
-    throw new Error(`TAF request for ${values.icaoId}${values.date && values.time ? ` at ${values.date} ${values.time} ` : ""} failed with status ${response.status}\n`)
+    throw new Error(`TAF request${(values.date && values.time) ? ` for ${values.date} ${values.time}` : ""} failed with status ${response.status}`)
   }
 
   return await response.json()
@@ -40,11 +40,11 @@ export const fetchMETAR = async (values: AerodromeFormValues): Promise<EntryMETA
   const response = await fetch(`${PATH_METAR}?${params}`)
 
   if (response.status === 204) {
-    throw new Error(`No METAR available for ${values.icaoId}\n`)
+    throw new Error(`No METAR available${(values.date && values.time) ? ` for ${values.date} ${values.time}` : ""}`)
   }
 
   if (!response.ok) {
-    throw new Error(`METAR request for ${values.icaoId} failed with status ${response.status}\n`)
+    throw new Error(`METAR request${(values.date && values.time) ? ` for ${values.date} ${values.time}` : ""} failed with status ${response.status}`)
   }
 
   const METAR: EntryMETAR[] = await response.json()
