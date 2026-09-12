@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AerodromeData, type AerodromeFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAerodrome, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
 import { createAerodrome, refreshAerodromes, resolveHighlights, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors } from "./utilities";
-import { fetchSelectAllAerodromes, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./api/supabase";
+import { fetchSelectAllAerodromes, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUserAccessToken, fetchSignOutUser } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
 import { Outlet, useLocation, useNavigate } from "react-router";
@@ -13,6 +13,7 @@ export const FlightPathProvider = () => {
     const [highlightsMETAR, setHighlightsMETAR] = useState<CodeHighlight[]>([])
     const [highlightsOPERATIONAL_HOURS, setHighlightsOPERATIONAL_HOURS] = useState<CodeHighlight[]>([])
     const [highlightsNOTAM, setHighlightsNOTAM] = useState<CodeHighlight[]>([])
+    const [queryMetarHoursBack, setQueryMetarHoursBack] = useState<number>(5)
     const [isLoading, setIsLoading] = useState(false)
     const [message, setMessage] = useState("")
     const [error, setError] = useState("")
@@ -160,20 +161,20 @@ export const FlightPathProvider = () => {
             const nextPollReports = Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM;
             const nextPollSNOWTAM = Date.now() + POLL_INTERVAL_SNOWTAM;
 
-            const refreshedUser = user
-                ? await capture(() => fetchRefreshedUser())
+            const refreshed = user
+                ? await capture(() => fetchRefreshedUserAccessToken())
                 : undefined
 
-            const synced = ((refreshedUser && refreshedUser.data) || user) && SNOWTAM.data
+            const synced = ((refreshed && refreshed.data) || user) && SNOWTAM.data
                 ? await captureSyncSNOWTAM(SNOWTAM.data, aerodrome.supabaseId, aerodrome.formValues.icaoId, nextPollSNOWTAM, aerodrome.id)
                 : []
 
-            if (refreshedUser && refreshedUser.data) {
-                setUser(refreshedUser.data)
+            if (refreshed?.data?.refreshedUser) {
+                setUser(refreshed.data.refreshedUser)
             }
 
             const mergedError = mergeErrors(
-                refreshedUser?.error,
+                refreshed?.error,
                 getReportError(TAF, "TAF"),
                 getReportError(METAR, "METAR"),
                 getReportError(NOTAM, "NOTAM"),
@@ -224,35 +225,30 @@ export const FlightPathProvider = () => {
     const handlePolling = useCallback(async () => {
         const now = Date.now()
 
-        try {
-            const session = localStorage.getItem(sessionStorageKey)
+        const session = localStorage.getItem(sessionStorageKey)
 
-            const refreshedUser = user && session
-                ? await fetchRefreshedUser()
-                : undefined;
+        const refreshed = user && session
+            ? await capture(() => fetchRefreshedUserAccessToken())
+            : { data: undefined, error: undefined };
 
-            if (refreshedUser) {
-                setUser(refreshedUser)
-            }
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "There was an unexpected error while polling")
+        if (refreshed?.data?.refreshedUser) {
+            setUser(refreshed.data.refreshedUser)
+        }
+        if (refreshed.error) {
+            setError(refreshed.error)
         }
 
-        try {
-            for (const aerodrome of aerodromes) {
-                const pollReports =
-                    aerodrome.icaoId &&
-                    !aerodrome.isLoading &&
-                    aerodrome.id !== searchAerodromeId &&
-                    aerodrome.nextPollReports <= now
+        for (const aerodrome of aerodromes) {
+            const pollReports =
+                aerodrome.icaoId &&
+                !aerodrome.isLoading &&
+                aerodrome.id !== searchAerodromeId &&
+                aerodrome.nextPollReports <= now
 
-                if (pollReports) {
-                    const pollSNOWTAM = aerodrome.nextPollSNOWTAM <= now
-                    handleSubmit(aerodrome, pollSNOWTAM)
-                }
+            if (pollReports) {
+                const pollSNOWTAM = aerodrome.nextPollSNOWTAM <= now
+                handleSubmit(aerodrome, pollSNOWTAM)
             }
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "There was an unexpected error while polling")
         }
     }, [aerodromes, handleSubmit])
 
@@ -280,15 +276,11 @@ export const FlightPathProvider = () => {
                 setIsLoading(true)
                 setError('')
 
-                const refreshedUser = await fetchRefreshedUser()
+                const { refreshedUser, accessToken } = await fetchRefreshedUserAccessToken()
 
                 if (refreshedUser) {
                     setUser(refreshedUser)
                 }
-
-                const accessToken = refreshedUser
-                    ? refreshedUser.session.access_token
-                    : user.session.access_token
 
                 await fetchUpsertHighlights({
                     accessToken: accessToken,
@@ -297,7 +289,28 @@ export const FlightPathProvider = () => {
                 })
             }
         } catch (error) {
-            setError(error instanceof Error ? error.message : "There was an unexpected error while updating highlights")
+            setError(error instanceof Error ? error.message : `There was an unexpected error while updating: ${report}-highlights`)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleSetQueryMetarHoursBack = async (newValue: string) => {
+        try {
+            setQueryMetarHoursBack(Number(newValue))
+
+            if (user) {
+                setIsLoading(true)
+                setError("")
+
+                const { refreshedUser, accessToken } = await fetchRefreshedUserAccessToken()
+
+                if (refreshedUser) {
+                    setUser(refreshedUser)
+                }
+            }
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "There was an unexpected error while updating: Query previous METAR hours")
         } finally {
             setIsLoading(false)
         }
@@ -324,15 +337,11 @@ export const FlightPathProvider = () => {
             setError('')
 
             try {
-                const refreshedUser = await fetchRefreshedUser()
+                const { refreshedUser, accessToken } = await fetchRefreshedUserAccessToken()
 
                 if (refreshedUser) {
                     setUser(refreshedUser)
                 }
-
-                const accessToken = refreshedUser
-                    ? refreshedUser.session.access_token
-                    : user.session.access_token
 
                 supabaseAerodrome = await fetchInsertAerodrome({
                     accessToken: accessToken,
@@ -386,15 +395,11 @@ export const FlightPathProvider = () => {
                 const icaoId = aerodrome?.formValues.icaoId
                 if (!icaoId) throw new Error(`Could not delete aerodrome with id: ${id}`)
 
-                const refreshedUser = await fetchRefreshedUser()
+                const { refreshedUser, accessToken } = await fetchRefreshedUserAccessToken()
 
                 if (refreshedUser) {
                     setUser(refreshedUser)
                 }
-
-                const accessToken = refreshedUser
-                    ? refreshedUser.session.access_token
-                    : user.session.access_token
 
                 await fetchDeleteAerodrome({
                     accessToken: accessToken,
@@ -450,11 +455,7 @@ export const FlightPathProvider = () => {
         setError('')
 
         try {
-            const refreshedUser = await fetchRefreshedUser()
-            
-            const accessToken = refreshedUser
-                ? refreshedUser.session.access_token
-                : user.session.access_token
+            const { accessToken } = await fetchRefreshedUserAccessToken()
 
             await fetchSignOutUser({
                 accessToken: accessToken
@@ -498,9 +499,11 @@ export const FlightPathProvider = () => {
                 highlightsMETAR,
                 highlightsOPERATIONAL_HOURS,
                 highlightsNOTAM,
+                queryMetarHoursBack,
                 handleSubmit,
                 handleSetFormValues,
                 handleSetHighlights,
+                handleSetQueryMetarHoursBack,
                 handleAddAerodrome,
                 handleDeleteAerodrome,
                 handleSignIn,

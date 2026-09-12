@@ -7,9 +7,11 @@ export type FlightPathState = {
     highlightsMETAR: CodeHighlight[];
     highlightsOPERATIONAL_HOURS: CodeHighlight[];
     highlightsNOTAM: CodeHighlight[];
+    queryMetarHoursBack: number;
     handleSubmit: (aerodrome: AerodromeData, fetchNotam: boolean) => void;
     handleSetFormValues: (newValues: AerodromeFormValues, id: string) => void;
     handleSetHighlights: (newHighlights: CodeHighlight[], report: CodeHighlightReport) => Promise<void>;
+    handleSetQueryMetarHoursBack: (newValue: string) => Promise<void>;
     handleAddAerodrome: (icaoId: string | null) => void;
     handleDeleteAerodrome: (id: string) => void;
     handleSignIn: (values: UserFormValues) => Promise<void>;

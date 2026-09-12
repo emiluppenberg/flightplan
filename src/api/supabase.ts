@@ -1,5 +1,5 @@
 import type { Session } from "@supabase/supabase-js"
-import type {  SupabaseAerodrome, EntryNOTAM,  AppUser, EntrySNOWTAM } from "../types"
+import type { SupabaseAerodrome, EntryNOTAM, AppUser, EntrySNOWTAM } from "../types"
 import { getAccessToken, getRefreshToken, sessionStorageKey } from "../utilities"
 import type { InsertAerodromeBody, DeleteAerodromeBody, SelectAllAerodromesBody, UpdateAerodromeBody, UpsertSNOWTAMBody, DeleteSNOWTAMBody, SelectSNOWTAMBody, UpsertHighlightsBody, SelectHighlightsBody, InitializeUserBody, SignInBody, SignUpBody, SignOutBody } from "../shared"
 
@@ -247,8 +247,9 @@ export const fetchSignOutUser = async (body: SignOutBody) => {
   }
 }
 
-export const fetchRefreshedUser = async (): Promise<AppUser | undefined> => {
+export const fetchRefreshedUserAccessToken = async () => {
   const session = localStorage.getItem(sessionStorageKey)
+  let refreshedUser: AppUser | undefined = undefined
 
   if (!session) {
     throw new Error("You are not logged in")
@@ -261,8 +262,13 @@ export const fetchRefreshedUser = async (): Promise<AppUser | undefined> => {
   }
 
   if (expiresAtSeconds * 1000 - EXPIRES_AT_SAFE_INTERVAL < Date.now()) {
-    return await fetchInitializeUser()
+    refreshedUser = await fetchInitializeUser()
   }
 
-  return undefined
+  const oldAccessToken = (JSON.parse(session) as Session).access_token
+  const accessToken = refreshedUser
+    ? refreshedUser.session.access_token
+    : oldAccessToken
+
+  return { refreshedUser, accessToken }
 }
