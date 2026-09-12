@@ -237,6 +237,20 @@ export const parseSkylinkDate = (value: string): number => {
   )
 }
 
+export const parseFormDate = (date: string, time: string): number => {
+  // date = yyyy-mm-dd, time = hh:mm
+  return Date.UTC(
+    Number(date.slice(0, 4)),
+    Number(date.slice(5, 7)) - 1, // month is zero-based
+    Number(date.slice(8, 10)),
+    Number(time.slice(0, 2)),
+    Number(time.slice(3, 5))
+  )
+}
+
+export const parseDateQuery = (date: string, time: string) =>
+  `${date.replaceAll("-", "")}_${time.replace(":", "")}`
+
 export const getRefreshToken = (): string => {
   const session = localStorage.getItem(sessionStorageKey)
 

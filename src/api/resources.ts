@@ -1,5 +1,5 @@
 import { type AerodromeFormValues, type EntryTAF, type EntryMETAR, type EntryNOTAM, type ResponseNOTAM, type AerodromesResourceResponse, HIGHLIGHTS_NOTAM, type EntrySNOWTAM, type AerodromeResourceResponse } from "../types"
-import { matchesNotamHighlight } from "../utilities"
+import { matchesNotamHighlight, parseDateQuery } from "../utilities"
 
 export const PATH_AERODROMES = "/api/aerodromes"
 export const PATH_NOTAM = "/api/reports/notam"
@@ -14,8 +14,11 @@ export const fetchTAF = async (values: AerodromeFormValues): Promise<EntryTAF[]>
   const params = new URLSearchParams({
     ids: values.icaoId,
     format: "json",
-    date: values.date && values.time ? `${values.date.replaceAll("-", "")}_${values.time.replace(":", "")}` : ""
   })
+
+  if (values.date && values.time) {
+    params.set("date", parseDateQuery(values.date, values.time))
+  }
 
   const response = await fetch(`${PATH_TAF}?${params}`)
 
@@ -34,8 +37,11 @@ export const fetchMETAR = async (values: AerodromeFormValues): Promise<EntryMETA
   const params = new URLSearchParams({
     ids: values.icaoId,
     format: "json",
-    hours: "5"
   })
+
+  if (values.date && values.time) {
+    params.set("date", parseDateQuery(values.date, values.time))
+  }
 
   const response = await fetch(`${PATH_METAR}?${params}`)
 
@@ -103,7 +109,7 @@ export const fetchSNOWTAM = async (values: AerodromeFormValues): Promise<EntrySN
 export const fetchAerodromeIcaoId = async (formIcaoId: string) => {
   const response = await fetch(`${PATH_AERODROMES}/${formIcaoId}`)
 
-  if (!response.ok){
+  if (!response.ok) {
     if (response.status === 404) {
       throw new Error(`No aerodrome found for ICAO: ${formIcaoId}`)
     } else {
