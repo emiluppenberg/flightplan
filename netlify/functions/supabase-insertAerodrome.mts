@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
 import type { InsertAerodromeBody } from "../../src/types"
+import { handlePostgrestResponseFailure } from "../../src/api/supabase"
 
 export default async (request: Request) => {
     let body: InsertAerodromeBody
@@ -34,11 +35,7 @@ export default async (request: Request) => {
         .select()
 
     if (!response.success) {
-        console.error(response.error.message)
-        return new Response(
-            response.error.message,
-            { status: response.status }
-        )
+        return handlePostgrestResponseFailure(response)
     }
 
     return Response.json(response.data[0])
