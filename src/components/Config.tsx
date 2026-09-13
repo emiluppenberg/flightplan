@@ -41,15 +41,17 @@ const Config = () => {
             </div>
             <div className="form-row">
                 <fieldset>
-                    <label>
-                        Query METAR previous hours
-                        <input
-                            type="number"
-                            min={0}
-                            max={720}
-                            value={context.queryMetarPreviousHours}
-                            onChange={(e) => handleChangeQueryMetarPreviousHours(e)} />
-                    </label>
+                    <div className="options">
+                        <label className="config">
+                            Query METAR previous hours
+                            <input
+                                type="number"
+                                min={0}
+                                max={720}
+                                value={context.queryMetarPreviousHours}
+                                onChange={(e) => handleChangeQueryMetarPreviousHours(e)} />
+                        </label>
+                    </div>
                 </fieldset>
             </div>
         </div>

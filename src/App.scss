@@ -354,6 +354,13 @@ h2 {
           padding: 0 1rem 0 1rem;
           border-right: 1px solid $color-first-border;
 
+          &.config {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            gap: 1rem;
+          }
+
           &.toggle-all {
             font-weight: 800;
           }
