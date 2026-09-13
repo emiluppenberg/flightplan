@@ -54,55 +54,66 @@ export const captureSyncSNOWTAM = async (
       ? []
       : ["Aerodrome is missing supabaseId"]
   }
-  
+
   const deleted = await capture(() => fetchDeleteSNOWTAM(aerodromeSupabaseId))
-  
+
   const upserted = !deleted.error
-  ? await capture(() => fetchUpsertSNOWTAM(SNOWTAM, aerodromeSupabaseId))
+    ? await capture(() => fetchUpsertSNOWTAM(SNOWTAM, aerodromeSupabaseId))
     : { data: undefined, error: undefined }
-    
-    const updated = !deleted.error && !upserted.error
+
+  const updated = !deleted.error && !upserted.error
     ? await capture(() => fetchUpdateAerodromeNextPollSNOWTAM(icaoId, nextPollSNOWTAM))
     : { data: undefined, error: undefined }
-    
-    return [
-      deleted.error,
-      upserted.error,
-      updated.error
-    ].filter(error => error !== undefined)
-  }
-  
-  export const captureUserData = async (accessToken: string): Promise<UserAppData> => {
-    const [aerodromesResult, configResult] = await Promise.all([
-      capture(() => fetchSelectAllAerodromes({ accessToken: accessToken })),
-      capture(() => fetchSelectConfig({ accessToken: accessToken }))
-    ])
-  
-    const [aerodromes, config] = [aerodromesResult.data, configResult.data]
-    const refreshResult = aerodromes
-      ? await capture(() => refreshAerodromes(aerodromes, config?.query_metar_previous_hours ?? defaultQueryMetarPreviousHours))
-      : { data: undefined, error: undefined }
-  
-    return {
-      aerodromes: refreshResult.data ?? [],
-      highlightsTaf: resolveHighlights(config?.highlights_taf ?? [], HIGHLIGHTS_TAF_METAR),
-      highlightsMetar: resolveHighlights(config?.highlights_metar ?? [], HIGHLIGHTS_TAF_METAR),
-      highlightsNotam: resolveHighlights(config?.highlights_notam ?? [], HIGHLIGHTS_NOTAM),
-      highlightsOperationalHours: resolveHighlights(config?.highlights_operational_hours ?? [], HIGHLIGHTS_OPERATIONAL_HOURS),
-      queryMetarPreviousHours: config?.query_metar_previous_hours ?? defaultQueryMetarPreviousHours,
-      errors: mergeErrors(
-        aerodromesResult.error,
-        configResult.error,
-        refreshResult.error
-      )
+
+  return [
+    deleted.error,
+    upserted.error,
+    updated.error
+  ].filter(error => error !== undefined)
+}
+
+export const captureUserData = async (accessToken: string): Promise<UserAppData> => {
+  const [aerodromesResult, configResult] = await Promise.all([
+    capture(() => fetchSelectAllAerodromes({ accessToken: accessToken })),
+    capture(() => fetchSelectConfig({ accessToken: accessToken }))
+  ])
+
+  const [aerodromes, config] = [aerodromesResult.data, configResult.data]
+  const refreshResult = aerodromes && config && await capture(() => refreshAerodromes(aerodromes, config.query_metar_previous_hours))
+
+  if (refreshResult?.data) {
+    if (config) {
+      return {
+        aerodromes: refreshResult.data,
+        highlightsTaf: resolveHighlights(config.highlights_taf, HIGHLIGHTS_TAF_METAR),
+        highlightsMetar: resolveHighlights(config.highlights_metar, HIGHLIGHTS_TAF_METAR),
+        highlightsNotam: resolveHighlights(config.highlights_notam, HIGHLIGHTS_NOTAM),
+        highlightsOperationalHours: resolveHighlights(config.highlights_operational_hours, HIGHLIGHTS_OPERATIONAL_HOURS),
+        queryMetarPreviousHours: config.query_metar_previous_hours,
+      }
     }
   }
 
-  export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[], queryMetarPreviousHours: number): Promise<AerodromeData[]> => {
-    const now = Date.now()
-    
-    return await Promise.all(supabaseAerodromes.map(async aerodrome => {
-      const formValues: AerodromeFormValues = {
+  return {
+    aerodromes: [],
+    highlightsTaf: [],
+    highlightsMetar: [],
+    highlightsNotam: [],
+    highlightsOperationalHours: [],
+    queryMetarPreviousHours: 0,
+    errors: mergeErrors(
+      aerodromesResult.error,
+      configResult.error,
+      refreshResult?.error
+    )
+  }
+}
+
+export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[], queryMetarPreviousHours: number): Promise<AerodromeData[]> => {
+  const now = Date.now()
+
+  return await Promise.all(supabaseAerodromes.map(async aerodrome => {
+    const formValues: AerodromeFormValues = {
       icaoId: aerodrome.icao,
       notamIncludeFIR: false,
       notamIncludeFuture: true
