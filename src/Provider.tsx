@@ -56,7 +56,7 @@ export const FlightPathProvider = () => {
                     userData = await captureUserData(confirmedResult.data.session.access_token)
                 }
                 if (confirmedResult.error) {
-                    setErrors([...errors, confirmedResult.error])
+                    setErrors(current => [...current, confirmedResult.error!])
                     localStorage.removeItem(sessionStorageKey)
                 }
 
@@ -70,7 +70,7 @@ export const FlightPathProvider = () => {
                         userData = await captureUserData(initializeResult.data.session.access_token)
                     }
                     if (initializeResult.error) {
-                        setErrors([...errors, initializeResult.error])
+                        setErrors(current => [...current, initializeResult.error!])
                         localStorage.removeItem(sessionStorageKey)
                     }
                 }
@@ -86,7 +86,7 @@ export const FlightPathProvider = () => {
                     hasAerodromes.current = userData.aerodromes.length > 0
                 }
             } catch (e) {
-                setErrors([...errors, e instanceof Error ? e.message : "There was an unexpected error while restoring your session"])
+                setErrors(current => [...current, e instanceof Error ? e.message : "There was an unexpected error while restoring your session"])
             } finally {
                 setInitialized(true);
                 setIsLoading(false)
@@ -181,7 +181,7 @@ export const FlightPathProvider = () => {
                 }
             }))
         } catch (e) {
-            setErrors([...errors, e instanceof Error ? e.message : `There was an unexpected error while fetch data for ${aerodrome.formValues.icaoId}`])
+            setErrors(current => [...current, e instanceof Error ? e.message : `There was an unexpected error while fetch data for ${aerodrome.formValues.icaoId}`])
             setAerodromes(current => current.map((currentAerodrome) => (
                 currentAerodrome.id === aerodrome.id
                     ? { ...currentAerodrome, isLoading: false }
@@ -198,7 +198,6 @@ export const FlightPathProvider = () => {
         try {
             inFlightPolling.current = true
 
-            const errors: string[] = []
             const now = Date.now()
             const session = localStorage.getItem(sessionStorageKey)
 
@@ -210,7 +209,7 @@ export const FlightPathProvider = () => {
                 setUser(refreshResult.data.refreshedUser)
             }
             if (refreshResult.error) {
-                errors.push(refreshResult.error)
+                setErrors(current => [...current, refreshResult.error!])
             }
 
             for (const aerodrome of aerodromes) {
@@ -226,34 +225,32 @@ export const FlightPathProvider = () => {
                 }
             }
 
-            if (upsertConfig.current && isUser.current) {
-                const bodyResult = await capture(() => mapUpsertConfigBody(
-                    highlightsTAF,
-                    highlightsMETAR,
-                    highlightsNOTAM,
-                    highlightsOPERATIONAL_HOURS
-                    , queryMetarPreviousHours,
-                    refreshResult.data?.accessToken))
+            if (upsertConfig.current) {
+                if (isUser.current) {
+                    const bodyResult = await capture(() => mapUpsertConfigBody(
+                        highlightsTAF,
+                        highlightsMETAR,
+                        highlightsNOTAM,
+                        highlightsOPERATIONAL_HOURS,
+                        queryMetarPreviousHours,
+                        refreshResult.data?.accessToken))
 
-                if (bodyResult.error) {
-                    errors.push(bodyResult.error)
-                }
+                    if (bodyResult.error) {
+                        setErrors(current => [...current, bodyResult.error!])
+                    }
 
-                const body = bodyResult.data
+                    const body = bodyResult.data
 
-                if (body) {
-                    const upsert = await capture(() => fetchUpsertConfig(body))
+                    if (body) {
+                        const upsert = await capture(() => fetchUpsertConfig(body))
 
-                    if (upsert.error) {
-                        errors.push(upsert.error)
-                    } else {
-                        upsertConfig.current = false
+                        if (upsert.error) {
+                            setErrors(current => [...current, upsert.error!])
+                        } else {
+                            upsertConfig.current = false
+                        }
                     }
                 }
-            }
-
-            if (errors.length > 0) {
-                setErrors(mergeErrors(...errors))
             }
         } finally {
             inFlightPolling.current = false
@@ -337,7 +334,7 @@ export const FlightPathProvider = () => {
                     nextPollSNOWTAM: nextPollSNOWTAM
                 })
             } catch (e) {
-                setErrors([...errors, e instanceof Error ? e.message : "There was an unexpected error while saving aerodrome"])
+                setErrors(current => [...current, e instanceof Error ? e.message : "There was an unexpected error while saving aerodrome"])
             } finally {
                 setIsLoading(false)
             }
@@ -393,7 +390,7 @@ export const FlightPathProvider = () => {
                     icaoId: icaoId
                 })
             } catch (e) {
-                setErrors([...errors, e instanceof Error ? e.message : "There was an unexpected error while deleting aerodrome"])
+                setErrors(current => [...current, e instanceof Error ? e.message : "There was an unexpected error while deleting aerodrome"])
             } finally {
                 setIsLoading(false)
             }
@@ -423,7 +420,7 @@ export const FlightPathProvider = () => {
                 setHighlightsNOTAM([...userData.highlightsNotam])
                 setHighlightsOPERATIONAL_HOURS([...userData.highlightsOperationalHours])
                 setQueryMetarPreviousHours(userData.queryMetarPreviousHours)
-                setErrors([...errors, ...userData.errors])
+                setErrors(current => [...current, ...userData.errors])
                 hasAerodromes.current = userData.aerodromes.length > 0
 
                 if (!hasAerodromes.current) {
@@ -433,7 +430,7 @@ export const FlightPathProvider = () => {
                 }
             }
         } catch (e) {
-            setErrors([...errors, e instanceof Error ? e.message : "There was an unexpected error while signing in"])
+            setErrors(current => [...current, e instanceof Error ? e.message : "There was an unexpected error while signing in"])
         } finally {
             setIsLoading(false)
         }
@@ -516,7 +513,7 @@ export const FlightPathProvider = () => {
             setMessages([...messages, responseMessage])
             navigate("/")
         } catch (e) {
-            setErrors([...errors, e instanceof Error ? e.message : "There was an unexpected error while signing up"])
+            setErrors(current => [...current, e instanceof Error ? e.message : "There was an unexpected error while signing up"])
         } finally {
             setIsLoading(false)
         }

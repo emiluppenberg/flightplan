@@ -1,10 +1,8 @@
 import AerodromeSearchForm from "../components/AerodromeSearchForm"
 import Messages from "../components/Messages"
-import { useFlightPathContext } from "../Context"
 
 const Search = () => {
-    const context = useFlightPathContext()
-
+    
     return (
         <>
             <Messages />
