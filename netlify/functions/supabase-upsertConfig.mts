@@ -1,22 +1,18 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import { handlePostgrestResponseFailure, type UpsertSNOWTAMBody } from "../../src/shared"
+import { handlePostgrestResponseFailure, type UpsertConfigBody } from "../../src/shared"
 
 export default async (request: Request) => {
-    let body: UpsertSNOWTAMBody
+    let body: UpsertConfigBody
 
     try {
-        body = await request.json() as UpsertSNOWTAMBody;
+        body = await request.json() as UpsertConfigBody;
     } catch {
         return new Response(
-            "Invalid UpsertSNOWTAMBody",
+            "Invalid UpsertConfigBody",
             { status: 400 },
         );
-    }
-
-    if (body.SNOWTAM.length === 0) {
-        return new Response(null, { status: 204 })
     }
 
     const supabase = createClient<Database>(
@@ -33,11 +29,16 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_aerodromes_notam")
-        .upsert(body.SNOWTAM.map(snowtam => ({
-            ...snowtam, aerodrome_id: body.aerodromeSupabaseId
-        })), { onConflict: "id" })
-        .select()
+        .from("user_config")
+        .upsert({
+            "query_metar_previous_hours": body.queryMetarPreviousHours,
+            "highlights_taf": body.highlightsTaf,
+            "highlights_metar": body.highlightsMetar,
+            "highlights_notam": body.highlightsNotam,
+            "highlights_operational_hours": body.highlightsOperationalHours,
+            "updated_at": body.updatedAt
+        }, { onConflict: "user_id" })
+        .lt("updated_at", body.updatedAt)
 
     if (!response.success) {
         return handlePostgrestResponseFailure(response)
@@ -47,6 +48,6 @@ export default async (request: Request) => {
 }
 
 export const config: Config = {
-    path: "/api/supabase/upsert-snowtam",
+    path: "/api/supabase/upsert-config",
     method: "POST"
 }

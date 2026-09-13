@@ -1,7 +1,8 @@
 import type { Session } from "@supabase/supabase-js"
-import { type AirportFormValues, type AirportData, HIGHLIGHTS_TAF_METAR, type EntryNOTAM, type FetchResult, type SupabaseAirport, type CodeHighlight, type AppUser, type EntrySNOWTAM } from "./types"
-import { fetchDeleteSNOWTAM, fetchInitializeUser, fetchSelectAirportSNOWTAM, fetchUpdateAirportNextPollSNOWTAM, fetchUpsertSNOWTAM } from "./api/supabase"
+import { type AerodromeFormValues, type AerodromeData, HIGHLIGHTS_TAF_METAR, type EntryNOTAM, type FetchResult, type SupabaseAerodrome, type CodeHighlight, type AppUser, type EntrySNOWTAM, HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, type UserAppData } from "./types"
+import { fetchDeleteSNOWTAM, fetchInitializeUser, fetchRefreshedUserAccessToken, fetchSelectAllAerodromes, fetchSelectConfig, fetchSelectSNOWTAM, fetchUpdateAerodromeNextPollSNOWTAM, fetchUpsertSNOWTAM } from "./api/supabase"
 import { fetchTAF, fetchMETAR, fetchNOTAM, fetchSNOWTAM, POLL_INTERVAL_SNOWTAM, POLL_INTERVAL_TAF_METAR_NOTAM } from "./api/resources";
+import type { UpsertConfigBody } from "./shared";
 
 export const SVG_URLS = {
   logo: '/flygvader-logo.svg',
@@ -9,7 +10,7 @@ export const SVG_URLS = {
   search: '/ui/browse-svgrepo-com.svg',
   close: '/ui/close-lg-svgrepo-com.svg',
   reload: '/ui/reload-svgrepo-com.svg',
-  airports: '/ui/globe-svgrepo-com.svg',
+  aerodromes: '/ui/globe-svgrepo-com.svg',
   trash: '/ui/trash-svgrepo-com.svg'
 } as const;
 
@@ -20,7 +21,8 @@ export const ROUTES = {
 }
 
 export const sessionStorageKey = "sb-cgllylmfqjwakuhemjxv-auth-token"
-export const searchAirportId = "search-airport"
+export const searchAerodromeId = "search-aerodrome"
+export const defaultQueryMetarPreviousHours = 5
 
 export const capture = async<T>(
   request: () => Promise<T>
@@ -35,88 +37,141 @@ export const capture = async<T>(
       data: undefined,
       error: error instanceof Error
         ? error.message
-        : `There was unexpected error while executing ${request.name}`
+        : `There was an unexpected error while executing a request`
     };
   }
 }
 
 export const captureSyncSNOWTAM = async (
   SNOWTAM: EntrySNOWTAM[],
-  airportSupabaseId: string | undefined,
+  aerodromeSupabaseId: string | undefined,
   icaoId: string,
   nextPollSNOWTAM: number,
-  airportId: string = ""
-): Promise<string> => {
-  if (!airportSupabaseId) {
-    return airportId === searchAirportId
-      ? ""
-      : "Airport is missing supabaseId"
+  aerodromeId: string = ""
+): Promise<string[]> => {
+  if (!aerodromeSupabaseId) {
+    return aerodromeId === searchAerodromeId
+      ? []
+      : ["Aerodrome is missing supabaseId"]
   }
 
-  const deleted = await capture(() => fetchDeleteSNOWTAM(airportSupabaseId))
+  const deleted = await capture(() => fetchDeleteSNOWTAM(aerodromeSupabaseId))
 
   const upserted = !deleted.error
-    ? await capture(() => fetchUpsertSNOWTAM(SNOWTAM, airportSupabaseId))
-    : { data: undefined, error: "" }
+    ? await capture(() => fetchUpsertSNOWTAM(SNOWTAM, aerodromeSupabaseId))
+    : { data: undefined, error: undefined }
 
   const updated = !deleted.error && !upserted.error
-    ? await capture(() => fetchUpdateAirportNextPollSNOWTAM(icaoId, nextPollSNOWTAM))
-    : { data: undefined, error: "" }
+    ? await capture(() => fetchUpdateAerodromeNextPollSNOWTAM(icaoId, nextPollSNOWTAM))
+    : { data: undefined, error: undefined }
 
-  return (deleted.error ?? "") + (upserted.error ?? "") + (updated.error ?? "")
+  return [
+    deleted.error,
+    upserted.error,
+    updated.error
+  ].filter(error => error !== undefined)
 }
 
-export const refreshAirports = async (supabaseAirports: SupabaseAirport[]): Promise<AirportData[]> => {
+export const captureUserData = async (accessToken: string): Promise<UserAppData> => {
+  const [aerodromesResult, configResult] = await Promise.all([
+    capture(() => fetchSelectAllAerodromes({ accessToken: accessToken })),
+    capture(() => fetchSelectConfig({ accessToken: accessToken }))
+  ])
+
+  const refreshResult = await capture(() => refreshAerodromes(aerodromesResult.data ?? [], configResult.data?.query_metar_previous_hours ?? defaultQueryMetarPreviousHours))
+  const [aerodromesError, configError] = [aerodromesResult.error, configResult.error]
+
+  if (!aerodromesError) {
+    if (!configError) {
+      if (refreshResult?.data) {
+        return {
+          aerodromes: refreshResult.data,
+          highlightsTaf: resolveHighlights(configResult.data?.highlights_taf ?? [], HIGHLIGHTS_TAF_METAR),
+          highlightsMetar: resolveHighlights(configResult.data?.highlights_metar ?? [], HIGHLIGHTS_TAF_METAR),
+          highlightsNotam: resolveHighlights(configResult.data?.highlights_notam ?? [], HIGHLIGHTS_NOTAM),
+          highlightsOperationalHours: resolveHighlights(configResult.data?.highlights_operational_hours ?? [], HIGHLIGHTS_OPERATIONAL_HOURS),
+          queryMetarPreviousHours: configResult.data?.query_metar_previous_hours ?? defaultQueryMetarPreviousHours,
+        }
+      }
+    }
+  }
+
+  return {
+    aerodromes: [],
+    highlightsTaf: [],
+    highlightsMetar: [],
+    highlightsNotam: [],
+    highlightsOperationalHours: [],
+    queryMetarPreviousHours: 0,
+    errors: mergeErrors(
+      aerodromesResult.error,
+      configResult.error,
+      refreshResult?.error
+    )
+  }
+}
+
+export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[], queryMetarPreviousHours: number): Promise<AerodromeData[]> => {
   const now = Date.now()
 
-  return await Promise.all(supabaseAirports.map(async airport => {
-    const formValues: AirportFormValues = {
-      icaoId: airport.icao,
+  return await Promise.all(supabaseAerodromes.map(async aerodrome => {
+    const formValues: AerodromeFormValues = {
+      icaoId: aerodrome.icao,
       notamIncludeFIR: false,
       notamIncludeFuture: true
     }
 
-    const fetchFreshSNOWTAM = airport.next_poll_snowtam <= now
+    const fetchFreshSNOWTAM = aerodrome.next_poll_snowtam <= now
 
     const [TAF, METAR, NOTAM, SNOWTAM] = await Promise.all([
       capture(() => fetchTAF(formValues)),
-      capture(() => fetchMETAR(formValues)),
+      capture(() => fetchMETAR(formValues, queryMetarPreviousHours)),
       capture(() => fetchNOTAM(formValues)),
       fetchFreshSNOWTAM
         ? capture(() => fetchSNOWTAM(formValues))
-        : Promise.resolve({ data: undefined, error: "" }),
+        : Promise.resolve({ data: undefined, error: undefined }),
     ])
 
     const nextPollSNOWTAM = fetchFreshSNOWTAM && SNOWTAM.data
       ? now + POLL_INTERVAL_SNOWTAM
-      : airport.next_poll_snowtam
+      : aerodrome.next_poll_snowtam
 
     const synced = fetchFreshSNOWTAM && SNOWTAM.data
-      ? await captureSyncSNOWTAM(SNOWTAM.data, airport.id, airport.icao, nextPollSNOWTAM)
-      : ""
+      ? await captureSyncSNOWTAM(SNOWTAM.data, aerodrome.id, aerodrome.icao, nextPollSNOWTAM)
+      : []
 
     if (!fetchFreshSNOWTAM || (fetchFreshSNOWTAM && !SNOWTAM.data)) {
-      SNOWTAM.data = await fetchSelectAirportSNOWTAM(airport.id)
+      SNOWTAM.data = await fetchSelectSNOWTAM(aerodrome.id)
     }
+
+    const mergedError = mergeErrors(
+      getReportError(TAF, "TAF"),
+      getReportError(METAR, "METAR"),
+      getReportError(NOTAM, "NOTAM"),
+      fetchFreshSNOWTAM
+        ? getReportError(SNOWTAM, "SNOWTAM")
+        : undefined,
+      ...synced
+    ).join("\n")
 
     return {
       id: crypto.randomUUID(),
-      icaoId: airport.icao,
+      icaoId: aerodrome.icao,
       formValues: formValues,
       TAF: TAF.data ? TAF.data : [],
       METAR: METAR.data ? METAR.data : [],
       NOTAM: NOTAM.data ? NOTAM.data : [],
       SNOWTAM: SNOWTAM.data ? SNOWTAM.data : [],
-      messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + (SNOWTAM.error ?? "") + synced,
+      messages: mergedError,
       nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM,
       nextPollSNOWTAM: nextPollSNOWTAM,
       isLoading: false,
-      supabaseId: airport.id
+      supabaseId: aerodrome.id
     }
   }))
 }
 
-export const createAirport = (id: string): AirportData => {
+export const createAerodrome = (id: string): AerodromeData => {
   return {
     id: id,
     icaoId: null,
@@ -223,6 +278,20 @@ export const parseSkylinkDate = (value: string): number => {
   )
 }
 
+export const parseFormDate = (date: string, time: string): number => {
+  // date = yyyy-mm-dd, time = hh:mm
+  return Date.UTC(
+    Number(date.slice(0, 4)),
+    Number(date.slice(5, 7)) - 1, // month is zero-based
+    Number(date.slice(8, 10)),
+    Number(time.slice(0, 2)),
+    Number(time.slice(3, 5))
+  )
+}
+
+export const parseDateQuery = (date: string, time: string) =>
+  `${date.replaceAll("-", "")}_${time.replace(":", "")}`
+
 export const getRefreshToken = (): string => {
   const session = localStorage.getItem(sessionStorageKey)
 
@@ -243,17 +312,21 @@ export const getAccessToken = (): string => {
   return (JSON.parse(session) as Session).access_token
 }
 
-export const consumeSupabaseConfirmationLink = async (): Promise<AppUser | undefined> => {
+export const isConfirmationLink = () => {
   const params = new URLSearchParams(window.location.hash.slice(1))
 
-  const hasAuthToken = params.has("access_token") || params.has("refresh_token")
-  const hasAuthError = params.has("error") && (
-    params.has("error_code") || params.has("error_description")
-  )
+  const hasAuthToken =
+    params.has("access_token") || params.has("refresh_token")
 
-  if (!hasAuthToken && !hasAuthError) {
-    return undefined
-  }
+  const hasAuthError =
+    params.has("error") &&
+    (params.has("error_code") || params.has("error_description"))
+
+  return hasAuthToken || hasAuthError
+}
+
+export const consumeSupabaseConfirmationLink = async (): Promise<AppUser | undefined> => {
+  const params = new URLSearchParams(window.location.hash.slice(1))
 
   window.history.replaceState(
     window.history.state,
@@ -273,4 +346,50 @@ export const consumeSupabaseConfirmationLink = async (): Promise<AppUser | undef
   }
 
   return await fetchInitializeUser(refreshToken)
+}
+
+export const getReportError = <T>(
+  fetchResult: FetchResult<Array<T>>,
+  report: "TAF" | "METAR" | "NOTAM" | "SNOWTAM")
+  : string | undefined => {
+  if (fetchResult.error) {
+    return fetchResult.error
+  }
+
+  if (fetchResult.data === undefined ||
+    fetchResult.data.length === 0
+  ) {
+    return `${report} not available`
+  }
+
+  return undefined
+}
+
+export const mergeErrors = (...errors: Array<string | undefined>) => {
+  return errors
+    .map(error => error?.trim())
+    .filter((error): error is string => Boolean(error))
+}
+
+export const mapUpsertConfigBody = async (
+  highlightsTaf: CodeHighlight[],
+  highlightsMetar: CodeHighlight[],
+  highlightsNotam: CodeHighlight[],
+  highlightsOperationalHours: CodeHighlight[],
+  queryMetarPreviousHours: number,
+  accessToken?: string)
+  : Promise<UpsertConfigBody> => {
+  if (!accessToken) {
+    accessToken = (await fetchRefreshedUserAccessToken()).accessToken
+  }
+
+  return {
+    accessToken: accessToken,
+    queryMetarPreviousHours: queryMetarPreviousHours,
+    highlightsTaf: highlightsTaf.map(highlight => highlight.class),
+    highlightsMetar: highlightsMetar.map(highlight => highlight.class),
+    highlightsNotam: highlightsNotam.map(highlight => highlight.class),
+    highlightsOperationalHours: highlightsOperationalHours.map(highlight => highlight.class),
+    updatedAt: Date.now()
+  }
 }

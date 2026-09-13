@@ -1,16 +1,16 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import type { UpdateAirportBody } from "../../src/types"
+import { type SelectAllAerodromesBody, handlePostgrestResponseFailure } from "../../src/shared"
 
 export default async (request: Request) => {
-    let body: UpdateAirportBody
+    let body: SelectAllAerodromesBody
 
     try {
-        body = await request.json() as UpdateAirportBody;
+        body = await request.json() as SelectAllAerodromesBody;
     } catch {
         return new Response(
-            "Invalid UpdateAirportBody",
+            "Invalid SelectAllAerodromesBody",
             { status: 400 },
         );
     }
@@ -29,22 +29,17 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_airports")
-        .update({ "next_poll_snowtam": body.nextPollSNOWTAM })
-        .eq("icao", body.icaoId)
+        .from("user_aerodromes")
+        .select()
 
     if (!response.success) {
-        console.error(response.error.message)
-        return new Response(
-            response.error.message,
-            { status: 500 }
-        )
+        return handlePostgrestResponseFailure(response)
     }
 
-    return new Response(null, { status: 204 })
+    return Response.json(response.data)
 }
 
 export const config: Config = {
-    path: "/api/supabase/update-airport-next-poll-snowtam",
+    path: "/api/supabase/select-aerodromes",
     method: "POST"
 }

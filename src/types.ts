@@ -1,10 +1,34 @@
 import type { Session, User } from "@supabase/supabase-js";
 
-export interface SupabaseAirport {
+export interface Message {
+  message: string
+  status?: number
+  time?: number
+}
+
+export interface UserAppData {
+  aerodromes: AerodromeData[]
+  highlightsTaf: CodeHighlight[]
+  highlightsMetar: CodeHighlight[]
+  highlightsNotam: CodeHighlight[]
+  highlightsOperationalHours: CodeHighlight[]
+  queryMetarPreviousHours: number
+  errors?: string[] | undefined
+}
+
+export interface SupabaseAerodrome {
   icao: string
   id: string
   next_poll_snowtam: number
   user_id: string
+}
+
+export interface SupabaseConfig {
+  query_metar_previous_hours: number
+  highlights_taf: string[]
+  highlights_metar: string[]
+  highlights_notam: string[]
+  highlights_operational_hours: string[]
 }
 
 export type FetchResult<T> = {
@@ -80,7 +104,7 @@ export interface AerodromeResource {
   };
 }
 
-export type AirportFormValues = {
+export type AerodromeFormValues = {
   icaoId: string;
   date?: string;
   time?: string;
@@ -99,10 +123,10 @@ export type EntryMETAR = {
   rawOb: string;
 }
 
-export type AirportData = {
+export type AerodromeData = {
   id: string;
   icaoId: string | null;
-  formValues: AirportFormValues;
+  formValues: AerodromeFormValues;
   TAF: EntryTAF[];
   METAR: EntryMETAR[];
   NOTAM: EntryNOTAM[];
@@ -468,70 +492,4 @@ export type UserFormValues = {
 export type AppUser = {
   user: User;
   session: Session;
-}
-
-export type InsertAirportBody = {
-  accessToken: string;
-  icaoId: string;
-  nextPollSNOWTAM: number;
-}
-
-export type DeleteAirportBody = {
-  accessToken: string;
-  icaoId: string;
-}
-
-export type UpdateAirportBody = {
-  accessToken: string;
-  icaoId: string;
-  nextPollSNOWTAM: number;
-}
-
-export type SelectAllAirportsBody = {
-  accessToken: string;
-}
-
-export type UpsertSNOWTAMBody = {
-  accessToken: string;
-  SNOWTAM: EntrySNOWTAM[];
-  airportSupabaseId: string;
-}
-
-export type DeleteSNOWTAMBody = {
-  accessToken: string;
-  airportSupabaseId: string;
-}
-
-export type SelectAirportSNOWTAMBody = {
-  accessToken: string;
-  airportSupabaseId: string;
-}
-
-export type UpsertHighlightsBody = {
-  accessToken: string;
-  highlights: string[];
-  report: CodeHighlightReport
-}
-
-export type SelectHighlightsBody = {
-  accessToken: string;
-  report: CodeHighlightReport;
-}
-
-export type SignInBody = {
-  email: string;
-  password: string;
-}
-
-export type SignUpBody = {
-  email: string;
-  password: string;
-}
-
-export type SignOutBody = {
-  accessToken: string
-}
-
-export type InitializeUserBody = {
-  refreshToken: string;
 }

@@ -14,7 +14,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      user_airports: {
+      user_aerodromes: {
         Row: {
           icao: string
           id: string
@@ -35,10 +35,10 @@ export type Database = {
         }
         Relationships: []
       }
-      user_airports_notam: {
+      user_aerodromes_notam: {
         Row: {
+          aerodrome_id: string | null
           affected_fir: string | null
-          airport_id: string | null
           body: string | null
           created_at: string
           effective: string | null
@@ -59,8 +59,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          aerodrome_id?: string | null
           affected_fir?: string | null
-          airport_id?: string | null
           body?: string | null
           created_at?: string
           effective?: string | null
@@ -81,8 +81,8 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          aerodrome_id?: string | null
           affected_fir?: string | null
-          airport_id?: string | null
           body?: string | null
           created_at?: string
           effective?: string | null
@@ -105,12 +105,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_airports_notam_airport_id_fkey"
-            columns: ["airport_id"]
+            columns: ["aerodrome_id"]
             isOneToOne: false
-            referencedRelation: "user_airports"
+            referencedRelation: "user_aerodromes"
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_config: {
+        Row: {
+          highlights_metar: string[]
+          highlights_notam: string[]
+          highlights_operational_hours: string[]
+          highlights_taf: string[]
+          id: string
+          query_metar_previous_hours: number
+          updated_at: number
+          user_id: string
+        }
+        Insert: {
+          highlights_metar?: string[]
+          highlights_notam?: string[]
+          highlights_operational_hours?: string[]
+          highlights_taf?: string[]
+          id?: string
+          query_metar_previous_hours?: number
+          updated_at?: number
+          user_id?: string
+        }
+        Update: {
+          highlights_metar?: string[]
+          highlights_notam?: string[]
+          highlights_operational_hours?: string[]
+          highlights_taf?: string[]
+          id?: string
+          query_metar_previous_hours?: number
+          updated_at?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       user_highlights: {
         Row: {
@@ -157,12 +190,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -186,11 +219,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -211,11 +244,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -236,11 +269,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -253,11 +286,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useFlightPathContext } from "../Context"
-import type { AirportFormValues, AerodromesResourceResponse } from "../types"
-import { searchAirportId } from "../utilities"
+import type { AerodromeFormValues, AerodromesResourceResponse } from "../types"
+import { searchAerodromeId } from "../utilities"
 import Expand from "./Expand"
-import AirportRender from "./AirportRender"
+import AerodromeRender from "./AerodromeRender"
 import { fetchAerodromes, fetchAerodromesPage, fetchAerodromeIcaoId } from "../api/resources"
 
-const SearchAirportForm = () => {
+const AerodromeSearchForm = () => {
     const context = useFlightPathContext()
-    const searchAirport = context.airports.find(airport => airport.id === searchAirportId)
-    const form = useForm<AirportFormValues>({
-        defaultValues: searchAirport?.formValues
+    const searchAerodrome = context.aerodromes.find(aerodrome => aerodrome.id === searchAerodromeId)
+    const form = useForm<AerodromeFormValues>({
+        defaultValues: searchAerodrome?.formValues
     })
     const { register, getValues, setValue, handleSubmit: formSubmit } = form;
 
@@ -89,8 +89,8 @@ const SearchAirportForm = () => {
         setError("")
 
         try {
-            if (searchAirport) {
-                const values: AirportFormValues = {
+            if (searchAerodrome) {
+                const values: AerodromeFormValues = {
                     ...getValues(),
                     icaoId: icaoId.trim().toUpperCase(),
                 }
@@ -100,8 +100,8 @@ const SearchAirportForm = () => {
                     shouldValidate: true,
                 })
 
-                context.handleSetFormValues(values, searchAirportId);
-                context.handleSubmit({ ...searchAirport, formValues: values }, true);
+                context.handleSetFormValues(values, searchAerodromeId);
+                context.handleSubmit({ ...searchAerodrome, formValues: values }, true);
             }
         } catch (error) {
             setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for ICAO: ${icaoId}`)
@@ -112,10 +112,10 @@ const SearchAirportForm = () => {
         setError("")
 
         try {
-            if (searchAirport && !searchAirport.isLoading) {
-                const values: AirportFormValues = {
+            if (searchAerodrome && !searchAerodrome.isLoading) {
+                const values: AerodromeFormValues = {
                     ...getValues(),
-                    icaoId: await fetchAerodromeIcaoId(searchAirport.formValues.icaoId),
+                    icaoId: await fetchAerodromeIcaoId(searchAerodrome.formValues.icaoId),
                 }
 
                 setValue("icaoId", values.icaoId, {
@@ -123,36 +123,36 @@ const SearchAirportForm = () => {
                     shouldValidate: true,
                 })
 
-                context.handleSetFormValues(values, searchAirportId);
-                context.handleSubmit({ ...searchAirport, formValues: values }, true);
+                context.handleSetFormValues(values, searchAerodromeId);
+                context.handleSubmit({ ...searchAerodrome, formValues: values }, true);
             }
         } catch (error) {
-            setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for ICAO: ${searchAirport?.formValues.icaoId}`)
+            setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for ICAO: ${searchAerodrome?.formValues.icaoId}`)
         }
     }
 
-    const airportRender = useMemo(() =>
-        searchAirport && <AirportRender airport={searchAirport} form={form} />,
-        [searchAirport])
+    const aerodromeRender = useMemo(() =>
+        searchAerodrome && <AerodromeRender aerodrome={searchAerodrome} form={form} />,
+        [searchAerodrome])
 
-    const hasSearched = searchAirport && searchAirport.icaoId
+    const hasSearched = searchAerodrome && searchAerodrome.icaoId
 
     return (
         <FormProvider {...form}>
             <form onSubmit={formSubmit(handleSubmit)}>
-                <div className="airport-render-container">
-                    <div className="airport-header-container">
-                        {searchAirport && (
-                            <div className="airport-header-buttons">
+                <div className="aerodrome-render-container">
+                    <div className="aerodrome-header-container">
+                        {searchAerodrome && (
+                            <div className="aerodrome-header-buttons">
                                 <input
                                     type="text"
                                     className="input-search"
                                     placeholder="Search aerodrome by ICAO"
-                                    value={searchAirport.formValues.icaoId}
+                                    value={searchAerodrome.formValues.icaoId}
                                     {...register("icaoId", {
                                         required: true,
                                         setValueAs: (value: string) => value.trim().toUpperCase(),
-                                        onChange: () => context.handleSetFormValues(getValues(), searchAirportId)
+                                        onChange: () => context.handleSetFormValues(getValues(), searchAerodromeId)
                                     })} />
                                 <input
                                     ref={searchInputRef}
@@ -172,16 +172,16 @@ const SearchAirportForm = () => {
                             rows={1}>
                             <div
                                 ref={searchPanelRef}
-                                className="airport-header-search">
-                                {searchResponse?.data.map((airport, index) => (
+                                className="aerodrome-header-search">
+                                {searchResponse?.data.map((aerodrome, index) => (
                                     <button
-                                        key={`${searchAirportId}-airport-${index}`}
+                                        key={`${searchAerodromeId}-aerodrome-${index}`}
                                         type="button"
-                                        disabled={searchAirport?.isLoading ? true : false}
-                                        className={`btn-search-item ${searchAirport?.formValues.icaoId === airport.attributes.code ? "open" : ""}`}
-                                        onClick={() => handleSelectSearchItem(airport.attributes.code)}>
-                                        <span className="search-item-icao">{airport.attributes.code}</span>
-                                        <span className="search-item-name">{airport.attributes.name}</span>
+                                        disabled={searchAerodrome?.isLoading ? true : false}
+                                        className={`btn-search-item ${searchAerodrome?.formValues.icaoId === aerodrome.attributes.code ? "open" : ""}`}
+                                        onClick={() => handleSelectSearchItem(aerodrome.attributes.code)}>
+                                        <span className="search-item-icao">{aerodrome.attributes.code}</span>
+                                        <span className="search-item-name">{aerodrome.attributes.name}</span>
                                     </button>
                                 ))}
                                 <div className="sticky">
@@ -203,7 +203,7 @@ const SearchAirportForm = () => {
                             </div>
                         </Expand>
                     </div>
-                    {airportRender && (airportRender)}
+                    {aerodromeRender && (aerodromeRender)}
                     {error.length > 0 && (
                         <p className="message warning">{error}</p>
                     )}
@@ -211,10 +211,10 @@ const SearchAirportForm = () => {
                         {hasSearched
                             ? (<button
                                 type="button"
-                                onClick={() => context.handleAddAirport(searchAirport.icaoId)}>
-                                Save {searchAirport.icaoId}
+                                onClick={() => context.handleAddAerodrome(searchAerodrome.icaoId)}>
+                                Save {searchAerodrome.icaoId}
                             </button>)
-                            : (<p className="message">No data</p>)}
+                            : (<p className="message info">Search aerodrome to display data</p>)}
                     </div>
                 </div>
             </form>
@@ -222,4 +222,4 @@ const SearchAirportForm = () => {
     )
 }
 
-export default SearchAirportForm;
+export default AerodromeSearchForm;

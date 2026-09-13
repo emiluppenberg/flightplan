@@ -1,23 +1,27 @@
 import { createContext, useContext } from "react";
-import type { AirportData, AirportFormValues, AppUser, CodeHighlight, CodeHighlightReport, UserFormValues } from "./types"
+import type { AerodromeData, AerodromeFormValues, AppUser, CodeHighlight, CodeHighlightReport, Message, UserFormValues } from "./types"
 
 export type FlightPathState = {
-    airports: AirportData[];
+    aerodromes: AerodromeData[];
     highlightsTAF: CodeHighlight[];
     highlightsMETAR: CodeHighlight[];
     highlightsOPERATIONAL_HOURS: CodeHighlight[];
     highlightsNOTAM: CodeHighlight[];
-    handleSubmit: (airport: AirportData, fetchNotam: boolean) => void;
-    handleSetFormValues: (newValues: AirportFormValues, id: string) => void;
+    queryMetarPreviousHours: number;
+    handleSubmit: (aerodrome: AerodromeData, fetchNotam: boolean) => void;
+    handleSetFormValues: (newValues: AerodromeFormValues, id: string) => void;
     handleSetHighlights: (newHighlights: CodeHighlight[], report: CodeHighlightReport) => Promise<void>;
-    handleAddAirport: (icaoId: string | null) => void;
-    handleDeleteAirport: (id: string) => void;
+    handleSetQueryMetarPreviousHours: (newValue: number) => void;
+    handleAddAerodrome: (icaoId: string | null) => void;
+    handleDeleteAerodrome: (id: string) => void;
     handleSignIn: (values: UserFormValues) => Promise<void>;
     handleSignOut: () => void;
     handleSignUp: (values: UserFormValues) => Promise<void>;
+    handleDiscardMessage: (index: number) => void;
+    handleDiscardError: (index: number) => void;
     isLoading: boolean;
-    message: string;
-    error: string;
+    messages: Message[];
+    errors: Message[];
     user: AppUser | undefined;
 }
 

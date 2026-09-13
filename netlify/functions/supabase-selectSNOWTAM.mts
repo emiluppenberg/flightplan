@@ -1,16 +1,16 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import type { DeleteAirportBody } from "../../src/types"
+import { handlePostgrestResponseFailure, type SelectSNOWTAMBody } from "../../src/shared"
 
 export default async (request: Request) => {
-    let body: DeleteAirportBody
+    let body: SelectSNOWTAMBody
 
     try {
-        body = await request.json() as DeleteAirportBody;
+        body = await request.json() as SelectSNOWTAMBody;
     } catch {
         return new Response(
-            "Invalid DeleteAirportBody",
+            "Invalid SelectSNOWTAMBody",
             { status: 400 },
         );
     }
@@ -29,23 +29,18 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_airports")
-        .delete()
-        .eq("icao", body.icaoId)
+        .from("user_aerodromes_notam")
         .select()
+        .eq("aerodrome_id", body.aerodromeSupabaseId)
 
     if (!response.success) {
-        console.error(response.error.message)
-        return new Response(
-            response.error.message,
-            { status: 500 }
-        )
+        return handlePostgrestResponseFailure(response)
     }
 
-    return Response.json(response.data[0])
+    return Response.json(response.data)
 }
 
 export const config: Config = {
-    path: "/api/supabase/delete-airport",
+    path: "/api/supabase/select-snowtam",
     method: "POST"
 }

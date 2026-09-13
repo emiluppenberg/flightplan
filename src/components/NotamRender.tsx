@@ -16,7 +16,7 @@ const NotamRender = (props: NotamRenderProps) => {
         [context.highlightsOPERATIONAL_HOURS, context.highlightsNOTAM, props.notam])
 
     return (
-        <div className="airport-notam-container">
+        <div className="aerodrome-notam-container">
             <pre>
                 <span className={classes.join(" ")}>{props.notam.raw}</span>
             </pre>

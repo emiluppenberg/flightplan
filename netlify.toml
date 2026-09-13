@@ -30,7 +30,7 @@
     "User-Agent" = "FlyRep/0.1"
 
 [[redirects]]
-  from = "/api/airports"
+  from = "/api/aerodromes"
   to = "https://airportsapi.com/api/airports"
   status = 200
   force = true
@@ -39,7 +39,7 @@
     "User-Agent" = "FlyRep/0.1"
 
 [[redirects]]
-  from = "/api/airports/*"
+  from = "/api/aerodromes/*"
   to = "https://airportsapi.com/api/airports/:splat"
   status = 200
   force = true

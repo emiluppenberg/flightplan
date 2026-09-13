@@ -1,10 +1,10 @@
 import type { Dispatch, SetStateAction } from "react"
-import type { AirportData } from "../types";
+import type { AerodromeData } from "../types";
 import { useFlightPathContext } from "../Context";
-import { searchAirportId, SVG_URLS } from "../utilities";
+import { searchAerodromeId, SVG_URLS } from "../utilities";
 
-type AirportHeaderButtonsProps = {
-    airport: AirportData;
+type AerodromeHeaderButtonsProps = {
+    aerodrome: AerodromeData;
     tafMetarOpen: boolean;
     notamsOpen: boolean;
     dateOpen: boolean;
@@ -19,43 +19,43 @@ type AirportHeaderButtonsProps = {
     setOperationalHoursOpen: Dispatch<SetStateAction<boolean>>;
 }
 
-const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
+const AerodromeHeaderButtons = (props: AerodromeHeaderButtonsProps) => {
     const context = useFlightPathContext();
 
     const handleDelete = () => {
-        if (window.confirm(`Delete ${props.airport.formValues.icaoId}?`)) {
-            context.handleDeleteAirport(props.airport.id)
+        if (window.confirm(`Delete ${props.aerodrome.formValues.icaoId}?`)) {
+            context.handleDeleteAerodrome(props.aerodrome.id)
         }
     }
 
     const handleSubmit = () => {
-        if (!props.airport.isLoading) {
-            context.handleSubmit(props.airport, true)
+        if (!props.aerodrome.isLoading) {
+            context.handleSubmit(props.aerodrome, true)
         }
     }
 
     return (
         <>
-            {props.airport.id !== searchAirportId && (
-                <div className="airport-header-buttons">
+            {props.aerodrome.id !== searchAerodromeId && (
+                <div className="aerodrome-header-buttons">
                     <button
                         type="button"
                         className="btn-delete"
                         onClick={handleDelete}>
                         <img src={SVG_URLS.trash} width="20" />
                     </button>
-                    <div className="airport-header-icao">
-                        <h4>{props.airport.formValues.icaoId}</h4>
+                    <div className="aerodrome-header-icao">
+                        <h4>{props.aerodrome.formValues.icaoId}</h4>
                     </div>
                     <button
                         type="button"
-                        className={`btn-refetch ${props.airport.isLoading ? "loading" : ""}`}
+                        className={`btn-refetch ${props.aerodrome.isLoading ? "loading" : ""}`}
                         onClick={handleSubmit}>
                         <img src={SVG_URLS.reload} width="20" />
                     </button>
                 </div>
             )}
-            <div className="airport-header-buttons">
+            <div className="aerodrome-header-buttons">
                 <button
                     type="button"
                     disabled={props.tafMetarDisabled}
@@ -89,4 +89,4 @@ const AirportHeaderButtons = (props: AirportHeaderButtonsProps) => {
     )
 }
 
-export default AirportHeaderButtons;
+export default AerodromeHeaderButtons;

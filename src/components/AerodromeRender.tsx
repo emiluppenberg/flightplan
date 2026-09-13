@@ -1,28 +1,28 @@
-import type { AirportData } from "../types";
+import type { AerodromeData } from "../types";
 import ReportRender from "./ReportRender";
 import { useFlightPathContext } from "../Context";
 import { useMemo, useState } from "react";
-import AirportDatetimeForm from "./AirportDatetimeForm";
+import AerodromeDatetimeForm from "./AerodromeDatetimeForm";
 import { FormProvider, useForm, type UseFormReturn } from "react-hook-form";
-import type { AirportFormValues } from "../types";
-import AirportHeaderButtons from "./AirportHeaderButtons";
+import type { AerodromeFormValues } from "../types";
+import AerodromeHeaderButtons from "./AerodromeHeaderButtons";
 import { formatRawCodes, getOperationalHours, sortNOTAM } from "../utilities";
 import Expand from "./Expand";
 import NotamRender from "./NotamRender";
 
-type AirportRenderProps = {
-    airport: AirportData;
-    form?: UseFormReturn<AirportFormValues>;
+type AerodromeRenderProps = {
+    aerodrome: AerodromeData;
+    form?: UseFormReturn<AerodromeFormValues>;
 }
 
-const AirportRender = (props: AirportRenderProps) => {
+const AerodromeRender = (props: AerodromeRenderProps) => {
     const context = useFlightPathContext()
     const [tafMetarOpen, setTafMetarOpen] = useState(false)
     const [notamsOpen, setNotamsOpen] = useState(false)
     const [dateOpen, setDateOpen] = useState(false)
     const [operationalHoursOpen, setOperationalHoursOpen] = useState(false)
-    const initialForm = useForm<AirportFormValues>({
-        defaultValues: props.airport.formValues
+    const initialForm = useForm<AerodromeFormValues>({
+        defaultValues: props.aerodrome.formValues
     })
     const form = props.form ?? initialForm
 
@@ -31,14 +31,14 @@ const AirportRender = (props: AirportRenderProps) => {
         [context.highlightsOPERATIONAL_HOURS, context.highlightsNOTAM])
 
     const sortedNOTAM = useMemo(() =>
-        sortNOTAM([...props.airport.NOTAM, ...props.airport.SNOWTAM], highlightsNOTAM),
-        [props.airport.NOTAM, props.airport.SNOWTAM, highlightsNOTAM])
+        sortNOTAM([...props.aerodrome.NOTAM, ...props.aerodrome.SNOWTAM], highlightsNOTAM),
+        [props.aerodrome.NOTAM, props.aerodrome.SNOWTAM, highlightsNOTAM])
 
     const reportsMETAR = [
-        ...props.airport.METAR.map((metar, index) => (
+        ...props.aerodrome.METAR.map((metar, index) => (
             <ReportRender
-                key={`${props.airport.id}-metar-${index}`}
-                icaoId={props.airport.formValues.icaoId}
+                key={`${props.aerodrome.id}-metar-${index}`}
+                icaoId={props.aerodrome.formValues.icaoId}
                 report="METAR"
                 codes={formatRawCodes(metar.rawOb)}
                 highlights={context.highlightsMETAR}
@@ -46,10 +46,10 @@ const AirportRender = (props: AirportRenderProps) => {
         )),
     ]
     const reportsTAF = [
-        ...props.airport.TAF.map((taf, index) => (
+        ...props.aerodrome.TAF.map((taf, index) => (
             <ReportRender
-                key={`${props.airport.id}-taf-${index}`}
-                icaoId={props.airport.formValues.icaoId}
+                key={`${props.aerodrome.id}-taf-${index}`}
+                icaoId={props.aerodrome.formValues.icaoId}
                 report="TAF"
                 codes={formatRawCodes(taf.rawTAF)}
                 highlights={context.highlightsTAF} />
@@ -58,7 +58,7 @@ const AirportRender = (props: AirportRenderProps) => {
     const reportsNOTAM = [
         ...sortedNOTAM.map((notam, index) => (
             <NotamRender
-                key={`${props.airport.id}-notam-${index}`}
+                key={`${props.aerodrome.id}-notam-${index}`}
                 notam={notam} />
         ))
     ]
@@ -69,19 +69,19 @@ const AirportRender = (props: AirportRenderProps) => {
         ? new Date(`${date}T${time}Z`).getTime()
         : Date.now()
 
-    const airportOpeningHours = getOperationalHours(props.airport.NOTAM, targetDate, context.highlightsOPERATIONAL_HOURS)
+    const aerodromeOpeningHours = getOperationalHours(props.aerodrome.NOTAM, targetDate, context.highlightsOPERATIONAL_HOURS)
 
-    const tafMetarDisabled = props.airport.METAR.length === 0 && props.airport.TAF.length === 0
-    const notamsDisabled = props.airport.NOTAM.length + props.airport.SNOWTAM.length === 0
-    const dateDisabled = props.airport.icaoId === null
-    const operationalHoursDisabled = props.airport.icaoId === null
+    const tafMetarDisabled = props.aerodrome.METAR.length === 0 && props.aerodrome.TAF.length === 0
+    const notamsDisabled = props.aerodrome.NOTAM.length + props.aerodrome.SNOWTAM.length === 0
+    const dateDisabled = props.aerodrome.icaoId === null
+    const operationalHoursDisabled = props.aerodrome.icaoId === null
 
     return (
         <FormProvider {...form}>
-            <div className="airport-render-container">
-                <div className="airport-header-container">
-                    <AirportHeaderButtons
-                        airport={props.airport}
+            <div className="aerodrome-render-container">
+                <div className="aerodrome-header-container">
+                    <AerodromeHeaderButtons
+                        aerodrome={props.aerodrome}
                         tafMetarOpen={tafMetarOpen}
                         notamsOpen={notamsOpen}
                         dateOpen={dateOpen}
@@ -98,23 +98,23 @@ const AirportRender = (props: AirportRenderProps) => {
                     <Expand
                         isOpen={dateOpen}
                         rows={1}>
-                        <AirportDatetimeForm id={props.airport.id} />
+                        <AerodromeDatetimeForm id={props.aerodrome.id} />
                     </Expand>
                     <Expand
                         isOpen={operationalHoursOpen}
                         rows={1}>
-                        <div className="airport-operational-hours">
-                            {airportOpeningHours.map((openingHours, index) => (
+                        <div className="aerodrome-operational-hours">
+                            {aerodromeOpeningHours.map((openingHours, index) => (
                                 <p
-                                    key={`${props.airport.id}-operational-hours-${index}`}
+                                    key={`${props.aerodrome.id}-operational-hours-${index}`}
                                     className="message operational-hours">{openingHours}</p>
                             ))}
                         </div>
                     </Expand>
                 </div>
-                <div className="airport-data-container">
-                    {props.airport.messages.length > 0 && (
-                        <p className="message warning">{props.airport.messages}</p>
+                <div className="aerodrome-data-container">
+                    {props.aerodrome.messages.length > 0 && (
+                        <p className="message warning">{props.aerodrome.messages}</p>
                     )}
                     <Expand
                         isOpen={notamsOpen}
@@ -139,4 +139,4 @@ const AirportRender = (props: AirportRenderProps) => {
     )
 }
 
-export default AirportRender;
+export default AerodromeRender;

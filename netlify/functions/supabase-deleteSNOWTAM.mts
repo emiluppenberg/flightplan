@@ -3,7 +3,7 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import type { DeleteSNOWTAMBody } from "../../src/types"
+import { type DeleteSNOWTAMBody, handlePostgrestResponseFailure } from "../../src/shared"
 
 export default async (request: Request) => {
     let body: DeleteSNOWTAMBody
@@ -31,16 +31,12 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_airports_notam")
+        .from("user_aerodromes_notam")
         .delete()
-        .in("airport_id", [body.airportSupabaseId])
+        .in("aerodrome_id", [body.aerodromeSupabaseId])
 
     if (!response.success) {
-        console.error(response.error.message)
-        return new Response(
-            response.error.message,
-            { status: 500 }
-        )
+        return handlePostgrestResponseFailure(response)
     }
 
     return new Response(null, { status: 204 })

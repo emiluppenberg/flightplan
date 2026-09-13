@@ -1,16 +1,16 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import type { SelectAllAirportsBody } from "../../src/types"
+import { type InsertAerodromeBody, handlePostgrestResponseFailure } from "../../src/shared"
 
 export default async (request: Request) => {
-    let body: SelectAllAirportsBody
+    let body: InsertAerodromeBody
 
     try {
-        body = await request.json() as SelectAllAirportsBody;
+        body = await request.json() as InsertAerodromeBody;
     } catch {
         return new Response(
-            "Invalid SelectAllAirportsBody",
+            "Invalid InsertAerodromeBody",
             { status: 400 },
         );
     }
@@ -29,21 +29,18 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_airports")
+        .from("user_aerodromes")
+        .insert({ icao: body.icaoId, next_poll_snowtam: body.nextPollSNOWTAM })
         .select()
 
     if (!response.success) {
-        console.error(response.error.message)
-        return new Response(
-            response.error.message,
-            { status: 500 }
-        )
+        return handlePostgrestResponseFailure(response)
     }
 
-    return Response.json(response.data)
+    return Response.json(response.data[0])
 }
 
 export const config: Config = {
-    path: "/api/supabase/select-all-airports",
+    path: "/api/supabase/insert-aerodrome",
     method: "POST"
 }

@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../src/database.types";
 import type { Config } from "@netlify/functions";
-import type { SignUpBody } from "../../src/types";
+import type { SignUpBody } from "../../src/shared";
 
 export default async (request: Request) => {
     let body: SignUpBody

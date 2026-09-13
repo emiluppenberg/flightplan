@@ -1,15 +1,13 @@
-import SearchAirportForm from "../components/SearchAirportForm"
-import { useFlightPathContext } from "../Context"
+import AerodromeSearchForm from "../components/AerodromeSearchForm"
+import Messages from "../components/Messages"
 
 const Search = () => {
-    const context = useFlightPathContext()
-
+    
     return (
         <>
-            {context.message.length > 0 && (<p className="message">{context.message}</p>)}
-            {context.error.length > 0 && (<p className="message warning">{context.error}</p>)}
+            <Messages />
             <div className="search-container">
-                <SearchAirportForm />
+                <AerodromeSearchForm />
             </div>
         </>
     )

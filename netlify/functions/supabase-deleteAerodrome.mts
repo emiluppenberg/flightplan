@@ -1,16 +1,16 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import type { UpsertHighlightsBody } from "../../src/types"
+import { handlePostgrestResponseFailure, type DeleteAerodromeBody } from "../../src/shared"
 
 export default async (request: Request) => {
-    let body: UpsertHighlightsBody
+    let body: DeleteAerodromeBody
 
     try {
-        body = await request.json() as UpsertHighlightsBody;
+        body = await request.json() as DeleteAerodromeBody;
     } catch {
         return new Response(
-            "Invalid UpsertHighlightsBody",
+            "Invalid DeleteAerodromeBody",
             { status: 400 },
         );
     }
@@ -29,21 +29,19 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_highlights")
-        .upsert({ highlights: body.highlights, report: body.report }, {onConflict: "user_id, report"})
+        .from("user_aerodromes")
+        .delete()
+        .eq("icao", body.icaoId)
+        .select()
 
     if (!response.success) {
-        console.error(response.error.message)
-        return new Response(
-            response.error.message,
-            { status: 500 }
-        )
+        return handlePostgrestResponseFailure(response)
     }
 
-    return new Response(null, { status: 204 })
+    return Response.json(response.data[0])
 }
 
 export const config: Config = {
-    path: "/api/supabase/upsert-highlights",
+    path: "/api/supabase/delete-aerodrome",
     method: "POST"
 }

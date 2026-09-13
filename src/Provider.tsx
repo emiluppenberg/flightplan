@@ -1,122 +1,176 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AirportData, type AirportFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAirport, type UserFormValues } from "./types";
+import { type AerodromeData, type AerodromeFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type Message, type SupabaseAerodrome, type UserAppData, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAirport, refreshAirports, resolveHighlights, searchAirportId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES } from "./utilities";
-import { fetchSelectAllAirports, fetchSelectHighlights, fetchInitializeUser, fetchUpsertHighlights, fetchInsertAirport, fetchDeleteAirport, fetchSignInUser, fetchSignUpUser, fetchRefreshedUser, fetchSignOutUser } from "./api/supabase";
+import { createAerodrome, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors, mapUpsertConfigBody, defaultQueryMetarPreviousHours, captureUserData, isConfirmationLink, getAccessToken } from "./utilities";
+import { fetchInitializeUser, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUserAccessToken, fetchSignOutUser, fetchUpsertConfig } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
 import { Outlet, useLocation, useNavigate } from "react-router";
+import type { UpsertConfigBody } from "./shared";
 
 export const FlightPathProvider = () => {
-    const [airports, setAirports] = useState<AirportData[]>([createAirport(searchAirportId)])
+    const [aerodromes, setAerodromes] = useState<AerodromeData[]>([createAerodrome(searchAerodromeId)])
     const [highlightsTAF, setHighlightsTAF] = useState<CodeHighlight[]>([])
     const [highlightsMETAR, setHighlightsMETAR] = useState<CodeHighlight[]>([])
     const [highlightsOPERATIONAL_HOURS, setHighlightsOPERATIONAL_HOURS] = useState<CodeHighlight[]>([])
     const [highlightsNOTAM, setHighlightsNOTAM] = useState<CodeHighlight[]>([])
+    const [queryMetarPreviousHours, setQueryMetarPreviousHours] = useState<number>(defaultQueryMetarPreviousHours)
     const [isLoading, setIsLoading] = useState(false)
-    const [message, setMessage] = useState("")
-    const [error, setError] = useState("")
+    const [messages, setMessages] = useState<Message[]>([])
+    const [errors, setErrors] = useState<Message[]>([])
     const [user, setUser] = useState<AppUser>()
     const [initialized, setInitialized] = useState(false)
     const navigate = useNavigate()
     const location = useLocation()
 
+    const inFlightPolling = useRef(false)
+    const upsertConfig = useRef(false)
+    const upsertConfigQueued = useRef(false)
     const preventRestoreSession = useRef(false)
     const pathname = useRef(location.pathname)
-    const hasAerodromes = useRef(airports.length > 1)
+    const hasAerodromes = useRef(aerodromes.length > 1)
+    const isUser = useRef(false)
     useEffect(() => {
         pathname.current = location.pathname
     }, [location.pathname])
     useEffect(() => {
-        hasAerodromes.current = airports.length > 1
-    }, [airports.length])
+        hasAerodromes.current = aerodromes.length > 1
+    }, [aerodromes.length])
+    useEffect(() => {
+        isUser.current = user !== undefined
+    }, [user])
 
-    const loadUserData = async (accessToken: string) => {
-        const [
-            airports,
-            highlightsTAF,
-            highlightsMETAR,
-            highlightsOPERATIONAL_HOURS,
-            highlightsNOTAM] = await Promise.all([
-                capture(() => fetchSelectAllAirports({ accessToken: accessToken })
-                    .then(async (supabaseAirports) => await refreshAirports(supabaseAirports))),
-                capture(() => fetchSelectHighlights({
-                    accessToken: accessToken,
-                    report: "TAF"
-                })),
-                capture(() => fetchSelectHighlights({
-                    accessToken: accessToken,
-                    report: "METAR"
-                })),
-                capture(() => fetchSelectHighlights({
-                    accessToken: accessToken,
-                    report: "OPERATIONAL HOURS"
-                })),
-                capture(() => fetchSelectHighlights({
-                    accessToken: accessToken,
-                    report: "NOTAM"
-                }))
+    const flushUpsert = useCallback(async () => {
+        if (!isUser.current) return
+        if (!upsertConfig.current && !upsertConfigQueued.current) return
+
+        upsertConfig.current = false
+        upsertConfigQueued.current = false
+
+        const configResult = await capture(async () => {
+            const configBody: UpsertConfigBody = {
+                accessToken: getAccessToken(),
+                highlightsTaf: highlightsTAF.map(highlight => highlight.class),
+                highlightsMetar: highlightsMETAR.map(highlight => highlight.class),
+                highlightsNotam: highlightsNOTAM.map(highlight => highlight.class),
+                highlightsOperationalHours:
+                    highlightsOPERATIONAL_HOURS.map(highlight => highlight.class),
+                queryMetarPreviousHours,
+                updatedAt: Date.now(),
+            }
+
+            await fetchUpsertConfig(configBody, true)
+        })
+
+        if (configResult.error) {
+            upsertConfig.current = true
+
+            setErrors(current => [
+                ...current,
+                { message: configResult.error!, time: Date.now() },
             ])
+        }
+    }, [highlightsTAF, highlightsMETAR, highlightsNOTAM, highlightsOPERATIONAL_HOURS, queryMetarPreviousHours])
 
-        if (airports.data) {
-            hasAerodromes.current = airports.data.length > 0
+    useEffect(() => {
+        const flushOnHidden = () => {
+            if (document.visibilityState === "hidden") {
+                void flushUpsert()
+            }
         }
 
-        airports.data && setAirports([...airports.data, createAirport(searchAirportId)])
-        highlightsTAF.data && setHighlightsTAF(resolveHighlights(highlightsTAF.data, HIGHLIGHTS_TAF_METAR))
-        highlightsMETAR.data && setHighlightsMETAR(resolveHighlights(highlightsMETAR.data, HIGHLIGHTS_TAF_METAR))
-        highlightsOPERATIONAL_HOURS.data && setHighlightsOPERATIONAL_HOURS(resolveHighlights(highlightsOPERATIONAL_HOURS.data, HIGHLIGHTS_OPERATIONAL_HOURS))
-        highlightsNOTAM.data && setHighlightsNOTAM(resolveHighlights(highlightsNOTAM.data, HIGHLIGHTS_NOTAM))
-
-        const mergedError = (airports.error ?? "") + (highlightsTAF.error ?? "") + (highlightsMETAR.error ?? "") + (highlightsOPERATIONAL_HOURS.error ?? "") + (highlightsNOTAM.error ?? "")
-
-        if (mergedError.length > 0) {
-            throw new Error(mergedError)
+        const flushOnPageHide = () => {
+            void flushUpsert()
         }
-    }
+
+        document.addEventListener("visibilitychange", flushOnHidden)
+        window.addEventListener("pagehide", flushOnPageHide)
+
+        return () => {
+            document.removeEventListener("visibilitychange", flushOnHidden)
+            window.removeEventListener("pagehide", flushOnPageHide)
+        }
+    }, [flushUpsert])
 
     useEffect(() => {
         if (initialized) return;
 
         const restoreSession = async () => {
-            try {
-                setIsLoading(true)
+            let userData: UserAppData | undefined = undefined
+            setIsLoading(true)
 
-                const confirmedUser = await capture(() => consumeSupabaseConfirmationLink())
+            if (isConfirmationLink()) {
+                const confirmedResult = await capture(() => consumeSupabaseConfirmationLink())
 
-                if (confirmedUser.data) {
-                    setMessage(`Welcome to FlyRep`)
-                    setUser(confirmedUser.data)
-                    await loadUserData(confirmedUser.data.session.access_token)
+                if (confirmedResult.data) {
+                    setMessages([...messages, { message: "Welcome to FlyRep" }])
+                    setUser(confirmedResult.data)
+                    userData = await captureUserData(confirmedResult.data.session.access_token)
+
+                    if (userData.errors) {
+                        setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
+                        let retry = window.confirm("There was an error while initializing your session - retry?")
+
+                        while (retry) {
+                            retry = false
+                            userData = await captureUserData(confirmedResult.data.session.access_token)
+
+                            if (userData.errors) {
+                                retry = window.confirm("There was an error while initializing your session - retry?")
+                            }
+                        }
+                    }
                 }
-                if (confirmedUser.error) {
-                    setError(confirmedUser.error)
+                if (confirmedResult.error) {
+                    setErrors(current => [...current, { message: confirmedResult.error!, time: Date.now() }])
                     localStorage.removeItem(sessionStorageKey)
                 }
+            } else if (localStorage.getItem(sessionStorageKey)) {
+                const initializeResult = await capture(() => fetchInitializeUser())
 
-                const session = localStorage.getItem(sessionStorageKey)
+                if (initializeResult.data) {
+                    setUser(initializeResult.data)
+                    userData = await captureUserData(initializeResult.data.session.access_token)
 
-                if (session && !confirmedUser.data) {
-                    const user = await capture(() => fetchInitializeUser())
+                    if (userData.errors) {
+                        setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
+                        let retry = window.confirm("There was an error while initializing your session - retry?")
 
-                    if (user.data) {
-                        setUser(user.data)
-                        await loadUserData(user.data.session.access_token)
-                    }
-                    if (user.error) {
-                        setError(user.error)
-                        localStorage.removeItem(sessionStorageKey)
+                        while (retry) {
+                            retry = false
+                            userData = await captureUserData(initializeResult.data.session.access_token)
+
+                            if (userData.errors) {
+                                retry = window.confirm("There was an error while initializing your session - retry?")
+                            }
+                        }
                     }
                 }
-            } catch (error) {
-                setError(error instanceof Error ? error.message : "There was an unexpected error while restoring your session")
-            } finally {
-                setInitialized(true);
-                setIsLoading(false)
-
-                if (!hasAerodromes.current && pathname.current === "/") {
-                    navigate(`/${ROUTES.search}`)
+                if (initializeResult.error) {
+                    setErrors(current => [...current, { message: initializeResult.error!, time: Date.now() }])
+                    localStorage.removeItem(sessionStorageKey)
                 }
+            }
+
+            if (userData) {
+                hasAerodromes.current = userData.aerodromes.length > 0
+                setAerodromes([...userData.aerodromes, createAerodrome(searchAerodromeId)])
+                setHighlightsTAF([...userData.highlightsTaf])
+                setHighlightsMETAR([...userData.highlightsMetar])
+                setHighlightsNOTAM([...userData.highlightsNotam])
+                setHighlightsOPERATIONAL_HOURS([...userData.highlightsOperationalHours])
+                setQueryMetarPreviousHours(userData.queryMetarPreviousHours)
+
+                if (userData.errors) {
+                    setErrors(userData.errors.map(message => ({ message, time: Date.now() })))
+                }
+            }
+
+            setInitialized(true);
+            setIsLoading(false)
+
+            if (!hasAerodromes.current && pathname.current === "/") {
+                navigate(`/${ROUTES.search}`)
             }
         }
 
@@ -129,172 +183,217 @@ export const FlightPathProvider = () => {
     }, [location.pathname])
 
     const handleSubmit = useCallback(async (
-        airport: AirportData,
+        aerodrome: AerodromeData,
         fetchFreshSNOWTAM: boolean,
     ) => {
-        if (airport.formValues.icaoId.length === 0) return;
+        if (aerodrome.formValues.icaoId.length === 0) return;
 
         setIsLoading(true)
-        setAirports(current => current.map((_airport) => (
-            _airport.id === airport.id
-                ? { ..._airport, isLoading: true }
-                : _airport
+        setAerodromes(current => current.map((currentAerodrome) => (
+            currentAerodrome.id === aerodrome.id
+                ? { ...currentAerodrome, isLoading: true }
+                : currentAerodrome
         )))
 
         try {
             const [TAF, METAR, NOTAM, SNOWTAM] = await Promise.all([
-                capture(() => fetchTAF(airport.formValues)),
-                capture(() => fetchMETAR(airport.formValues)),
-                capture(() => fetchNOTAM(airport.formValues)),
+                capture(() => fetchTAF(aerodrome.formValues)),
+                capture(() => fetchMETAR(aerodrome.formValues, queryMetarPreviousHours)),
+                capture(() => fetchNOTAM(aerodrome.formValues)),
                 fetchFreshSNOWTAM
-                    ? capture(() => fetchSNOWTAM(airport.formValues))
-                    : Promise.resolve({ data: undefined, error: "" }),
+                    ? capture(() => fetchSNOWTAM(aerodrome.formValues))
+                    : Promise.resolve({ data: undefined, error: undefined }),
             ])
 
             const nextPollReports = Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM;
             const nextPollSNOWTAM = Date.now() + POLL_INTERVAL_SNOWTAM;
 
-            const refreshedUser = user
-                ? await capture(() => fetchRefreshedUser())
+            const refreshed = user
+                ? await capture(() => fetchRefreshedUserAccessToken())
                 : undefined
 
-            const synced = ((refreshedUser && refreshedUser.data) || user) && SNOWTAM.data
-                ? await captureSyncSNOWTAM(SNOWTAM.data, airport.supabaseId, airport.formValues.icaoId, nextPollSNOWTAM, airport.id)
-                : ""
+            const synced = ((refreshed && refreshed.data) || user) && SNOWTAM.data
+                ? await captureSyncSNOWTAM(SNOWTAM.data, aerodrome.supabaseId, aerodrome.formValues.icaoId, nextPollSNOWTAM, aerodrome.id)
+                : []
 
-            if (refreshedUser && refreshedUser.data) {
-                setUser(refreshedUser.data)
+            if (refreshed?.data?.refreshedUser) {
+                setUser(refreshed.data.refreshedUser)
             }
 
-            setAirports(current => current.map(_airport => {
-                if (_airport.id === airport.id) {
-                    // matches preserve data during failed fetch AND prevents searchAirport from displaying reports for multiple icaoId
-                    const hasTAF = _airport.TAF.some(taf => taf.icaoId === airport.formValues.icaoId)
-                    const hasMETAR = _airport.METAR.some(metar => metar.icaoId === airport.formValues.icaoId)
-                    const hasNOTAM = _airport.NOTAM.some(notam => notam.location === airport.formValues.icaoId)
-                    const hasSNOWTAM = _airport.SNOWTAM.some(snowtam => snowtam.location === airport.formValues.icaoId)
+            const mergedErrors = mergeErrors(
+                refreshed?.error,
+                getReportError(TAF, "TAF"),
+                getReportError(METAR, "METAR"),
+                getReportError(NOTAM, "NOTAM"),
+                fetchFreshSNOWTAM
+                    ? getReportError(SNOWTAM, "SNOWTAM")
+                    : undefined,
+                ...synced
+            )
+
+            setAerodromes(current => current.map(currentAerodrome => {
+                if (currentAerodrome.id === aerodrome.id) {
+                    // matches preserve data during failed fetch AND prevents searchaerodrome from displaying reports for multiple icaoId
+                    const hasTAF = currentAerodrome.TAF.some(taf => taf.icaoId === aerodrome.formValues.icaoId)
+                    const hasMETAR = currentAerodrome.METAR.some(metar => metar.icaoId === aerodrome.formValues.icaoId)
+                    const hasNOTAM = currentAerodrome.NOTAM.some(notam => notam.location === aerodrome.formValues.icaoId)
+                    const hasSNOWTAM = currentAerodrome.SNOWTAM.some(snowtam => snowtam.location === aerodrome.formValues.icaoId)
 
                     return {
-                        ..._airport,
-                        icaoId: airport.formValues.icaoId,
-                        TAF: TAF.data ?? (hasTAF ? _airport.TAF : []),
-                        METAR: METAR.data ?? (hasMETAR ? _airport.METAR : []),
-                        NOTAM: NOTAM.data ?? (hasNOTAM ? _airport.NOTAM : []),
-                        SNOWTAM: SNOWTAM.data ?? (hasSNOWTAM ? _airport.SNOWTAM : []),
-                        messages: (TAF.error ?? "") + (METAR.error ?? "") + (NOTAM.error ?? "") + (SNOWTAM.error ?? "") + (refreshedUser?.error ?? "") + synced,
+                        ...currentAerodrome,
+                        icaoId: aerodrome.formValues.icaoId,
+                        TAF: TAF.data ?? (hasTAF ? currentAerodrome.TAF : []),
+                        METAR: METAR.data ?? (hasMETAR ? currentAerodrome.METAR : []),
+                        NOTAM: NOTAM.data ?? (hasNOTAM ? currentAerodrome.NOTAM : []),
+                        SNOWTAM: SNOWTAM.data ?? (hasSNOWTAM ? currentAerodrome.SNOWTAM : []),
+                        messages: mergedErrors.join("\n"),
                         nextPollReports: nextPollReports,
                         nextPollSNOWTAM: fetchFreshSNOWTAM && SNOWTAM.data
                             ? nextPollSNOWTAM
-                            : _airport.nextPollSNOWTAM,
+                            : currentAerodrome.nextPollSNOWTAM,
                         isLoading: false
                     }
                 } else {
-                    return _airport
+                    return currentAerodrome
                 }
             }))
-        } catch (error) {
-            setError(error instanceof Error ? error.message : `There was an unexpected error while fetch data for ${airport.formValues.icaoId}`)
-            setAirports(current => current.map((_airport) => (
-                _airport.id === airport.id
-                    ? { ..._airport, isLoading: false }
-                    : _airport
+        } catch (e) {
+            setErrors(current => [...current, { message: e instanceof Error ? e.message : `There was an unexpected error while fetch data for ${aerodrome.formValues.icaoId}`, time: Date.now() }])
+            setAerodromes(current => current.map((currentAerodrome) => (
+                currentAerodrome.id === aerodrome.id
+                    ? { ...currentAerodrome, isLoading: false }
+                    : currentAerodrome
             )))
         } finally {
             setIsLoading(false)
         }
-    }, [user, airports])
+    }, [user, queryMetarPreviousHours])
 
     const handlePolling = useCallback(async () => {
-        const now = Date.now()
+        if (inFlightPolling.current) return
 
         try {
+            inFlightPolling.current = true
+
+            const now = Date.now()
             const session = localStorage.getItem(sessionStorageKey)
 
-            const refreshedUser = user && session
-                ? await fetchRefreshedUser()
-                : undefined;
+            const refreshResult = user && session
+                ? await capture(() => fetchRefreshedUserAccessToken())
+                : { data: undefined, error: undefined };
 
-            if (refreshedUser) {
-                setUser(refreshedUser)
+            if (refreshResult?.data?.refreshedUser) {
+                setUser(refreshResult.data.refreshedUser)
             }
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "There was an unexpected error while polling")
-        }
+            if (refreshResult.error) {
+                setErrors(current => [
+                    ...current.filter(currentError => currentError.message !== refreshResult.error),
+                    { message: refreshResult.error!, time: Date.now() }
+                ])
+            }
 
-        try {
-            for (const airport of airports) {
+            for (const aerodrome of aerodromes) {
                 const pollReports =
-                    airport.icaoId &&
-                    !airport.isLoading &&
-                    airport.id !== searchAirportId &&
-                    airport.nextPollReports <= now
+                    aerodrome.icaoId &&
+                    !aerodrome.isLoading &&
+                    aerodrome.id !== searchAerodromeId &&
+                    aerodrome.nextPollReports <= now
 
                 if (pollReports) {
-                    const pollSNOWTAM = airport.nextPollSNOWTAM <= now
-                    handleSubmit(airport, pollSNOWTAM)
+                    const pollSNOWTAM = aerodrome.nextPollSNOWTAM <= now
+                    handleSubmit(aerodrome, pollSNOWTAM)
                 }
             }
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "There was an unexpected error while polling")
+
+            if (upsertConfig.current) {
+                if (isUser.current) {
+                    const bodyResult = await capture(() => mapUpsertConfigBody(
+                        highlightsTAF,
+                        highlightsMETAR,
+                        highlightsNOTAM,
+                        highlightsOPERATIONAL_HOURS,
+                        queryMetarPreviousHours,
+                        refreshResult.data?.accessToken))
+
+                    if (bodyResult.error) {
+                        setErrors(current => [...current, { message: bodyResult.error!, time: Date.now() }])
+                    }
+
+                    const body = bodyResult.data
+
+                    if (body) {
+                        const upsert = await capture(() => fetchUpsertConfig(body))
+
+                        if (upsert.error) {
+                            setErrors(current => [
+                                ...current.filter(currentError => currentError.message !== upsert.error),
+                                { message: upsert.error!, time: Date.now() }
+                            ])
+                        } else {
+                            upsertConfig.current = false
+                        }
+                    }
+                }
+            }
+        } finally {
+            inFlightPolling.current = false
+
+            if (upsertConfigQueued.current && isUser.current) {
+                upsertConfigQueued.current = false
+                upsertConfig.current = true
+            }
         }
-    }, [airports, handleSubmit])
+    }, [aerodromes, handleSubmit, highlightsTAF, highlightsMETAR, highlightsNOTAM, highlightsOPERATIONAL_HOURS, queryMetarPreviousHours])
 
     useEffect(() => {
         const intervalId = setInterval(handlePolling, 5000)
         return (() => clearInterval(intervalId))
     }, [handlePolling])
 
-    const handleSetFormValues = (values: AirportFormValues, id: string) => {
-        setAirports(current => current.map((airport) => (
-            airport.id === id
-                ? { ...airport, formValues: values }
-                : airport
+    const handleSetFormValues = (values: AerodromeFormValues, id: string) => {
+        setAerodromes(current => current.map((aerodrome) => (
+            aerodrome.id === id
+                ? { ...aerodrome, formValues: values }
+                : aerodrome
         )))
     }
 
     const handleSetHighlights = async (newHighlights: CodeHighlight[], report: CodeHighlightReport) => {
-        try {
-            if (report === "TAF") setHighlightsTAF(newHighlights)
-            if (report === "METAR") setHighlightsMETAR(newHighlights)
-            if (report === "NOTAM") setHighlightsNOTAM(newHighlights)
-            if (report === "OPERATIONAL HOURS") setHighlightsOPERATIONAL_HOURS(newHighlights)
+        if (report === "TAF") setHighlightsTAF(newHighlights)
+        if (report === "METAR") setHighlightsMETAR(newHighlights)
+        if (report === "NOTAM") setHighlightsNOTAM(newHighlights)
+        if (report === "OPERATIONAL HOURS") setHighlightsOPERATIONAL_HOURS(newHighlights)
 
-            if (user) {
-                setIsLoading(true)
-                setError('')
-
-                const refreshedUser = await fetchRefreshedUser()
-
-                if (refreshedUser) {
-                    setUser(refreshedUser)
-                }
-
-                const accessToken = refreshedUser
-                    ? refreshedUser.session.access_token
-                    : user.session.access_token
-
-                await fetchUpsertHighlights({
-                    accessToken: accessToken,
-                    highlights: newHighlights.map(highlight => highlight.class),
-                    report: report
-                })
+        if (user) {
+            if (inFlightPolling.current) {
+                upsertConfigQueued.current = true
+            } else {
+                upsertConfig.current = true
             }
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "")
-        } finally {
-            setIsLoading(false)
         }
     }
 
-    const handleAddAirport = async (icaoId: string | null) => {
+    const handleSetQueryMetarPreviousHours = (newValue: number) => {
+        setQueryMetarPreviousHours(newValue)
+
+        if (user) {
+            if (inFlightPolling.current) {
+                upsertConfigQueued.current = true
+            } else {
+                upsertConfig.current = true
+            }
+        }
+    }
+
+    const handleAddAerodrome = async (icaoId: string | null) => {
         if (!icaoId) return
 
-        let supabaseAirport: SupabaseAirport | undefined = undefined
+        let supabaseAerodrome: SupabaseAerodrome | undefined = undefined
         let nextPollSNOWTAM = Date.now()
-        const searchAirport = airports.find(airport => airport.id === searchAirportId) ?? createAirport(searchAirportId)
-        const isDuplicate = airports.some(airport =>
-            airport.icaoId === icaoId &&
-            airport.id !== searchAirportId
+        const searchAerodrome = aerodromes.find(aerodrome => aerodrome.id === searchAerodromeId) ?? createAerodrome(searchAerodromeId)
+        const isDuplicate = aerodromes.some(aerodrome =>
+            aerodrome.icaoId === icaoId &&
+            aerodrome.id !== searchAerodromeId
         );
 
         if (isDuplicate) {
@@ -304,124 +403,133 @@ export const FlightPathProvider = () => {
 
         if (user) {
             setIsLoading(true)
-            setError('')
 
             try {
-                const refreshedUser = await fetchRefreshedUser()
+                const { refreshedUser, accessToken } = await fetchRefreshedUserAccessToken()
 
                 if (refreshedUser) {
                     setUser(refreshedUser)
                 }
 
-                const accessToken = refreshedUser
-                    ? refreshedUser.session.access_token
-                    : user.session.access_token
-
-                supabaseAirport = await fetchInsertAirport({
+                supabaseAerodrome = await fetchInsertAerodrome({
                     accessToken: accessToken,
                     icaoId: icaoId,
                     nextPollSNOWTAM: nextPollSNOWTAM
                 })
-            } catch (error) {
-                setError(error instanceof Error ? error.message : "")
+            } catch (e) {
+                setErrors(current => [...current, { message: e instanceof Error ? e.message : "There was an unexpected error while saving aerodrome", time: Date.now() }])
             } finally {
                 setIsLoading(false)
             }
         }
 
-        const hasTAF = searchAirport.TAF.some(taf => taf.icaoId === icaoId)
-        const hasMETAR = searchAirport.METAR.some(metar => metar.icaoId === icaoId)
-        const hasNOTAM = searchAirport.NOTAM.some(notam => notam.location === icaoId)
-        const hasSNOWTAM = searchAirport.SNOWTAM.some(snowtam => snowtam.location === icaoId)
+        const hasTAF = searchAerodrome.TAF.some(taf => taf.icaoId === icaoId)
+        const hasMETAR = searchAerodrome.METAR.some(metar => metar.icaoId === icaoId)
+        const hasNOTAM = searchAerodrome.NOTAM.some(notam => notam.location === icaoId)
+        const hasSNOWTAM = searchAerodrome.SNOWTAM.some(snowtam => snowtam.location === icaoId)
 
         nextPollSNOWTAM = user && hasSNOWTAM
             ? nextPollSNOWTAM + POLL_INTERVAL_SNOWTAM
             : nextPollSNOWTAM
 
         const synced = user && hasSNOWTAM
-            ? await captureSyncSNOWTAM(searchAirport.SNOWTAM, supabaseAirport?.id, icaoId, nextPollSNOWTAM)
-            : ""
+            ? await captureSyncSNOWTAM(searchAerodrome.SNOWTAM, supabaseAerodrome?.id, icaoId, nextPollSNOWTAM)
+            : []
 
-        setAirports(current => [...current, {
-            ...searchAirport,
+        setAerodromes(current => [...current, {
+            ...searchAerodrome,
             id: crypto.randomUUID(),
             icaoId: icaoId,
-            formValues: { ...searchAirport.formValues, icaoId: icaoId },
-            TAF: hasTAF ? [...searchAirport.TAF] : [],
-            METAR: hasMETAR ? [...searchAirport.METAR] : [],
-            NOTAM: hasNOTAM ? [...searchAirport.NOTAM] : [],
-            SNOWTAM: hasSNOWTAM ? [...searchAirport.SNOWTAM] : [],
+            formValues: { ...searchAerodrome.formValues, icaoId: icaoId },
+            TAF: hasTAF ? [...searchAerodrome.TAF] : [],
+            METAR: hasMETAR ? [...searchAerodrome.METAR] : [],
+            NOTAM: hasNOTAM ? [...searchAerodrome.NOTAM] : [],
+            SNOWTAM: hasSNOWTAM ? [...searchAerodrome.SNOWTAM] : [],
             nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM,
             nextPollSNOWTAM: nextPollSNOWTAM,
-            messages: synced,
+            messages: mergeErrors(...synced).join("\n"),
             isLoading: false,
-            supabaseId: supabaseAirport?.id
+            supabaseId: supabaseAerodrome?.id
         }])
     }
 
-    const handleDeleteAirport = async (id: string) => {
+    const handleDeleteAerodrome = async (id: string) => {
         if (user) {
             setIsLoading(true)
-            setError('')
 
             try {
-                const airport = airports.find(airport => airport.id === id)
-                const icaoId = airport?.formValues.icaoId
-                if (!icaoId) throw new Error(`Could not delete airport with id: ${id}`)
+                const aerodrome = aerodromes.find(aerodrome => aerodrome.id === id)
+                const icaoId = aerodrome?.formValues.icaoId
+                if (!icaoId) throw new Error(`Could not delete aerodrome with id: ${id}`)
 
-                const refreshedUser = await fetchRefreshedUser()
+                const { refreshedUser, accessToken } = await fetchRefreshedUserAccessToken()
 
                 if (refreshedUser) {
                     setUser(refreshedUser)
                 }
 
-                const accessToken = refreshedUser
-                    ? refreshedUser.session.access_token
-                    : user.session.access_token
-
-                await fetchDeleteAirport({
+                await fetchDeleteAerodrome({
                     accessToken: accessToken,
                     icaoId: icaoId
                 })
-            } catch (error) {
-                setError(error instanceof Error ? error.message : "")
+            } catch (e) {
+                setErrors(current => [...current, { message: e instanceof Error ? e.message : "There was an unexpected error while deleting aerodrome", time: Date.now() }])
             } finally {
                 setIsLoading(false)
             }
         }
 
-        setAirports(current => current.filter(airport => airport.id !== id))
+        setAerodromes(current => current.filter(aerodrome => aerodrome.id !== id))
     }
 
     const handleSignIn = async (values: UserFormValues) => {
         setIsLoading(true)
-        setError('')
 
         try {
-            const user = await fetchSignInUser({ ...values });
+            const signInResult = await capture(() => fetchSignInUser({ ...values }))
 
-            if (user && !user.user.email_confirmed_at) {
-                throw new Error(`Please follow the link in the confirmation email sent to ${values.email} before logging in`)
-            }
-            if (!user) {
-                throw new Error(`No user exists with email ${values.email} and your provided password`)
+            if (signInResult.error) {
+                throw new Error(signInResult.error)
             }
 
-            setUser(user)
+            if (signInResult.data) {
+                setUser(signInResult.data)
+                let userData = await captureUserData(signInResult.data.session.access_token)
 
-            try {
-                await loadUserData(user.session.access_token);
-            } catch (error) {
-                setError(error instanceof Error ? error.message : "")    
-            }
+                if (userData.errors) {
+                    setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
+                    let retry = window.confirm("There was an error while initializing your session - retry?")
 
-            if (!hasAerodromes.current) {
-                navigate(`/${ROUTES.search}`)
-            } else {
-                navigate("/")
+                    while (retry) {
+                        retry = false
+                        userData = await captureUserData(signInResult.data.session.access_token)
+
+                        if (userData.errors) {
+                            retry = window.confirm("There was an error while initializing your session - retry?")
+                        }
+                    }
+                }
+
+                hasAerodromes.current = userData.aerodromes.length > 0
+                setAerodromes([...userData.aerodromes, createAerodrome(searchAerodromeId)])
+                setHighlightsTAF([...userData.highlightsTaf])
+                setHighlightsMETAR([...userData.highlightsMetar])
+                setHighlightsNOTAM([...userData.highlightsNotam])
+                setHighlightsOPERATIONAL_HOURS([...userData.highlightsOperationalHours])
+                setQueryMetarPreviousHours(userData.queryMetarPreviousHours)
+
+                if (userData.errors) {
+                    setErrors(current => [...current, ...userData.errors!.map(message => ({ message, time: Date.now() }))])
+                }
+
+                if (!hasAerodromes.current) {
+                    navigate(`/${ROUTES.search}`)
+                } else {
+                    navigate("/")
+                }
             }
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "")
+        } catch (e) {
+            setErrors(current => [...current, { message: e instanceof Error ? e.message : "There was an unexpected error while signing in", time: Date.now() }])
         } finally {
             setIsLoading(false)
         }
@@ -429,69 +537,116 @@ export const FlightPathProvider = () => {
 
     const handleSignOut = async () => {
         if (!user) return
-
         setIsLoading(true)
-        setError('')
 
-        try {
-            const refreshedUser = await fetchRefreshedUser()
-            const accessToken = refreshedUser
-                ? refreshedUser.session.access_token
-                : user.session.access_token
+        const refreshUserResult = await capture(() => fetchRefreshedUserAccessToken())
 
-            await fetchSignOutUser({
-                accessToken: accessToken
-            })
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "")
-        } finally {
-            setIsLoading(false)
-            setMessage("")
-            setUser(undefined)
-            setAirports([createAirport(searchAirportId)])
-            setHighlightsTAF([])
-            setHighlightsMETAR([])
-            setHighlightsNOTAM([])
-            setHighlightsOPERATIONAL_HOURS([])
-            localStorage.removeItem(sessionStorageKey)
+        if (refreshUserResult.error) {
+            setErrors(current => [...current, { message: refreshUserResult.error!, time: Date.now() }])
         }
+        if (refreshUserResult.data) {
+            if (upsertConfig.current || upsertConfigQueued.current) {
+                const bodyResult = await capture(() => mapUpsertConfigBody(
+                    highlightsTAF,
+                    highlightsMETAR,
+                    highlightsNOTAM,
+                    highlightsOPERATIONAL_HOURS,
+                    queryMetarPreviousHours,
+                    refreshUserResult.data!.accessToken
+                ))
+
+                if (bodyResult.error) {
+                    setErrors(current => [...current, { message: bodyResult.error!, time: Date.now() }])
+                }
+
+                const body = bodyResult.data
+
+                if (body) {
+                    if (upsertConfig.current || upsertConfigQueued.current) {
+                        const upsertResult = await capture(() => fetchUpsertConfig(body))
+
+                        if (upsertResult.error) {
+                            setErrors(current => [...current, { message: upsertResult.error!, time: Date.now() }])
+                            const retryUpsert = window.confirm("There was an error while updating your latest configurations - retry?")
+
+                            if (retryUpsert) {
+                                setIsLoading(false)
+                                handleSignOut()
+                                return
+                            }
+                        }
+                        if (!upsertResult.data) {
+                            upsertConfigQueued.current = false
+                            upsertConfig.current = false
+                        }
+                    }
+                }
+            }
+
+            const signOutResult = await capture(() => fetchSignOutUser({ accessToken: refreshUserResult.data!.accessToken }))
+
+            if (signOutResult.error) {
+                setErrors(current => [...current, { message: signOutResult.error!, time: Date.now() }])
+            }
+        }
+
+        setIsLoading(false)
+        setUser(undefined)
+        setAerodromes([createAerodrome(searchAerodromeId)])
+        setHighlightsTAF([])
+        setHighlightsMETAR([])
+        setHighlightsNOTAM([])
+        setHighlightsOPERATIONAL_HOURS([])
+        setQueryMetarPreviousHours(defaultQueryMetarPreviousHours)
+        upsertConfigQueued.current = false
+        upsertConfig.current = false
+        localStorage.removeItem(sessionStorageKey)
     }
 
     const handleSignUp = async (values: UserFormValues) => {
         setIsLoading(true)
-        setMessage("")
-        setError("")
 
         try {
             const responseMessage = await fetchSignUpUser({ ...values });
-            setMessage(responseMessage)
+            setMessages([...messages, { message: responseMessage }])
             navigate("/")
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "")
+        } catch (e) {
+            setErrors(current => [...current, { message: e instanceof Error ? e.message : "There was an unexpected error while signing up", time: Date.now() }])
         } finally {
             setIsLoading(false)
         }
     }
 
+    const handleDiscardMessage = (index: number) => {
+        setMessages(current => current.filter((_, currentIndex) => currentIndex !== index))
+    }
+
+    const handleDiscardError = (index: number) => {
+        setErrors(current => current.filter((_, currentIndex) => currentIndex !== index))
+    }
     return (
         <FlightPathContext
             value={{
-                airports,
+                aerodromes,
                 highlightsTAF,
                 highlightsMETAR,
                 highlightsOPERATIONAL_HOURS,
                 highlightsNOTAM,
+                queryMetarPreviousHours,
                 handleSubmit,
                 handleSetFormValues,
                 handleSetHighlights,
-                handleAddAirport,
-                handleDeleteAirport,
+                handleSetQueryMetarPreviousHours,
+                handleAddAerodrome,
+                handleDeleteAerodrome,
                 handleSignIn,
                 handleSignOut,
                 handleSignUp,
+                handleDiscardMessage,
+                handleDiscardError,
                 isLoading,
-                message,
-                error,
+                messages,
+                errors,
                 user
             }}>
             <main className="page">

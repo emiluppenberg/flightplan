@@ -5,7 +5,7 @@ $color-fourth: #2b2b3f;
 $color-open: #303064;
 $color-disabled: #15151d;
 $color-danger: #943838;
-$color-success: #10571c;
+$color-success: #51c957;
 $color-warning: #c9c935;
 $color-first-border: #34346d;
 $color-second-border: #28285a;
@@ -76,6 +76,13 @@ img {
   }
 }
 
+.message-row {
+  display:flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+
 .message {
   white-space: pre-line;
   font-style: italic;
@@ -88,13 +95,18 @@ img {
     margin-bottom: 0.5rem;
   }
 
+  &.info {
+    font-style: normal;
+    font-size: 1rem;
+    padding: 0.5rem;
+  }
 
   &.warning {
     color: $color-warning;
   }
 }
 
-.airports-container,
+.aerodromes-container,
 .search-container,
 .sign-in-container,
 .sign-out-container,
@@ -105,7 +117,7 @@ img {
   overflow-y: auto;
 }
 
-.airports-container {
+.aerodromes-container {
   padding: 1rem 0 1rem 0;
 
   &.split {
@@ -187,7 +199,7 @@ fieldset {
   &.btn-delete,
   &.btn-refetch,
   &.btn-search,
-  &.btn-airports {
+  &.btn-aerodromes {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -255,13 +267,19 @@ h2 {
       }
     }
 
-    &.highlights {
+    &.config {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
+      align-items: stretch;
       overflow-y: auto;
       padding: 0.5rem;
       max-height: 50vh;
+
+      @media (max-width: 500px),
+      (max-height: 500px) {
+        max-height: 30vh;
+      }
 
       fieldset {
         background: $color-second;
@@ -305,10 +323,6 @@ h2 {
 
     &.highlights-row {
       flex-direction: column;
-
-      @media (max-width: 500px) {
-        flex-direction: row;
-      }
     }
 
     fieldset {
@@ -340,6 +354,13 @@ h2 {
           padding: 0 1rem 0 1rem;
           border-right: 1px solid $color-first-border;
 
+          &.config {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            gap: 1rem;
+          }
+
           &.toggle-all {
             font-weight: 800;
           }
@@ -357,8 +378,7 @@ h2 {
         align-items: center;
 
         .options {
-          flex-direction: column;
-          flex-wrap: nowrap;
+          flex-direction: row;
           align-items: start;
           width: 100%;
           max-height: 6rem;
@@ -371,7 +391,6 @@ h2 {
             align-items: center;
             justify-content: space-between;
             height: 2rem;
-            width: 100%;
             border-top: 1px solid $color-first-border;
             padding-right: 0;
             border-right: 0;
@@ -407,7 +426,7 @@ h2 {
   }
 }
 
-.airport-render-container {
+.aerodrome-render-container {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -418,20 +437,20 @@ h2 {
   background: $color-background;
   width: 100%;
 
-  .airport-header-container {
+  .aerodrome-header-container {
     position: sticky;
     top: 0;
     display: flex;
     flex-direction: column;
     border-top: 1px solid $color-border-light;
 
-    .airport-operational-hours {
+    .aerodrome-operational-hours {
       padding-top: 0.5rem;
       background: $color-third;
       border-bottom: 1px solid $color-first-border;
     }
 
-    .airport-header-search {
+    .aerodrome-header-search {
       display: flex;
       flex-direction: column;
       max-height: 40vh;
@@ -457,11 +476,11 @@ h2 {
       }
     }
 
-    .airport-header-buttons {
+    .aerodrome-header-buttons {
       display: flex;
       border-radius: 0;
 
-      .airport-header-icao {
+      .aerodrome-header-icao {
         font: inherit;
         padding: 0.5rem;
         background: $color-first;
@@ -469,7 +488,7 @@ h2 {
         user-select: none;
       }
 
-      .airport-header-icao,
+      .aerodrome-header-icao,
       .input-search,
       .btn-notam,
       .btn-taf-metar,
@@ -488,7 +507,7 @@ h2 {
         }
       }
 
-      .airport-header-icao>h4 {
+      .aerodrome-header-icao>h4 {
         font-size: 1.5rem;
       }
 
@@ -507,7 +526,7 @@ h2 {
         border-top-right-radius: 0.5rem;
       }
 
-      .airport-header-icao,
+      .aerodrome-header-icao,
       .btn-refetch,
       .btn-search {
         border-left: 1px solid $color-first-border;
@@ -515,23 +534,23 @@ h2 {
     }
   }
 
-  .airport-report-container,
-  .airport-notam-container {
+  .aerodrome-report-container,
+  .aerodrome-notam-container {
     display: flex;
     flex-direction: row;
     padding: 0.5rem 1rem 0.5rem 1rem;
 
-    .airport-report-type {
+    .aerodrome-report-type {
       min-width: 4rem;
       text-align: start;
     }
 
-    .airport-report-icao {
+    .aerodrome-report-icao {
       min-width: 3rem;
       text-align: start;
     }
 
-    .airport-report-codes {
+    .aerodrome-report-codes {
       display: flex;
       flex-direction: row;
       flex-wrap: wrap;
