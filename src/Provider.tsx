@@ -70,7 +70,9 @@ export const FlightPathProvider = () => {
                     setErrors(current => [...current, { message: confirmedResult.error!, time: Date.now() }])
                     localStorage.removeItem(sessionStorageKey)
                 }
+            }
 
+            if (!confirmedResult.data) {
                 const session = localStorage.getItem(sessionStorageKey)
 
                 if (session && !confirmedResult.data) {
@@ -99,27 +101,27 @@ export const FlightPathProvider = () => {
                         localStorage.removeItem(sessionStorageKey)
                     }
                 }
+            }
 
-                if (userData) {
-                    hasAerodromes.current = userData.aerodromes.length > 0
-                    setAerodromes([...userData.aerodromes, createAerodrome(searchAerodromeId)])
-                    setHighlightsTAF([...userData.highlightsTaf])
-                    setHighlightsMETAR([...userData.highlightsMetar])
-                    setHighlightsNOTAM([...userData.highlightsNotam])
-                    setHighlightsOPERATIONAL_HOURS([...userData.highlightsOperationalHours])
-                    setQueryMetarPreviousHours(userData.queryMetarPreviousHours)
+            if (userData) {
+                hasAerodromes.current = userData.aerodromes.length > 0
+                setAerodromes([...userData.aerodromes, createAerodrome(searchAerodromeId)])
+                setHighlightsTAF([...userData.highlightsTaf])
+                setHighlightsMETAR([...userData.highlightsMetar])
+                setHighlightsNOTAM([...userData.highlightsNotam])
+                setHighlightsOPERATIONAL_HOURS([...userData.highlightsOperationalHours])
+                setQueryMetarPreviousHours(userData.queryMetarPreviousHours)
 
-                    if (userData.errors) {
-                        setErrors(userData.errors.map(message => ({ message, time: Date.now() })))
-                    }
+                if (userData.errors) {
+                    setErrors(userData.errors.map(message => ({ message, time: Date.now() })))
                 }
+            }
 
-                setInitialized(true);
-                setIsLoading(false)
+            setInitialized(true);
+            setIsLoading(false)
 
-                if (!hasAerodromes.current && pathname.current === "/") {
-                    navigate(`/${ROUTES.search}`)
-                }
+            if (!hasAerodromes.current && pathname.current === "/") {
+                navigate(`/${ROUTES.search}`)
             }
         }
 
