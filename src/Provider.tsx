@@ -43,17 +43,28 @@ export const FlightPathProvider = () => {
         if (initialized) return;
 
         const restoreSession = async () => {
-            try {
-                let userData: UserAppData | undefined = undefined
+            let userData: UserAppData | undefined = undefined
+            setIsLoading(true)
 
-                setIsLoading(true)
+            const confirmedResult = await capture(() => consumeSupabaseConfirmationLink())
 
-                const confirmedResult = await capture(() => consumeSupabaseConfirmationLink())
+            if (confirmedResult.data) {
+                setMessages([...messages, { message: "Welcome to FlyRep" }])
+                setUser(confirmedResult.data)
+                userData = await captureUserData(confirmedResult.data.session.access_token)
 
-                if (confirmedResult.data) {
-                    setMessages([...messages, "Welcome to FlyRep"])
-                    setUser(confirmedResult.data)
-                    userData = await captureUserData(confirmedResult.data.session.access_token)
+                if (userData.errors) {
+                    setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
+                    let retry = window.confirm("There was an error while initializing your session - retry?")
+
+                    while (retry) {
+                        retry = false
+                        userData = await captureUserData(confirmedResult.data.session.access_token)
+
+                        if (userData.errors) {
+                            retry = window.confirm("There was an error while initializing your session - retry?")
+                        }
+                    }
                 }
                 if (confirmedResult.error) {
                     setErrors(current => [...current, { message: confirmedResult.error!, time: Date.now() }])
@@ -68,6 +79,20 @@ export const FlightPathProvider = () => {
                     if (initializeResult.data) {
                         setUser(initializeResult.data)
                         userData = await captureUserData(initializeResult.data.session.access_token)
+
+                        if (userData.errors) {
+                            setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
+                            let retry = window.confirm("There was an error while initializing your session - retry?")
+
+                            while (retry) {
+                                retry = false
+                                userData = await captureUserData(initializeResult.data.session.access_token)
+
+                                if (userData.errors) {
+                                    retry = window.confirm("There was an error while initializing your session - retry?")
+                                }
+                            }
+                        }
                     }
                     if (initializeResult.error) {
                         setErrors(current => [...current, { message: initializeResult.error!, time: Date.now() }])
@@ -76,18 +101,19 @@ export const FlightPathProvider = () => {
                 }
 
                 if (userData) {
+                    hasAerodromes.current = userData.aerodromes.length > 0
                     setAerodromes([...userData.aerodromes, createAerodrome(searchAerodromeId)])
                     setHighlightsTAF([...userData.highlightsTaf])
                     setHighlightsMETAR([...userData.highlightsMetar])
                     setHighlightsNOTAM([...userData.highlightsNotam])
                     setHighlightsOPERATIONAL_HOURS([...userData.highlightsOperationalHours])
                     setQueryMetarPreviousHours(userData.queryMetarPreviousHours)
-                    setErrors(userData.errors)
-                    hasAerodromes.current = userData.aerodromes.length > 0
+
+                    if (userData.errors) {
+                        setErrors(userData.errors.map(message => ({ message, time: Date.now() })))
+                    }
                 }
-            } catch (e) {
-                setErrors(current => [...current, e instanceof Error ? e.message : "There was an unexpected error while restoring your session"])
-            } finally {
+
                 setInitialized(true);
                 setIsLoading(false)
 
