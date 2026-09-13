@@ -372,6 +372,7 @@ export const mapUpsertConfigBody = async (
     highlightsTaf: highlightsTaf.map(highlight => highlight.class),
     highlightsMetar: highlightsMetar.map(highlight => highlight.class),
     highlightsNotam: highlightsNotam.map(highlight => highlight.class),
-    highlightsOperationalHours: highlightsOperationalHours.map(highlight => highlight.class)
+    highlightsOperationalHours: highlightsOperationalHours.map(highlight => highlight.class),
+    updatedAt: Date.now()
   }
 }

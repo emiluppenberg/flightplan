@@ -45,6 +45,7 @@ export type UpsertConfigBody = {
   highlightsMetar: string[];
   highlightsNotam: string[];
   highlightsOperationalHours: string[];
+  updatedAt: number;
 }
 
 export type SelectConfigBody = {

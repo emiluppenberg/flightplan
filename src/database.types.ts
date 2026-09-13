@@ -120,6 +120,7 @@ export type Database = {
           highlights_taf: string[]
           id: string
           query_metar_previous_hours: number
+          updated_at: number
           user_id: string
         }
         Insert: {
@@ -129,6 +130,7 @@ export type Database = {
           highlights_taf?: string[]
           id?: string
           query_metar_previous_hours?: number
+          updated_at?: number
           user_id?: string
         }
         Update: {
@@ -138,6 +140,7 @@ export type Database = {
           highlights_taf?: string[]
           id?: string
           query_metar_previous_hours?: number
+          updated_at?: number
           user_id?: string
         }
         Relationships: []

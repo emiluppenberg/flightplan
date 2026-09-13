@@ -35,8 +35,10 @@ export default async (request: Request) => {
             "highlights_taf": body.highlightsTaf,
             "highlights_metar": body.highlightsMetar,
             "highlights_notam": body.highlightsNotam,
-            "highlights_operational_hours": body.highlightsOperationalHours
+            "highlights_operational_hours": body.highlightsOperationalHours,
+            "updated_at": body.updatedAt
         }, { onConflict: "user_id" })
+        .lt("updated_at", body.updatedAt)
 
     if (!response.success) {
         return handlePostgrestResponseFailure(response)
