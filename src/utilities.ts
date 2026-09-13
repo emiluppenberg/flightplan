@@ -2,7 +2,7 @@ import type { Session } from "@supabase/supabase-js"
 import { type AerodromeFormValues, type AerodromeData, HIGHLIGHTS_TAF_METAR, type EntryNOTAM, type FetchResult, type SupabaseAerodrome, type CodeHighlight, type AppUser, type EntrySNOWTAM } from "./types"
 import { fetchDeleteSNOWTAM, fetchInitializeUser, fetchRefreshedUserAccessToken, fetchSelectSNOWTAM, fetchUpdateAerodromeNextPollSNOWTAM, fetchUpsertSNOWTAM } from "./api/supabase"
 import { fetchTAF, fetchMETAR, fetchNOTAM, fetchSNOWTAM, POLL_INTERVAL_SNOWTAM, POLL_INTERVAL_TAF_METAR_NOTAM } from "./api/resources";
-import type { SelectConfigBody, UpsertConfigBody } from "./shared";
+import type { UpsertConfigBody } from "./shared";
 
 export const SVG_URLS = {
   logo: '/flygvader-logo.svg',
@@ -22,6 +22,7 @@ export const ROUTES = {
 
 export const sessionStorageKey = "sb-cgllylmfqjwakuhemjxv-auth-token"
 export const searchAerodromeId = "search-aerodrome"
+export const defaultQueryMetarPreviousHours = 5
 
 export const capture = async<T>(
   request: () => Promise<T>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AerodromeData, type AerodromeFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAerodrome, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAerodrome, refreshAerodromes, resolveHighlights, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors, mapUpsertConfigBody } from "./utilities";
+import { createAerodrome, refreshAerodromes, resolveHighlights, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors, mapUpsertConfigBody, defaultQueryMetarPreviousHours } from "./utilities";
 import { fetchSelectAllAerodromes, fetchInitializeUser, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUserAccessToken, fetchSignOutUser, fetchUpsertConfig, fetchSelectConfig } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
@@ -13,7 +13,7 @@ export const FlightPathProvider = () => {
     const [highlightsMETAR, setHighlightsMETAR] = useState<CodeHighlight[]>([])
     const [highlightsOPERATIONAL_HOURS, setHighlightsOPERATIONAL_HOURS] = useState<CodeHighlight[]>([])
     const [highlightsNOTAM, setHighlightsNOTAM] = useState<CodeHighlight[]>([])
-    const [queryMetarPreviousHours, setQueryMetarPreviousHours] = useState<number>(5)
+    const [queryMetarPreviousHours, setQueryMetarPreviousHours] = useState<number>(defaultQueryMetarPreviousHours)
     const [isLoading, setIsLoading] = useState(false)
     const [message, setMessage] = useState("")
     const [error, setError] = useState("")
@@ -22,16 +22,22 @@ export const FlightPathProvider = () => {
     const navigate = useNavigate()
     const location = useLocation()
 
+    const inFlightPolling = useRef(false)
     const upsertConfig = useRef(false)
+    const upsertConfigQueued = useRef(false)
     const preventRestoreSession = useRef(false)
     const pathname = useRef(location.pathname)
     const hasAerodromes = useRef(aerodromes.length > 1)
+    const isUser = useRef(false)
     useEffect(() => {
         pathname.current = location.pathname
     }, [location.pathname])
     useEffect(() => {
         hasAerodromes.current = aerodromes.length > 1
     }, [aerodromes.length])
+    useEffect(() => {
+        isUser.current = user !== undefined
+    }, [user])
 
     const loadUserData = async (accessToken: string) => {
         const [aerodromesResult, configResult] = await Promise.all([
@@ -40,11 +46,11 @@ export const FlightPathProvider = () => {
         ])
 
         const [aerodromes, config] = [aerodromesResult.data, configResult.data]
-        const refreshResult = (aerodromes && config)
-            ? await capture(() => refreshAerodromes(aerodromes, config.query_metar_previous_hours))
+        const refreshResult = aerodromes
+            ? await capture(() => refreshAerodromes(aerodromes, config?.query_metar_previous_hours ?? queryMetarPreviousHours))
             : { data: undefined, error: undefined }
 
-        if (aerodromes && config) {
+        if (aerodromes) {
             hasAerodromes.current = aerodromes.length > 0
         }
 
@@ -53,6 +59,7 @@ export const FlightPathProvider = () => {
         config && setHighlightsMETAR(resolveHighlights(config.highlights_metar, HIGHLIGHTS_TAF_METAR))
         config && setHighlightsNOTAM(resolveHighlights(config.highlights_notam, HIGHLIGHTS_NOTAM))
         config && setHighlightsOPERATIONAL_HOURS(resolveHighlights(config.highlights_operational_hours, HIGHLIGHTS_OPERATIONAL_HOURS))
+        config && setQueryMetarPreviousHours(config.query_metar_previous_hours)
 
         const mergedError = mergeErrors(
             aerodromesResult.error,
@@ -206,48 +213,78 @@ export const FlightPathProvider = () => {
     }, [user, queryMetarPreviousHours])
 
     const handlePolling = useCallback(async () => {
-        const now = Date.now()
+        if (inFlightPolling.current) return
 
-        const session = localStorage.getItem(sessionStorageKey)
+        try {
+            inFlightPolling.current = true
+            setError("")
 
-        const refreshed = user && session
-            ? await capture(() => fetchRefreshedUserAccessToken())
-            : { data: undefined, error: undefined };
+            const errors: string[] = []
+            const now = Date.now()
+            const session = localStorage.getItem(sessionStorageKey)
 
-        if (refreshed?.data?.refreshedUser) {
-            setUser(refreshed.data.refreshedUser)
-        }
-        if (refreshed.error) {
-            setError(refreshed.error)
-        }
+            const refreshResult = user && session
+                ? await capture(() => fetchRefreshedUserAccessToken())
+                : { data: undefined, error: undefined };
 
-        for (const aerodrome of aerodromes) {
-            const pollReports =
-                aerodrome.icaoId &&
-                !aerodrome.isLoading &&
-                aerodrome.id !== searchAerodromeId &&
-                aerodrome.nextPollReports <= now
+            if (refreshResult?.data?.refreshedUser) {
+                setUser(refreshResult.data.refreshedUser)
+            }
+            if (refreshResult.error) {
+                errors.push(refreshResult.error)
+            }
 
-            if (pollReports) {
-                const pollSNOWTAM = aerodrome.nextPollSNOWTAM <= now
-                handleSubmit(aerodrome, pollSNOWTAM)
+            for (const aerodrome of aerodromes) {
+                const pollReports =
+                    aerodrome.icaoId &&
+                    !aerodrome.isLoading &&
+                    aerodrome.id !== searchAerodromeId &&
+                    aerodrome.nextPollReports <= now
+
+                if (pollReports) {
+                    const pollSNOWTAM = aerodrome.nextPollSNOWTAM <= now
+                    handleSubmit(aerodrome, pollSNOWTAM)
+                }
+            }
+
+            if (upsertConfig.current && isUser.current) {
+                const bodyResult = await capture(() => mapUpsertConfigBody(
+                    highlightsTAF,
+                    highlightsMETAR,
+                    highlightsNOTAM,
+                    highlightsOPERATIONAL_HOURS
+                    , queryMetarPreviousHours,
+                    refreshResult.data?.accessToken))
+
+                if (bodyResult.error) {
+                    errors.push(bodyResult.error)
+                }
+
+                const body = bodyResult.data
+
+                if (body) {
+                    const upsert = await capture(() => fetchUpsertConfig(body))
+
+                    if (upsert.error) {
+                        errors.push(upsert.error)
+                    } else {
+                        upsertConfig.current = false
+                    }
+                }
+            }
+
+            if (errors.length > 0) {
+                setError(mergeErrors(...errors))
+            }
+        } finally {
+            inFlightPolling.current = false
+
+            if (upsertConfigQueued.current && isUser.current) {
+                upsertConfigQueued.current = false
+                upsertConfig.current = true
             }
         }
-
-        if (upsertConfig.current) {
-            const body = await mapUpsertConfigBody(
-                highlightsTAF,
-                highlightsMETAR,
-                highlightsNOTAM,
-                highlightsOPERATIONAL_HOURS
-                ,queryMetarPreviousHours,
-                refreshed.data?.accessToken)
-
-            fetchUpsertConfig(body)
-
-            upsertConfig.current = false
-        }
-    }, [aerodromes, handleSubmit])
+    }, [aerodromes, handleSubmit, highlightsTAF, highlightsMETAR, highlightsNOTAM, highlightsOPERATIONAL_HOURS, queryMetarPreviousHours])
 
     useEffect(() => {
         const intervalId = setInterval(handlePolling, 5000)
@@ -269,7 +306,11 @@ export const FlightPathProvider = () => {
         if (report === "OPERATIONAL HOURS") setHighlightsOPERATIONAL_HOURS(newHighlights)
 
         if (user) {
-            upsertConfig.current = true
+            if (inFlightPolling.current) {
+                upsertConfigQueued.current = true
+            } else {
+                upsertConfig.current = true
+            }
         }
     }
 
@@ -277,7 +318,11 @@ export const FlightPathProvider = () => {
         setQueryMetarPreviousHours(newValue)
 
         if (user) {
-            upsertConfig.current = true
+            if (inFlightPolling.current) {
+                upsertConfigQueued.current = true
+            } else {
+                upsertConfig.current = true
+            }
         }
     }
 
@@ -436,6 +481,9 @@ export const FlightPathProvider = () => {
             setHighlightsMETAR([])
             setHighlightsNOTAM([])
             setHighlightsOPERATIONAL_HOURS([])
+            setQueryMetarPreviousHours(defaultQueryMetarPreviousHours)
+            upsertConfig.current = false
+            upsertConfigQueued.current = false
             localStorage.removeItem(sessionStorageKey)
         }
     }
