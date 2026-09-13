@@ -1,5 +1,5 @@
 import type { PostgrestResponseFailure } from "@supabase/postgrest-js"
-import type { CodeHighlightReport, EntrySNOWTAM } from "./types";
+import type { EntrySNOWTAM } from "./types";
 
 export type InsertAerodromeBody = {
   accessToken: string;
@@ -38,20 +38,17 @@ export type SelectSNOWTAMBody = {
   aerodromeSupabaseId: string;
 }
 
-export type UpsertHighlightsBody = {
-  accessToken: string;
-  highlights: string[];
-  report: CodeHighlightReport
-}
-
-export type SelectHighlightsBody = {
-  accessToken: string;
-  report: CodeHighlightReport;
-}
-
-export type UpsertQueryMetarPreviousHoursBody = {
+export type UpsertConfigBody = {
   accessToken: string;
   queryMetarPreviousHours: number;
+  highlightsTaf: string[];
+  highlightsMetar: string[];
+  highlightsNotam: string[];
+  highlightsOperationalHours: string[];
+}
+
+export type SelectConfigBody = {
+  accessToken: string;
 }
 
 export type SignInBody = {

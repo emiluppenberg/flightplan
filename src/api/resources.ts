@@ -33,10 +33,11 @@ export const fetchTAF = async (values: AerodromeFormValues): Promise<EntryTAF[]>
   return await response.json()
 }
 
-export const fetchMETAR = async (values: AerodromeFormValues): Promise<EntryMETAR[]> => {
+export const fetchMETAR = async (values: AerodromeFormValues, queryPreviousHours: number): Promise<EntryMETAR[]> => {
   const params = new URLSearchParams({
     ids: values.icaoId,
     format: "json",
+    hours: queryPreviousHours.toString()
   })
 
   if (values.date && values.time) {

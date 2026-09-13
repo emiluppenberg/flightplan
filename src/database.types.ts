@@ -114,16 +114,28 @@ export type Database = {
       }
       user_config: {
         Row: {
+          highlights_metar: string[]
+          highlights_notam: string[]
+          highlights_operational_hours: string[]
+          highlights_taf: string[]
           id: string
           query_metar_previous_hours: number
           user_id: string
         }
         Insert: {
+          highlights_metar?: string[]
+          highlights_notam?: string[]
+          highlights_operational_hours?: string[]
+          highlights_taf?: string[]
           id?: string
           query_metar_previous_hours?: number
           user_id?: string
         }
         Update: {
+          highlights_metar?: string[]
+          highlights_notam?: string[]
+          highlights_operational_hours?: string[]
+          highlights_taf?: string[]
           id?: string
           query_metar_previous_hours?: number
           user_id?: string

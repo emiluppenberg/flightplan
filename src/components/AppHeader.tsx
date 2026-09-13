@@ -1,6 +1,6 @@
 import { useState } from "react";
 import AppLogo from "./AppLogo"
-import Highlights from "./Highlights";
+import Config from "./Config";
 import Expand from "./Expand";
 import { SVG_URLS } from "../utilities";
 import { useFlightPathContext } from "../Context";
@@ -55,8 +55,8 @@ const AppHeader = () => {
             <Expand
                 isOpen={showHighlights}
                 rows={1}>
-                <div className="app-header-row highlights">
-                    <Highlights />
+                <div className="app-header-row config">
+                    <Config />
                 </div>
             </Expand>
         </div>

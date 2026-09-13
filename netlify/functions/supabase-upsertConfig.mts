@@ -1,16 +1,16 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import { handlePostgrestResponseFailure, type UpsertHighlightsBody } from "../../src/shared"
+import { handlePostgrestResponseFailure, type UpsertConfigBody } from "../../src/shared"
 
 export default async (request: Request) => {
-    let body: UpsertHighlightsBody
+    let body: UpsertConfigBody
 
     try {
-        body = await request.json() as UpsertHighlightsBody;
+        body = await request.json() as UpsertConfigBody;
     } catch {
         return new Response(
-            "Invalid UpsertHighlightsBody",
+            "Invalid UpsertConfigBody",
             { status: 400 },
         );
     }
@@ -29,8 +29,14 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_highlights")
-        .upsert({ highlights: body.highlights, report: body.report }, {onConflict: "user_id, report"})
+        .from("user_config")
+        .upsert({
+            "query_metar_previous_hours": body.queryMetarPreviousHours,
+            "highlights_taf": body.highlightsTaf,
+            "highlights_metar": body.highlightsMetar,
+            "highlights_notam": body.highlightsNotam,
+            "highlights_operational_hours": body.highlightsOperationalHours
+        }, { onConflict: "user_id" })
 
     if (!response.success) {
         return handlePostgrestResponseFailure(response)
@@ -40,6 +46,6 @@ export default async (request: Request) => {
 }
 
 export const config: Config = {
-    path: "/api/supabase/upsert-highlights",
+    path: "/api/supabase/upsert-config",
     method: "POST"
 }

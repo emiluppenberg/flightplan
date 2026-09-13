@@ -7,6 +7,14 @@ export interface SupabaseAerodrome {
   user_id: string
 }
 
+export interface SupabaseConfig {
+  query_metar_previous_hours: number
+  highlights_taf: string[]
+  highlights_metar: string[]
+  highlights_notam: string[]
+  highlights_operational_hours: string[]
+}
+
 export type FetchResult<T> = {
   data: T | undefined;
   error: string | undefined;

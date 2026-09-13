@@ -2,7 +2,7 @@ import { useFlightPathContext } from "../Context"
 import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR } from "../types"
 import HighlightsField from "./HighlightsField"
 
-const Highlights = () => {
+const Config = () => {
     const context = useFlightPathContext()
 
     return (
@@ -29,8 +29,19 @@ const Highlights = () => {
                     selections={context.highlightsOPERATIONAL_HOURS}
                     onSelected={async (selections) => await context.handleSetHighlights(selections, "OPERATIONAL HOURS")} />
             </div>
+            <div className="form-row">
+                <fieldset>
+                    <label>
+                        Query METAR previous hours
+                        <input
+                            type="number"
+                            value={context.queryMetarPreviousHours}
+                            onChange={async (e) => await context.handleSetQueryMetarPreviousHours(Number(e.target.value))} />
+                    </label>
+                </fieldset>
+            </div>
         </div>
     )
 }
 
-export default Highlights;
+export default Config;

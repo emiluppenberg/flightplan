@@ -1,16 +1,16 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "../../src/database.types"
 import type { Config } from "@netlify/functions"
-import { type SelectHighlightsBody, handlePostgrestResponseFailure } from "../../src/shared"
+import { type SelectConfigBody, handlePostgrestResponseFailure } from "../../src/shared"
 
 export default async (request: Request) => {
-    let body: SelectHighlightsBody
+    let body: SelectConfigBody
 
     try {
-        body = await request.json() as SelectHighlightsBody;
+        body = await request.json() as SelectConfigBody;
     } catch {
         return new Response(
-            "Invalid SelectHighlightsBody",
+            "Invalid SelectConfigBody",
             { status: 400 },
         );
     }
@@ -29,19 +29,18 @@ export default async (request: Request) => {
     )
 
     const response = await supabase
-        .from("user_highlights")
+        .from("user_config")
         .select()
-        .eq("report", body.report)
         .maybeSingle()
 
     if (!response.success) {
         return handlePostgrestResponseFailure(response)
     }
 
-    return Response.json(response.data?.highlights ?? [])
+    return Response.json(response.data)
 }
 
 export const config: Config = {
-    path: "/api/supabase/select-highlights",
+    path: "/api/supabase/select-config",
     method: "POST"
 }

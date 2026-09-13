@@ -1,7 +1,8 @@
 import type { Session } from "@supabase/supabase-js"
 import { type AerodromeFormValues, type AerodromeData, HIGHLIGHTS_TAF_METAR, type EntryNOTAM, type FetchResult, type SupabaseAerodrome, type CodeHighlight, type AppUser, type EntrySNOWTAM } from "./types"
-import { fetchDeleteSNOWTAM, fetchInitializeUser, fetchSelectSNOWTAM, fetchUpdateAerodromeNextPollSNOWTAM, fetchUpsertSNOWTAM } from "./api/supabase"
+import { fetchDeleteSNOWTAM, fetchInitializeUser, fetchRefreshedUserAccessToken, fetchSelectSNOWTAM, fetchUpdateAerodromeNextPollSNOWTAM, fetchUpsertSNOWTAM } from "./api/supabase"
 import { fetchTAF, fetchMETAR, fetchNOTAM, fetchSNOWTAM, POLL_INTERVAL_SNOWTAM, POLL_INTERVAL_TAF_METAR_NOTAM } from "./api/resources";
+import type { SelectConfigBody, UpsertConfigBody } from "./shared";
 
 export const SVG_URLS = {
   logo: '/flygvader-logo.svg',
@@ -70,7 +71,7 @@ export const captureSyncSNOWTAM = async (
   ].filter(error => error !== undefined)
 }
 
-export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[]): Promise<AerodromeData[]> => {
+export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[], queryMetarPreviousHours: number): Promise<AerodromeData[]> => {
   const now = Date.now()
 
   return await Promise.all(supabaseAerodromes.map(async aerodrome => {
@@ -84,7 +85,7 @@ export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[])
 
     const [TAF, METAR, NOTAM, SNOWTAM] = await Promise.all([
       capture(() => fetchTAF(formValues)),
-      capture(() => fetchMETAR(formValues)),
+      capture(() => fetchMETAR(formValues, queryMetarPreviousHours)),
       capture(() => fetchNOTAM(formValues)),
       fetchFreshSNOWTAM
         ? capture(() => fetchSNOWTAM(formValues))
@@ -325,4 +326,26 @@ export const mergeErrors = (...errors: Array<string | undefined>) => {
     .map(error => error?.trim())
     .filter((error): error is string => Boolean(error))
     .join("\n")
+}
+
+export const mapUpsertConfigBody = async (
+  highlightsTaf: CodeHighlight[],
+  highlightsMetar: CodeHighlight[],
+  highlightsNotam: CodeHighlight[],
+  highlightsOperationalHours: CodeHighlight[],
+  queryMetarPreviousHours: number,
+  accessToken?: string)
+  : Promise<UpsertConfigBody> => {
+  if (!accessToken) {
+    accessToken = (await fetchRefreshedUserAccessToken()).accessToken
+  }
+
+  return {
+    accessToken: accessToken,
+    queryMetarPreviousHours: queryMetarPreviousHours,
+    highlightsTaf: highlightsTaf.map(highlight => highlight.class),
+    highlightsMetar: highlightsMetar.map(highlight => highlight.class),
+    highlightsNotam: highlightsNotam.map(highlight => highlight.class),
+    highlightsOperationalHours: highlightsOperationalHours.map(highlight => highlight.class)
+  }
 }
