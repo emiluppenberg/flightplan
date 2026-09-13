@@ -441,29 +441,70 @@ export const FlightPathProvider = () => {
 
     const handleSignOut = async () => {
         if (!user) return
-
         setIsLoading(true)
 
-        try {
-            const { accessToken } = await fetchRefreshedUserAccessToken()
+        const refreshUserResult = await capture(() => fetchRefreshedUserAccessToken())
 
-            await fetchSignOutUser({
-                accessToken: accessToken
-            })
-        } catch (e) {
-            setErrors([...errors, e instanceof Error ? e.message : "There was an unexpected error while signing out"])
-        } finally {
-            setIsLoading(false)
-            setUser(undefined)
-            setAerodromes([createAerodrome(searchAerodromeId)])
-            setHighlightsTAF([])
-            setHighlightsMETAR([])
-            setHighlightsNOTAM([])
-            setHighlightsOPERATIONAL_HOURS([])
-            setQueryMetarPreviousHours(defaultQueryMetarPreviousHours)
-            upsertConfig.current = false
-            upsertConfigQueued.current = false
-            localStorage.removeItem(sessionStorageKey)
+        if (refreshUserResult.error) {
+            setErrors(current => [...current, refreshUserResult.error!])
+        }
+        if (refreshUserResult.data) {
+            if (upsertConfig.current || upsertConfigQueued.current) {
+                const bodyResult = await capture(() => mapUpsertConfigBody(
+                    highlightsTAF,
+                    highlightsMETAR,
+                    highlightsNOTAM,
+                    highlightsOPERATIONAL_HOURS,
+                    queryMetarPreviousHours,
+                    refreshUserResult.data!.accessToken
+                ))
+
+                if (bodyResult.error) {
+                    setErrors(current => [...current, bodyResult.error!])
+                }
+
+                const body = bodyResult.data
+
+                if (body) {
+                    if (upsertConfig.current || upsertConfigQueued.current) {
+                        const upsertResult = await capture(() => fetchUpsertConfig(body))
+
+                        if (upsertResult.error) {
+                            setErrors(current => [...current, upsertResult.error!])
+                            const retry = window.confirm("Failed to update your latest configurations - retry?")
+
+                            if (retry) {
+                                setIsLoading(false)
+                                handleSignOut()
+                                return
+                            }
+                        }
+                        if (!upsertResult.data) {
+                            upsertConfigQueued.current = false
+                            upsertConfig.current = false
+                        }
+                    }
+                }
+            }
+
+            const signOutResult = await capture(() => fetchSignOutUser({ accessToken: refreshUserResult.data!.accessToken }))
+
+            if (signOutResult.error) {
+                setErrors(current => [...current, signOutResult.error!])
+            }
+            if (!signOutResult.error) {
+                setIsLoading(false)
+                setUser(undefined)
+                setAerodromes([createAerodrome(searchAerodromeId)])
+                setHighlightsTAF([])
+                setHighlightsMETAR([])
+                setHighlightsNOTAM([])
+                setHighlightsOPERATIONAL_HOURS([])
+                setQueryMetarPreviousHours(defaultQueryMetarPreviousHours)
+                upsertConfigQueued.current = false
+                upsertConfig.current = false
+                localStorage.removeItem(sessionStorageKey)
+            }
         }
     }
 
