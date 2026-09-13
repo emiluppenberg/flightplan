@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, HIGHLIGHTS_TAF_METAR, type AerodromeData, type AerodromeFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAerodrome, type UserFormValues } from "./types";
+import { type AerodromeData, type AerodromeFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAerodrome, type UserAppData, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAerodrome, refreshAerodromes, resolveHighlights, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors, mapUpsertConfigBody, defaultQueryMetarPreviousHours } from "./utilities";
-import { fetchSelectAllAerodromes, fetchInitializeUser, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUserAccessToken, fetchSignOutUser, fetchUpsertConfig, fetchSelectConfig } from "./api/supabase";
+import { createAerodrome, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors, mapUpsertConfigBody, defaultQueryMetarPreviousHours, captureUserData } from "./utilities";
+import { fetchInitializeUser, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUserAccessToken, fetchSignOutUser, fetchUpsertConfig } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
 import { Outlet, useLocation, useNavigate } from "react-router";
@@ -15,8 +15,8 @@ export const FlightPathProvider = () => {
     const [highlightsNOTAM, setHighlightsNOTAM] = useState<CodeHighlight[]>([])
     const [queryMetarPreviousHours, setQueryMetarPreviousHours] = useState<number>(defaultQueryMetarPreviousHours)
     const [isLoading, setIsLoading] = useState(false)
-    const [message, setMessage] = useState("")
-    const [error, setError] = useState("")
+    const [messages, setMessages] = useState<string[]>([])
+    const [errors, setErrors] = useState<string[]>([])
     const [user, setUser] = useState<AppUser>()
     const [initialized, setInitialized] = useState(false)
     const navigate = useNavigate()
@@ -39,74 +39,54 @@ export const FlightPathProvider = () => {
         isUser.current = user !== undefined
     }, [user])
 
-    const loadUserData = async (accessToken: string) => {
-        const [aerodromesResult, configResult] = await Promise.all([
-            capture(() => fetchSelectAllAerodromes({ accessToken: accessToken })),
-            capture(() => fetchSelectConfig({ accessToken: accessToken }))
-        ])
-
-        const [aerodromes, config] = [aerodromesResult.data, configResult.data]
-        const refreshResult = aerodromes
-            ? await capture(() => refreshAerodromes(aerodromes, config?.query_metar_previous_hours ?? queryMetarPreviousHours))
-            : { data: undefined, error: undefined }
-
-        if (aerodromes) {
-            hasAerodromes.current = aerodromes.length > 0
-        }
-
-        refreshResult.data && setAerodromes([...refreshResult.data, createAerodrome(searchAerodromeId)])
-        config && setHighlightsTAF(resolveHighlights(config.highlights_taf, HIGHLIGHTS_TAF_METAR))
-        config && setHighlightsMETAR(resolveHighlights(config.highlights_metar, HIGHLIGHTS_TAF_METAR))
-        config && setHighlightsNOTAM(resolveHighlights(config.highlights_notam, HIGHLIGHTS_NOTAM))
-        config && setHighlightsOPERATIONAL_HOURS(resolveHighlights(config.highlights_operational_hours, HIGHLIGHTS_OPERATIONAL_HOURS))
-        config && setQueryMetarPreviousHours(config.query_metar_previous_hours)
-
-        const mergedError = mergeErrors(
-            aerodromesResult.error,
-            configResult.error,
-            refreshResult.error
-        )
-
-        if (mergedError.length > 0) {
-            throw new Error(mergedError)
-        }
-    }
-
     useEffect(() => {
         if (initialized) return;
 
         const restoreSession = async () => {
             try {
+                let userData: UserAppData | undefined = undefined
+
                 setIsLoading(true)
 
-                const confirmedUser = await capture(() => consumeSupabaseConfirmationLink())
+                const confirmedResult = await capture(() => consumeSupabaseConfirmationLink())
 
-                if (confirmedUser.data) {
-                    setMessage(`Welcome to FlyRep`)
-                    setUser(confirmedUser.data)
-                    await loadUserData(confirmedUser.data.session.access_token)
+                if (confirmedResult.data) {
+                    setMessages([...messages, "Welcome to FlyRep"])
+                    setUser(confirmedResult.data)
+                    userData = await captureUserData(confirmedResult.data.session.access_token)
                 }
-                if (confirmedUser.error) {
-                    setError(confirmedUser.error)
+                if (confirmedResult.error) {
+                    setErrors([...errors, confirmedResult.error])
                     localStorage.removeItem(sessionStorageKey)
                 }
 
                 const session = localStorage.getItem(sessionStorageKey)
 
-                if (session && !confirmedUser.data) {
-                    const user = await capture(() => fetchInitializeUser())
+                if (session && !confirmedResult.data) {
+                    const initializeResult = await capture(() => fetchInitializeUser())
 
-                    if (user.data) {
-                        setUser(user.data)
-                        await loadUserData(user.data.session.access_token)
+                    if (initializeResult.data) {
+                        setUser(initializeResult.data)
+                        userData = await captureUserData(initializeResult.data.session.access_token)
                     }
-                    if (user.error) {
-                        setError(user.error)
+                    if (initializeResult.error) {
+                        setErrors([...errors, initializeResult.error])
                         localStorage.removeItem(sessionStorageKey)
                     }
                 }
-            } catch (error) {
-                setError(error instanceof Error ? error.message : "There was an unexpected error while restoring your session")
+
+                if (userData) {
+                    setAerodromes([...userData.aerodromes, createAerodrome(searchAerodromeId)])
+                    setHighlightsTAF([...userData.highlightsTaf])
+                    setHighlightsMETAR([...userData.highlightsMetar])
+                    setHighlightsNOTAM([...userData.highlightsNotam])
+                    setHighlightsOPERATIONAL_HOURS([...userData.highlightsOperationalHours])
+                    setQueryMetarPreviousHours(userData.queryMetarPreviousHours)
+                    setErrors(userData.errors)
+                    hasAerodromes.current = userData.aerodromes.length > 0
+                }
+            } catch (e) {
+                setErrors([...errors, e instanceof Error ? e.message : "There was an unexpected error while restoring your session"])
             } finally {
                 setInitialized(true);
                 setIsLoading(false)
@@ -163,7 +143,7 @@ export const FlightPathProvider = () => {
                 setUser(refreshed.data.refreshedUser)
             }
 
-            const mergedError = mergeErrors(
+            const mergedErrors = mergeErrors(
                 refreshed?.error,
                 getReportError(TAF, "TAF"),
                 getReportError(METAR, "METAR"),
@@ -189,7 +169,7 @@ export const FlightPathProvider = () => {
                         METAR: METAR.data ?? (hasMETAR ? currentAerodrome.METAR : []),
                         NOTAM: NOTAM.data ?? (hasNOTAM ? currentAerodrome.NOTAM : []),
                         SNOWTAM: SNOWTAM.data ?? (hasSNOWTAM ? currentAerodrome.SNOWTAM : []),
-                        messages: mergedError,
+                        messages: mergedErrors.join("\n"),
                         nextPollReports: nextPollReports,
                         nextPollSNOWTAM: fetchFreshSNOWTAM && SNOWTAM.data
                             ? nextPollSNOWTAM
@@ -200,8 +180,8 @@ export const FlightPathProvider = () => {
                     return currentAerodrome
                 }
             }))
-        } catch (error) {
-            setError(error instanceof Error ? error.message : `There was an unexpected error while fetch data for ${aerodrome.formValues.icaoId}`)
+        } catch (e) {
+            setErrors([...errors, e instanceof Error ? e.message : `There was an unexpected error while fetch data for ${aerodrome.formValues.icaoId}`])
             setAerodromes(current => current.map((currentAerodrome) => (
                 currentAerodrome.id === aerodrome.id
                     ? { ...currentAerodrome, isLoading: false }
@@ -217,7 +197,6 @@ export const FlightPathProvider = () => {
 
         try {
             inFlightPolling.current = true
-            setError("")
 
             const errors: string[] = []
             const now = Date.now()
@@ -274,7 +253,7 @@ export const FlightPathProvider = () => {
             }
 
             if (errors.length > 0) {
-                setError(mergeErrors(...errors))
+                setErrors(mergeErrors(...errors))
             }
         } finally {
             inFlightPolling.current = false
@@ -344,7 +323,6 @@ export const FlightPathProvider = () => {
 
         if (user) {
             setIsLoading(true)
-            setError('')
 
             try {
                 const { refreshedUser, accessToken } = await fetchRefreshedUserAccessToken()
@@ -358,8 +336,8 @@ export const FlightPathProvider = () => {
                     icaoId: icaoId,
                     nextPollSNOWTAM: nextPollSNOWTAM
                 })
-            } catch (error) {
-                setError(error instanceof Error ? error.message : "There was an unexpected error while saving aerodrome")
+            } catch (e) {
+                setErrors([...errors, e instanceof Error ? e.message : "There was an unexpected error while saving aerodrome"])
             } finally {
                 setIsLoading(false)
             }
@@ -389,7 +367,7 @@ export const FlightPathProvider = () => {
             SNOWTAM: hasSNOWTAM ? [...searchAerodrome.SNOWTAM] : [],
             nextPollReports: Date.now() + POLL_INTERVAL_TAF_METAR_NOTAM,
             nextPollSNOWTAM: nextPollSNOWTAM,
-            messages: mergeErrors(...synced),
+            messages: mergeErrors(...synced).join("\n"),
             isLoading: false,
             supabaseId: supabaseAerodrome?.id
         }])
@@ -398,7 +376,6 @@ export const FlightPathProvider = () => {
     const handleDeleteAerodrome = async (id: string) => {
         if (user) {
             setIsLoading(true)
-            setError('')
 
             try {
                 const aerodrome = aerodromes.find(aerodrome => aerodrome.id === id)
@@ -415,8 +392,8 @@ export const FlightPathProvider = () => {
                     accessToken: accessToken,
                     icaoId: icaoId
                 })
-            } catch (error) {
-                setError(error instanceof Error ? error.message : "There was an unexpected error while deleting aerodrome")
+            } catch (e) {
+                setErrors([...errors, e instanceof Error ? e.message : "There was an unexpected error while deleting aerodrome"])
             } finally {
                 setIsLoading(false)
             }
@@ -427,23 +404,27 @@ export const FlightPathProvider = () => {
 
     const handleSignIn = async (values: UserFormValues) => {
         setIsLoading(true)
-        setError('')
 
         try {
-            const user = await capture(() => fetchSignInUser({ ...values }))
+            const signInResult = await capture(() => fetchSignInUser({ ...values }))
 
-            if (user.error) {
-                throw new Error(user.error)
+            if (signInResult.error) {
+                throw new Error(signInResult.error)
             }
 
-            if (user.data) {
-                setUser(user.data)
+            if (signInResult.data) {
+                setUser(signInResult.data)
 
-                const loaded = await capture(() => loadUserData(user.data!.session.access_token))
+                const userData = await captureUserData(signInResult.data!.session.access_token)
 
-                if (loaded.error) {
-                    setError(loaded.error)
-                }
+                setAerodromes([...userData.aerodromes, createAerodrome(searchAerodromeId)])
+                setHighlightsTAF([...userData.highlightsTaf])
+                setHighlightsMETAR([...userData.highlightsMetar])
+                setHighlightsNOTAM([...userData.highlightsNotam])
+                setHighlightsOPERATIONAL_HOURS([...userData.highlightsOperationalHours])
+                setQueryMetarPreviousHours(userData.queryMetarPreviousHours)
+                setErrors([...errors, ...userData.errors])
+                hasAerodromes.current = userData.aerodromes.length > 0
 
                 if (!hasAerodromes.current) {
                     navigate(`/${ROUTES.search}`)
@@ -451,8 +432,8 @@ export const FlightPathProvider = () => {
                     navigate("/")
                 }
             }
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "There was an unexpected error while signing in")
+        } catch (e) {
+            setErrors([...errors, e instanceof Error ? e.message : "There was an unexpected error while signing in"])
         } finally {
             setIsLoading(false)
         }
@@ -462,7 +443,6 @@ export const FlightPathProvider = () => {
         if (!user) return
 
         setIsLoading(true)
-        setError('')
 
         try {
             const { accessToken } = await fetchRefreshedUserAccessToken()
@@ -470,11 +450,10 @@ export const FlightPathProvider = () => {
             await fetchSignOutUser({
                 accessToken: accessToken
             })
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "There was an unexpected error while signing out")
+        } catch (e) {
+            setErrors([...errors, e instanceof Error ? e.message : "There was an unexpected error while signing out"])
         } finally {
             setIsLoading(false)
-            setMessage("")
             setUser(undefined)
             setAerodromes([createAerodrome(searchAerodromeId)])
             setHighlightsTAF([])
@@ -490,20 +469,25 @@ export const FlightPathProvider = () => {
 
     const handleSignUp = async (values: UserFormValues) => {
         setIsLoading(true)
-        setMessage("")
-        setError("")
 
         try {
             const responseMessage = await fetchSignUpUser({ ...values });
-            setMessage(responseMessage)
+            setMessages([...messages, responseMessage])
             navigate("/")
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "There was an unexpected error while signing up")
+        } catch (e) {
+            setErrors([...errors, e instanceof Error ? e.message : "There was an unexpected error while signing up"])
         } finally {
             setIsLoading(false)
         }
     }
 
+    const handleDiscardMessage = (index: number) => {
+        setMessages(current => current.filter((_, currentIndex) => currentIndex !== index))
+    }
+
+    const handleDiscardError = (index: number) => {
+        setErrors(current => current.filter((_, currentIndex) => currentIndex !== index))
+    }
     return (
         <FlightPathContext
             value={{
@@ -522,9 +506,11 @@ export const FlightPathProvider = () => {
                 handleSignIn,
                 handleSignOut,
                 handleSignUp,
+                handleDiscardMessage,
+                handleDiscardError,
                 isLoading,
-                message,
-                error,
+                messages,
+                errors,
                 user
             }}>
             <main className="page">

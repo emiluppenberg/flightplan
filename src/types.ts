@@ -1,5 +1,15 @@
 import type { Session, User } from "@supabase/supabase-js";
 
+export interface UserAppData {
+  aerodromes: AerodromeData[]
+  highlightsTaf: CodeHighlight[]
+  highlightsMetar: CodeHighlight[]
+  highlightsNotam: CodeHighlight[]
+  highlightsOperationalHours: CodeHighlight[]
+  queryMetarPreviousHours: number
+  errors: string[]
+}
+
 export interface SupabaseAerodrome {
   icao: string
   id: string

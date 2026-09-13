@@ -1,4 +1,5 @@
 import AerodromeSearchForm from "../components/AerodromeSearchForm"
+import Messages from "../components/Messages"
 import { useFlightPathContext } from "../Context"
 
 const Search = () => {
@@ -6,8 +7,7 @@ const Search = () => {
 
     return (
         <>
-            {context.message.length > 0 && (<p className="message">{context.message}</p>)}
-            {context.error.length > 0 && (<p className="message warning">{context.error}</p>)}
+            <Messages />
             <div className="search-container">
                 <AerodromeSearchForm />
             </div>

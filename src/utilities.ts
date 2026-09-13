@@ -1,6 +1,6 @@
 import type { Session } from "@supabase/supabase-js"
-import { type AerodromeFormValues, type AerodromeData, HIGHLIGHTS_TAF_METAR, type EntryNOTAM, type FetchResult, type SupabaseAerodrome, type CodeHighlight, type AppUser, type EntrySNOWTAM } from "./types"
-import { fetchDeleteSNOWTAM, fetchInitializeUser, fetchRefreshedUserAccessToken, fetchSelectSNOWTAM, fetchUpdateAerodromeNextPollSNOWTAM, fetchUpsertSNOWTAM } from "./api/supabase"
+import { type AerodromeFormValues, type AerodromeData, HIGHLIGHTS_TAF_METAR, type EntryNOTAM, type FetchResult, type SupabaseAerodrome, type CodeHighlight, type AppUser, type EntrySNOWTAM, HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, type UserAppData } from "./types"
+import { fetchDeleteSNOWTAM, fetchInitializeUser, fetchRefreshedUserAccessToken, fetchSelectAllAerodromes, fetchSelectConfig, fetchSelectSNOWTAM, fetchUpdateAerodromeNextPollSNOWTAM, fetchUpsertSNOWTAM } from "./api/supabase"
 import { fetchTAF, fetchMETAR, fetchNOTAM, fetchSNOWTAM, POLL_INTERVAL_SNOWTAM, POLL_INTERVAL_TAF_METAR_NOTAM } from "./api/resources";
 import type { UpsertConfigBody } from "./shared";
 
@@ -54,29 +54,55 @@ export const captureSyncSNOWTAM = async (
       ? []
       : ["Aerodrome is missing supabaseId"]
   }
-
+  
   const deleted = await capture(() => fetchDeleteSNOWTAM(aerodromeSupabaseId))
-
+  
   const upserted = !deleted.error
-    ? await capture(() => fetchUpsertSNOWTAM(SNOWTAM, aerodromeSupabaseId))
+  ? await capture(() => fetchUpsertSNOWTAM(SNOWTAM, aerodromeSupabaseId))
     : { data: undefined, error: undefined }
-
-  const updated = !deleted.error && !upserted.error
+    
+    const updated = !deleted.error && !upserted.error
     ? await capture(() => fetchUpdateAerodromeNextPollSNOWTAM(icaoId, nextPollSNOWTAM))
     : { data: undefined, error: undefined }
+    
+    return [
+      deleted.error,
+      upserted.error,
+      updated.error
+    ].filter(error => error !== undefined)
+  }
+  
+  export const captureUserData = async (accessToken: string): Promise<UserAppData> => {
+    const [aerodromesResult, configResult] = await Promise.all([
+      capture(() => fetchSelectAllAerodromes({ accessToken: accessToken })),
+      capture(() => fetchSelectConfig({ accessToken: accessToken }))
+    ])
+  
+    const [aerodromes, config] = [aerodromesResult.data, configResult.data]
+    const refreshResult = aerodromes
+      ? await capture(() => refreshAerodromes(aerodromes, config?.query_metar_previous_hours ?? defaultQueryMetarPreviousHours))
+      : { data: undefined, error: undefined }
+  
+    return {
+      aerodromes: refreshResult.data ?? [],
+      highlightsTaf: resolveHighlights(config?.highlights_taf ?? [], HIGHLIGHTS_TAF_METAR),
+      highlightsMetar: resolveHighlights(config?.highlights_metar ?? [], HIGHLIGHTS_TAF_METAR),
+      highlightsNotam: resolveHighlights(config?.highlights_notam ?? [], HIGHLIGHTS_NOTAM),
+      highlightsOperationalHours: resolveHighlights(config?.highlights_operational_hours ?? [], HIGHLIGHTS_OPERATIONAL_HOURS),
+      queryMetarPreviousHours: config?.query_metar_previous_hours ?? defaultQueryMetarPreviousHours,
+      errors: mergeErrors(
+        aerodromesResult.error,
+        configResult.error,
+        refreshResult.error
+      )
+    }
+  }
 
-  return [
-    deleted.error,
-    upserted.error,
-    updated.error
-  ].filter(error => error !== undefined)
-}
-
-export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[], queryMetarPreviousHours: number): Promise<AerodromeData[]> => {
-  const now = Date.now()
-
-  return await Promise.all(supabaseAerodromes.map(async aerodrome => {
-    const formValues: AerodromeFormValues = {
+  export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[], queryMetarPreviousHours: number): Promise<AerodromeData[]> => {
+    const now = Date.now()
+    
+    return await Promise.all(supabaseAerodromes.map(async aerodrome => {
+      const formValues: AerodromeFormValues = {
       icaoId: aerodrome.icao,
       notamIncludeFIR: false,
       notamIncludeFuture: true
@@ -113,7 +139,7 @@ export const refreshAerodromes = async (supabaseAerodromes: SupabaseAerodrome[],
         ? getReportError(SNOWTAM, "SNOWTAM")
         : undefined,
       ...synced
-    )
+    ).join("\n")
 
     return {
       id: crypto.randomUUID(),
@@ -326,7 +352,6 @@ export const mergeErrors = (...errors: Array<string | undefined>) => {
   return errors
     .map(error => error?.trim())
     .filter((error): error is string => Boolean(error))
-    .join("\n")
 }
 
 export const mapUpsertConfigBody = async (

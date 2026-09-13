@@ -3,6 +3,7 @@ import AerodromeRender from '../components/AerodromeRender'
 import { useFlightPathContext } from '../Context'
 import { useWindowWidth } from '../hooks'
 import { searchAerodromeId } from '../utilities'
+import Messages from '../components/Messages'
 
 const Aerodromes = () => {
   const context = useFlightPathContext()
@@ -18,8 +19,7 @@ const Aerodromes = () => {
 
   return (
     <>
-      {context.message.length > 0 && (<p className="message">{context.message}</p>)}
-      {context.error.length > 0 && (<p className="message warning">{context.error}</p>)}
+      <Messages />
       <div className={`aerodromes-container ${splitRender && "split"}`}>
         <div className={`renders-container ${splitRender && "split"}`}>
           {aerodromes.map((aerodrome, index) => {

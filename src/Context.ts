@@ -17,9 +17,11 @@ export type FlightPathState = {
     handleSignIn: (values: UserFormValues) => Promise<void>;
     handleSignOut: () => void;
     handleSignUp: (values: UserFormValues) => Promise<void>;
+    handleDiscardMessage: (index: number) => void;
+    handleDiscardError: (index: number) => void;
     isLoading: boolean;
-    message: string;
-    error: string;
+    messages: string[];
+    errors: string[];
     user: AppUser | undefined;
 }
 

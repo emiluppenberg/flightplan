@@ -76,6 +76,11 @@ img {
   }
 }
 
+.message-row {
+  display:flex;
+  justify-content: space-between;
+}
+
 .message {
   white-space: pre-line;
   font-style: italic;
@@ -268,8 +273,9 @@ h2 {
       overflow-y: auto;
       padding: 0.5rem;
       max-height: 50vh;
-      
-      @media (max-width: 500px), (max-height: 500px) {
+
+      @media (max-width: 500px),
+      (max-height: 500px) {
         max-height: 30vh;
       }
 
