@@ -312,17 +312,21 @@ export const getAccessToken = (): string => {
   return (JSON.parse(session) as Session).access_token
 }
 
-export const consumeSupabaseConfirmationLink = async (): Promise<AppUser | undefined> => {
+export const isConfirmationLink = () => {
   const params = new URLSearchParams(window.location.hash.slice(1))
 
-  const hasAuthToken = params.has("access_token") || params.has("refresh_token")
-  const hasAuthError = params.has("error") && (
-    params.has("error_code") || params.has("error_description")
-  )
+  const hasAuthToken =
+    params.has("access_token") || params.has("refresh_token")
 
-  if (!hasAuthToken && !hasAuthError) {
-    return undefined
-  }
+  const hasAuthError =
+    params.has("error") &&
+    (params.has("error_code") || params.has("error_description"))
+
+  return hasAuthToken || hasAuthError
+}
+
+export const consumeSupabaseConfirmationLink = async (): Promise<AppUser | undefined> => {
+  const params = new URLSearchParams(window.location.hash.slice(1))
 
   window.history.replaceState(
     window.history.state,

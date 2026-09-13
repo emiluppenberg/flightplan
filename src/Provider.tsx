@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type AerodromeData, type AerodromeFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type Message, type SupabaseAerodrome, type UserAppData, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAerodrome, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors, mapUpsertConfigBody, defaultQueryMetarPreviousHours, captureUserData } from "./utilities";
+import { createAerodrome, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors, mapUpsertConfigBody, defaultQueryMetarPreviousHours, captureUserData, isConfirmationLink } from "./utilities";
 import { fetchInitializeUser, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUserAccessToken, fetchSignOutUser, fetchUpsertConfig } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
@@ -46,23 +46,25 @@ export const FlightPathProvider = () => {
             let userData: UserAppData | undefined = undefined
             setIsLoading(true)
 
-            const confirmedResult = await capture(() => consumeSupabaseConfirmationLink())
+            if (isConfirmationLink()) {
+                const confirmedResult = await capture(() => consumeSupabaseConfirmationLink())
 
-            if (confirmedResult.data) {
-                setMessages([...messages, { message: "Welcome to FlyRep" }])
-                setUser(confirmedResult.data)
-                userData = await captureUserData(confirmedResult.data.session.access_token)
+                if (confirmedResult.data) {
+                    setMessages([...messages, { message: "Welcome to FlyRep" }])
+                    setUser(confirmedResult.data)
+                    userData = await captureUserData(confirmedResult.data.session.access_token)
 
-                if (userData.errors) {
-                    setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
-                    let retry = window.confirm("There was an error while initializing your session - retry?")
+                    if (userData.errors) {
+                        setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
+                        let retry = window.confirm("There was an error while initializing your session - retry?")
 
-                    while (retry) {
-                        retry = false
-                        userData = await captureUserData(confirmedResult.data.session.access_token)
+                        while (retry) {
+                            retry = false
+                            userData = await captureUserData(confirmedResult.data.session.access_token)
 
-                        if (userData.errors) {
-                            retry = window.confirm("There was an error while initializing your session - retry?")
+                            if (userData.errors) {
+                                retry = window.confirm("There was an error while initializing your session - retry?")
+                            }
                         }
                     }
                 }
@@ -70,36 +72,30 @@ export const FlightPathProvider = () => {
                     setErrors(current => [...current, { message: confirmedResult.error!, time: Date.now() }])
                     localStorage.removeItem(sessionStorageKey)
                 }
-            }
+            } else if (localStorage.getItem(sessionStorageKey)) {
+                const initializeResult = await capture(() => fetchInitializeUser())
 
-            if (!confirmedResult.data) {
-                const session = localStorage.getItem(sessionStorageKey)
+                if (initializeResult.data) {
+                    setUser(initializeResult.data)
+                    userData = await captureUserData(initializeResult.data.session.access_token)
 
-                if (session && !confirmedResult.data) {
-                    const initializeResult = await capture(() => fetchInitializeUser())
+                    if (userData.errors) {
+                        setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
+                        let retry = window.confirm("There was an error while initializing your session - retry?")
 
-                    if (initializeResult.data) {
-                        setUser(initializeResult.data)
-                        userData = await captureUserData(initializeResult.data.session.access_token)
+                        while (retry) {
+                            retry = false
+                            userData = await captureUserData(initializeResult.data.session.access_token)
 
-                        if (userData.errors) {
-                            setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
-                            let retry = window.confirm("There was an error while initializing your session - retry?")
-
-                            while (retry) {
-                                retry = false
-                                userData = await captureUserData(initializeResult.data.session.access_token)
-
-                                if (userData.errors) {
-                                    retry = window.confirm("There was an error while initializing your session - retry?")
-                                }
+                            if (userData.errors) {
+                                retry = window.confirm("There was an error while initializing your session - retry?")
                             }
                         }
                     }
-                    if (initializeResult.error) {
-                        setErrors(current => [...current, { message: initializeResult.error!, time: Date.now() }])
-                        localStorage.removeItem(sessionStorageKey)
-                    }
+                }
+                if (initializeResult.error) {
+                    setErrors(current => [...current, { message: initializeResult.error!, time: Date.now() }])
+                    localStorage.removeItem(sessionStorageKey)
                 }
             }
 
