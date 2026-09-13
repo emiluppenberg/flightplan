@@ -443,9 +443,23 @@ export const FlightPathProvider = () => {
 
             if (signInResult.data) {
                 setUser(signInResult.data)
+                let userData = await captureUserData(signInResult.data.session.access_token)
 
-                const userData = await captureUserData(signInResult.data!.session.access_token)
+                if (userData.errors) {
+                    setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
+                    let retry = window.confirm("There was an error while initializing your session - retry?")
 
+                    while (retry) {
+                        retry = false
+                        userData = await captureUserData(signInResult.data.session.access_token)
+
+                        if (userData.errors) {
+                            retry = window.confirm("There was an error while initializing your session - retry?")
+                        }
+                    }
+                }
+
+                hasAerodromes.current = userData.aerodromes.length > 0
                 setAerodromes([...userData.aerodromes, createAerodrome(searchAerodromeId)])
                 setHighlightsTAF([...userData.highlightsTaf])
                 setHighlightsMETAR([...userData.highlightsMetar])
@@ -501,10 +515,10 @@ export const FlightPathProvider = () => {
                         const upsertResult = await capture(() => fetchUpsertConfig(body))
 
                         if (upsertResult.error) {
-                            setErrors(current => [...current, upsertResult.error!])
-                            const retry = window.confirm("Failed to update your latest configurations - retry?")
+                            setErrors(current => [...current, { message: upsertResult.error!, time: Date.now() }])
+                            const retryUpsert = window.confirm("There was an error while updating your latest configurations - retry?")
 
-                            if (retry) {
+                            if (retryUpsert) {
                                 setIsLoading(false)
                                 handleSignOut()
                                 return

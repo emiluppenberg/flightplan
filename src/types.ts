@@ -13,7 +13,7 @@ export interface UserAppData {
   highlightsNotam: CodeHighlight[]
   highlightsOperationalHours: CodeHighlight[]
   queryMetarPreviousHours: number
-  errors: string[]
+  errors?: string[] | undefined
 }
 
 export interface SupabaseAerodrome {

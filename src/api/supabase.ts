@@ -260,6 +260,7 @@ export const fetchRefreshedUserAccessToken = async () => {
   const expiresAtSeconds = (JSON.parse(session) as Session).expires_at
 
   if (!expiresAtSeconds) {
+    localStorage.removeItem(sessionStorageKey)
     throw new Error("Session is missing value: expires_at")
   }
 
