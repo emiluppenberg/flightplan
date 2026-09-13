@@ -6,8 +6,10 @@ const Messages = () => {
     return (
         <div>
             {context.messages.map((message, index) => (
-                <div className="message-row">
-                    <p className="message">{message}</p>
+                <div
+                    key={`message-${index}`}
+                    className="message-row">
+                    <p className="message">{message.message}</p>
                     <button
                         type="button"
                         onClick={() => context.handleDiscardMessage(index)}>
@@ -16,8 +18,10 @@ const Messages = () => {
                 </div>
             ))}
             {context.errors.map((error, index) => (
-                <div className="message-row">
-                    <p className="message warning">{error}</p>
+                <div
+                    key={`error-${index}`}
+                    className="message-row">
+                    <p className="message warning">{error.message}{error.time && (" - " + new Date(error.time).toLocaleTimeString("sv-SE"))}</p>
                     <button
                         type="button"
                         onClick={() => context.handleDiscardError(index)}>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { type AerodromeData, type AerodromeFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type SupabaseAerodrome, type UserAppData, type UserFormValues } from "./types";
+import { type AerodromeData, type AerodromeFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type Message, type SupabaseAerodrome, type UserAppData, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
 import { createAerodrome, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors, mapUpsertConfigBody, defaultQueryMetarPreviousHours, captureUserData } from "./utilities";
 import { fetchInitializeUser, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUserAccessToken, fetchSignOutUser, fetchUpsertConfig } from "./api/supabase";
@@ -15,8 +15,8 @@ export const FlightPathProvider = () => {
     const [highlightsNOTAM, setHighlightsNOTAM] = useState<CodeHighlight[]>([])
     const [queryMetarPreviousHours, setQueryMetarPreviousHours] = useState<number>(defaultQueryMetarPreviousHours)
     const [isLoading, setIsLoading] = useState(false)
-    const [messages, setMessages] = useState<string[]>([])
-    const [errors, setErrors] = useState<string[]>([])
+    const [messages, setMessages] = useState<Message[]>([])
+    const [errors, setErrors] = useState<Message[]>([])
     const [user, setUser] = useState<AppUser>()
     const [initialized, setInitialized] = useState(false)
     const navigate = useNavigate()
@@ -56,7 +56,7 @@ export const FlightPathProvider = () => {
                     userData = await captureUserData(confirmedResult.data.session.access_token)
                 }
                 if (confirmedResult.error) {
-                    setErrors(current => [...current, confirmedResult.error!])
+                    setErrors(current => [...current, { message: confirmedResult.error!, time: Date.now() }])
                     localStorage.removeItem(sessionStorageKey)
                 }
 
@@ -70,7 +70,7 @@ export const FlightPathProvider = () => {
                         userData = await captureUserData(initializeResult.data.session.access_token)
                     }
                     if (initializeResult.error) {
-                        setErrors(current => [...current, initializeResult.error!])
+                        setErrors(current => [...current, { message: initializeResult.error!, time: Date.now() }])
                         localStorage.removeItem(sessionStorageKey)
                     }
                 }
@@ -181,7 +181,7 @@ export const FlightPathProvider = () => {
                 }
             }))
         } catch (e) {
-            setErrors(current => [...current, e instanceof Error ? e.message : `There was an unexpected error while fetch data for ${aerodrome.formValues.icaoId}`])
+            setErrors(current => [...current, { message: e instanceof Error ? e.message : `There was an unexpected error while fetch data for ${aerodrome.formValues.icaoId}`, time: Date.now() }])
             setAerodromes(current => current.map((currentAerodrome) => (
                 currentAerodrome.id === aerodrome.id
                     ? { ...currentAerodrome, isLoading: false }
@@ -209,7 +209,10 @@ export const FlightPathProvider = () => {
                 setUser(refreshResult.data.refreshedUser)
             }
             if (refreshResult.error) {
-                setErrors(current => [...current, refreshResult.error!])
+                setErrors(current => [
+                    ...current.filter(currentError => currentError.message !== refreshResult.error),
+                    { message: refreshResult.error!, time: Date.now() }
+                ])
             }
 
             for (const aerodrome of aerodromes) {
@@ -236,7 +239,7 @@ export const FlightPathProvider = () => {
                         refreshResult.data?.accessToken))
 
                     if (bodyResult.error) {
-                        setErrors(current => [...current, bodyResult.error!])
+                        setErrors(current => [...current, { message: bodyResult.error!, time: Date.now() }])
                     }
 
                     const body = bodyResult.data
@@ -245,7 +248,10 @@ export const FlightPathProvider = () => {
                         const upsert = await capture(() => fetchUpsertConfig(body))
 
                         if (upsert.error) {
-                            setErrors(current => [...current, upsert.error!])
+                            setErrors(current => [
+                                ...current.filter(currentError => currentError.message !== upsert.error),
+                                { message: upsert.error!, time: Date.now() }
+                            ])
                         } else {
                             upsertConfig.current = false
                         }
@@ -290,7 +296,7 @@ export const FlightPathProvider = () => {
         }
     }
 
-    const handleSetQueryMetarPreviousHours = async (newValue: number) => {
+    const handleSetQueryMetarPreviousHours = (newValue: number) => {
         setQueryMetarPreviousHours(newValue)
 
         if (user) {
@@ -334,7 +340,7 @@ export const FlightPathProvider = () => {
                     nextPollSNOWTAM: nextPollSNOWTAM
                 })
             } catch (e) {
-                setErrors(current => [...current, e instanceof Error ? e.message : "There was an unexpected error while saving aerodrome"])
+                setErrors(current => [...current, { message: e instanceof Error ? e.message : "There was an unexpected error while saving aerodrome", time: Date.now() }])
             } finally {
                 setIsLoading(false)
             }
@@ -390,7 +396,7 @@ export const FlightPathProvider = () => {
                     icaoId: icaoId
                 })
             } catch (e) {
-                setErrors(current => [...current, e instanceof Error ? e.message : "There was an unexpected error while deleting aerodrome"])
+                setErrors(current => [...current, { message: e instanceof Error ? e.message : "There was an unexpected error while deleting aerodrome", time: Date.now() }])
             } finally {
                 setIsLoading(false)
             }
@@ -420,8 +426,10 @@ export const FlightPathProvider = () => {
                 setHighlightsNOTAM([...userData.highlightsNotam])
                 setHighlightsOPERATIONAL_HOURS([...userData.highlightsOperationalHours])
                 setQueryMetarPreviousHours(userData.queryMetarPreviousHours)
-                setErrors(current => [...current, ...userData.errors])
-                hasAerodromes.current = userData.aerodromes.length > 0
+
+                if (userData.errors) {
+                    setErrors(current => [...current, ...userData.errors!.map(message => ({ message, time: Date.now() }))])
+                }
 
                 if (!hasAerodromes.current) {
                     navigate(`/${ROUTES.search}`)
@@ -430,7 +438,7 @@ export const FlightPathProvider = () => {
                 }
             }
         } catch (e) {
-            setErrors(current => [...current, e instanceof Error ? e.message : "There was an unexpected error while signing in"])
+            setErrors(current => [...current, { message: e instanceof Error ? e.message : "There was an unexpected error while signing in", time: Date.now() }])
         } finally {
             setIsLoading(false)
         }
@@ -443,7 +451,7 @@ export const FlightPathProvider = () => {
         const refreshUserResult = await capture(() => fetchRefreshedUserAccessToken())
 
         if (refreshUserResult.error) {
-            setErrors(current => [...current, refreshUserResult.error!])
+            setErrors(current => [...current, { message: refreshUserResult.error!, time: Date.now() }])
         }
         if (refreshUserResult.data) {
             if (upsertConfig.current || upsertConfigQueued.current) {
@@ -457,7 +465,7 @@ export const FlightPathProvider = () => {
                 ))
 
                 if (bodyResult.error) {
-                    setErrors(current => [...current, bodyResult.error!])
+                    setErrors(current => [...current, { message: bodyResult.error!, time: Date.now() }])
                 }
 
                 const body = bodyResult.data
@@ -487,22 +495,21 @@ export const FlightPathProvider = () => {
             const signOutResult = await capture(() => fetchSignOutUser({ accessToken: refreshUserResult.data!.accessToken }))
 
             if (signOutResult.error) {
-                setErrors(current => [...current, signOutResult.error!])
-            }
-            if (!signOutResult.error) {
-                setIsLoading(false)
-                setUser(undefined)
-                setAerodromes([createAerodrome(searchAerodromeId)])
-                setHighlightsTAF([])
-                setHighlightsMETAR([])
-                setHighlightsNOTAM([])
-                setHighlightsOPERATIONAL_HOURS([])
-                setQueryMetarPreviousHours(defaultQueryMetarPreviousHours)
-                upsertConfigQueued.current = false
-                upsertConfig.current = false
-                localStorage.removeItem(sessionStorageKey)
+                setErrors(current => [...current, { message: signOutResult.error!, time: Date.now() }])
             }
         }
+
+        setIsLoading(false)
+        setUser(undefined)
+        setAerodromes([createAerodrome(searchAerodromeId)])
+        setHighlightsTAF([])
+        setHighlightsMETAR([])
+        setHighlightsNOTAM([])
+        setHighlightsOPERATIONAL_HOURS([])
+        setQueryMetarPreviousHours(defaultQueryMetarPreviousHours)
+        upsertConfigQueued.current = false
+        upsertConfig.current = false
+        localStorage.removeItem(sessionStorageKey)
     }
 
     const handleSignUp = async (values: UserFormValues) => {
@@ -510,10 +517,10 @@ export const FlightPathProvider = () => {
 
         try {
             const responseMessage = await fetchSignUpUser({ ...values });
-            setMessages([...messages, responseMessage])
+            setMessages([...messages, { message: responseMessage }])
             navigate("/")
         } catch (e) {
-            setErrors(current => [...current, e instanceof Error ? e.message : "There was an unexpected error while signing up"])
+            setErrors(current => [...current, { message: e instanceof Error ? e.message : "There was an unexpected error while signing up", time: Date.now() }])
         } finally {
             setIsLoading(false)
         }

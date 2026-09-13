@@ -5,6 +5,16 @@ import HighlightsField from "./HighlightsField"
 const Config = () => {
     const context = useFlightPathContext()
 
+    const handleChangeQueryMetarPreviousHours = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = Number(e.target.value)
+
+        if (newValue >= 0) {
+            if (newValue <= 720) {
+                context.handleSetQueryMetarPreviousHours(newValue)
+            }
+        }
+    }
+
     return (
         <div className="form">
             <div className="form-row highlights-row">
@@ -35,8 +45,10 @@ const Config = () => {
                         Query METAR previous hours
                         <input
                             type="number"
+                            min={0}
+                            max={720}
                             value={context.queryMetarPreviousHours}
-                            onChange={async (e) => await context.handleSetQueryMetarPreviousHours(Number(e.target.value))} />
+                            onChange={(e) => handleChangeQueryMetarPreviousHours(e)} />
                     </label>
                 </fieldset>
             </div>

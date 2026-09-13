@@ -1,5 +1,11 @@
 import type { Session, User } from "@supabase/supabase-js";
 
+export interface Message {
+  message: string
+  status?: number
+  time?: number
+}
+
 export interface UserAppData {
   aerodromes: AerodromeData[]
   highlightsTaf: CodeHighlight[]

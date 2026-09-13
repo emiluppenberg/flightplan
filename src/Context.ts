@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { AerodromeData, AerodromeFormValues, AppUser, CodeHighlight, CodeHighlightReport, UserFormValues } from "./types"
+import type { AerodromeData, AerodromeFormValues, AppUser, CodeHighlight, CodeHighlightReport, Message, UserFormValues } from "./types"
 
 export type FlightPathState = {
     aerodromes: AerodromeData[];
@@ -11,7 +11,7 @@ export type FlightPathState = {
     handleSubmit: (aerodrome: AerodromeData, fetchNotam: boolean) => void;
     handleSetFormValues: (newValues: AerodromeFormValues, id: string) => void;
     handleSetHighlights: (newHighlights: CodeHighlight[], report: CodeHighlightReport) => Promise<void>;
-    handleSetQueryMetarPreviousHours: (newValue: number) => Promise<void>;
+    handleSetQueryMetarPreviousHours: (newValue: number) => void;
     handleAddAerodrome: (icaoId: string | null) => void;
     handleDeleteAerodrome: (id: string) => void;
     handleSignIn: (values: UserFormValues) => Promise<void>;
@@ -20,8 +20,8 @@ export type FlightPathState = {
     handleDiscardMessage: (index: number) => void;
     handleDiscardError: (index: number) => void;
     isLoading: boolean;
-    messages: string[];
-    errors: string[];
+    messages: Message[];
+    errors: Message[];
     user: AppUser | undefined;
 }
 
