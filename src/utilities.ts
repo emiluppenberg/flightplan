@@ -78,18 +78,20 @@ export const captureUserData = async (accessToken: string): Promise<UserAppData>
     capture(() => fetchSelectConfig({ accessToken: accessToken }))
   ])
 
-  const [aerodromes, config] = [aerodromesResult.data, configResult.data]
-  const refreshResult = aerodromes && config && await capture(() => refreshAerodromes(aerodromes, config.query_metar_previous_hours))
+  const refreshResult = await capture(() => refreshAerodromes(aerodromesResult.data ?? [], configResult.data?.query_metar_previous_hours ?? defaultQueryMetarPreviousHours))
+  const [aerodromesError, configError] = [aerodromesResult.error, configResult.error]
 
-  if (refreshResult?.data) {
-    if (config) {
-      return {
-        aerodromes: refreshResult.data,
-        highlightsTaf: resolveHighlights(config.highlights_taf, HIGHLIGHTS_TAF_METAR),
-        highlightsMetar: resolveHighlights(config.highlights_metar, HIGHLIGHTS_TAF_METAR),
-        highlightsNotam: resolveHighlights(config.highlights_notam, HIGHLIGHTS_NOTAM),
-        highlightsOperationalHours: resolveHighlights(config.highlights_operational_hours, HIGHLIGHTS_OPERATIONAL_HOURS),
-        queryMetarPreviousHours: config.query_metar_previous_hours,
+  if (!aerodromesError) {
+    if (!configError) {
+      if (refreshResult?.data) {
+        return {
+          aerodromes: refreshResult.data,
+          highlightsTaf: resolveHighlights(configResult.data?.highlights_taf ?? [], HIGHLIGHTS_TAF_METAR),
+          highlightsMetar: resolveHighlights(configResult.data?.highlights_metar ?? [], HIGHLIGHTS_TAF_METAR),
+          highlightsNotam: resolveHighlights(configResult.data?.highlights_notam ?? [], HIGHLIGHTS_NOTAM),
+          highlightsOperationalHours: resolveHighlights(configResult.data?.highlights_operational_hours ?? [], HIGHLIGHTS_OPERATIONAL_HOURS),
+          queryMetarPreviousHours: configResult.data?.query_metar_previous_hours ?? defaultQueryMetarPreviousHours,
+        }
       }
     }
   }
