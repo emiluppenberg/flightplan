@@ -141,21 +141,22 @@ export const fetchSelectSNOWTAM = async (aerodromeSupabaseId: string): Promise<E
       "Content-Type": "application/json"
     }
   })
-
+  
   if (!response.ok) {
     throw new Error(await response.text())
   }
-
+  
   return await response.json()
 }
 
-export const fetchUpsertConfig = async (body: UpsertConfigBody) => {
+export const fetchUpsertConfig = async (body: UpsertConfigBody, keepalive = false) => {
   const response = await fetch(`${PATH_UPSERT_CONFIG}`, {
     method: "POST",
     body: JSON.stringify(body),
     headers: {
       "Content-Type": "application/json"
-    }
+    },
+    keepalive: keepalive
   })
 
   if (!response.ok) {

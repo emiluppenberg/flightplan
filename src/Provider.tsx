@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type AerodromeData, type AerodromeFormValues, type AppUser, type CodeHighlight, type CodeHighlightReport, type Message, type SupabaseAerodrome, type UserAppData, type UserFormValues } from "./types";
 import { FlightPathContext } from "./Context";
-import { createAerodrome, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors, mapUpsertConfigBody, defaultQueryMetarPreviousHours, captureUserData, isConfirmationLink } from "./utilities";
+import { createAerodrome, searchAerodromeId, capture, captureSyncSNOWTAM, consumeSupabaseConfirmationLink, sessionStorageKey, ROUTES, getReportError, mergeErrors, mapUpsertConfigBody, defaultQueryMetarPreviousHours, captureUserData, isConfirmationLink, getAccessToken } from "./utilities";
 import { fetchInitializeUser, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUserAccessToken, fetchSignOutUser, fetchUpsertConfig } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
 import { Outlet, useLocation, useNavigate } from "react-router";
+import type { UpsertConfigBody } from "./shared";
 
 export const FlightPathProvider = () => {
     const [aerodromes, setAerodromes] = useState<AerodromeData[]>([createAerodrome(searchAerodromeId)])
@@ -38,6 +39,59 @@ export const FlightPathProvider = () => {
     useEffect(() => {
         isUser.current = user !== undefined
     }, [user])
+
+    const flushUpsert = useCallback(async () => {
+        if (!isUser.current) return
+        if (!upsertConfig.current && !upsertConfigQueued.current) return
+
+        upsertConfig.current = false
+        upsertConfigQueued.current = false
+
+        const configResult = await capture(async () => {
+            const configBody: UpsertConfigBody = {
+                accessToken: getAccessToken(),
+                highlightsTaf: highlightsTAF.map(highlight => highlight.class),
+                highlightsMetar: highlightsMETAR.map(highlight => highlight.class),
+                highlightsNotam: highlightsNOTAM.map(highlight => highlight.class),
+                highlightsOperationalHours:
+                    highlightsOPERATIONAL_HOURS.map(highlight => highlight.class),
+                queryMetarPreviousHours,
+                updatedAt: Date.now(),
+            }
+
+            await fetchUpsertConfig(configBody, true)
+        })
+
+        if (configResult.error) {
+            upsertConfig.current = true
+            
+            setErrors(current => [
+                ...current,
+                { message: configResult.error!, time: Date.now() },
+            ])
+        } else {
+        }
+    }, [highlightsTAF, highlightsMETAR, highlightsNOTAM, highlightsOPERATIONAL_HOURS, queryMetarPreviousHours])
+
+    useEffect(() => {
+        const flushOnHidden = () => {
+            if (document.visibilityState === "hidden") {
+                void flushUpsert()
+            }
+        }
+
+        const flushOnPageHide = () => {
+            void flushUpsert()
+        }
+
+        document.addEventListener("visibilitychange", flushOnHidden)
+        window.addEventListener("pagehide", flushOnPageHide)
+
+        return () => {
+            document.removeEventListener("visibilitychange", flushOnHidden)
+            window.removeEventListener("pagehide", flushOnPageHide)
+        }
+    }, [flushUpsert])
 
     useEffect(() => {
         if (initialized) return;
