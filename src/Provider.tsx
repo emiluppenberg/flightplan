@@ -64,12 +64,11 @@ export const FlightPathProvider = () => {
 
         if (configResult.error) {
             upsertConfig.current = true
-            
+
             setErrors(current => [
                 ...current,
                 { message: configResult.error!, time: Date.now() },
             ])
-        } else {
         }
     }, [highlightsTAF, highlightsMETAR, highlightsNOTAM, highlightsOPERATIONAL_HOURS, queryMetarPreviousHours])
 
