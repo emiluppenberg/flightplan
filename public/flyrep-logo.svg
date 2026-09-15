@@ -25,6 +25,6 @@
     </g>
   </svg><!-- Stylized wordmark -->
   <g filter="url(#softShadow)">
-    <text x="450" y="200" text-anchor="middle" fill="#1d4ed8" font-family="Trebuchet MS, Verdana, Arial, sans-serif" font-size="86" font-weight="800" letter-spacing="-3">flygväder</text>
+    <text x="450" y="200" text-anchor="middle" fill="#1d4ed8" font-family="Trebuchet MS, Verdana, Arial, sans-serif" font-size="86" font-weight="800" letter-spacing="-3">FlyRep</text>
   </g>
 </svg>
