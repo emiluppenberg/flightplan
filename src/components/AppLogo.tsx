@@ -6,7 +6,7 @@ const AppLogo = () => {
 
     return <img
         src={SVG_URLS.logo}
-        alt="Flygvader"
+        alt="FlyRep"
         width="100"
         className={context.isLoading ? "loading" : ""}
     />

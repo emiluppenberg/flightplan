@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="260 35 380 185" role="img" aria-labelledby="title desc">
-  <title id="title">planeraflyg route logo</title>
-  <desc id="desc">Stylized flygväder text with a rising sun and a distant airplane silhouette behind the wordmark.</desc>
+  <title id="title">FlyRep</title>
+  <desc id="desc">Stylized FlyRep text with a rising sun and a distant airplane silhouette behind the wordmark.</desc>
   <defs>
     <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#14b8a6"/>
