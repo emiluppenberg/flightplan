@@ -5,7 +5,7 @@ import { fetchTAF, fetchMETAR, fetchNOTAM, fetchSNOWTAM, POLL_INTERVAL_SNOWTAM, 
 import type { UpsertConfigBody } from "./shared";
 
 export const SVG_URLS = {
-  logo: '/flygvader-logo.svg',
+  logo: '/flyrep-logo.svg',
   highlight: '/ui/underline-text-editor-svgrepo-com.svg',
   search: '/ui/browse-svgrepo-com.svg',
   close: '/ui/close-lg-svgrepo-com.svg',

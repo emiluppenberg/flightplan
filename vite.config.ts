@@ -30,8 +30,8 @@ export default defineConfig({
       },
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "maskable-icon.png", "pwa-64.png", "pwa-192.png", "pwa-512.png"],
       manifest: {
-        name: "Flygväder",
-        short_name: "Flygväder",
+        name: "FlyRep",
+        short_name: "FlyRep",
         description: "For efficient reading of flight reports",
         background_color: "#090913",
         theme_color: "#090913",
