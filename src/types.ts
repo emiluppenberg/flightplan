@@ -149,14 +149,14 @@ export interface LocationResource {
   name: string;
   display_name: string;
   address: {
-    road: string;
-    village: string;
-    municipality: string;
-    county: string;
-    "ISO3166-2-lvl4": string;
-    postcode: string;
-    country: string;
-    country_code: string;
+    [key: `ISO3166-2-lvl${number}`]: string | undefined;
+    road?: string;
+    village?: string;
+    municipality?: string;
+    county?: string;
+    postcode?: string;
+    country?: string;
+    country_code?: string;
   };
   boundingbox: string[];
 }

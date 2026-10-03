@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useFlightPathContext } from "../Context"
 import { type RegionsResourceResponse, type AerodromeFormValues, type AerodromesResourceResponse } from "../types"
-import { searchAerodromeId } from "../utilities"
+import { parseLocationRegionIds, searchAerodromeId } from "../utilities"
 import Expand from "./Expand"
 import AerodromeRender from "./AerodromeRender"
 import { fetchAerodromesName, fetchPage, fetchAerodromeIcaoId, fetchRegionsName, fetchAerodromesRegionId, fetchLocation } from "../api/resources"
@@ -225,15 +225,28 @@ const AerodromeSearchForm = () => {
     useEffect(() => {
         if (initialized) return
 
-        const searchId = ++globalSearchId.current
-        navigator.geolocation.getCurrentPosition(async (data) => {
-            const location = await fetchLocation(data.coords)
 
-            if (searchId < globalSearchId.current) return
-            if (await handleSelectRegion(location.address["ISO3166-2-lvl4"])) {
-                setSearchOpen(true)
+        const searchId = ++globalSearchId.current
+
+        navigator.geolocation.getCurrentPosition(async (data) => {
+            try {
+                setError("")
+                const location = await fetchLocation(data.coords)
+
+                if (searchId < globalSearchId.current) return
+
+                const regionIds = parseLocationRegionIds(location)
+
+                for (const regionId of regionIds) {
+                    if (await handleSelectRegion(regionId)) {
+                        setSearchOpen(true)
+                        break
+                    }
+                }
+            } catch (error) {
+                setError(error instanceof Error ? error.message : "There was an unexpected error while reverse-geocoding your position")
             }
-        })
+        }, (error) => setError(`There was an error while retrieving your device's location: ${error.message} ${error.code} `))
 
         setInitialized(true)
     }, [initialized])
