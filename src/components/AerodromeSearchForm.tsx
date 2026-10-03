@@ -181,10 +181,11 @@ const AerodromeSearchForm = () => {
             if (searchId < globalSearchId.current) return
             setRegionAerodromeResponse(resourceResponse)
             setSearchType("region aerodromes")
-
+            return true
         } catch (error) {
             setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for ICAO: ${regionId}`)
         }
+        return false
     }
 
     const handleSubmit = async () => {
@@ -220,10 +221,14 @@ const AerodromeSearchForm = () => {
     useEffect(() => {
         if (initialized) return
 
+        const searchId = ++globalSearchId.current
         navigator.geolocation.getCurrentPosition(async (data) => {
             const location = await fetchLocation(data.coords)
-            handleSelectRegion(location.address["ISO3166-2-lvl4"])
-                .then(() => setSearchOpen(true))
+
+            if (searchId < globalSearchId.current) return
+            if (await handleSelectRegion(location.address["ISO3166-2-lvl4"])) {
+                setSearchOpen(true)
+            }
         })
 
         setInitialized(true)
