@@ -175,3 +175,20 @@ export const fetchRegionsName = async (name: string): Promise<RegionsResourceRes
 
   return await response.json()
 }
+
+export const fetchLocation = async (coordinates: GeolocationCoordinates): Promise<LocationResource> => {
+  const params = new URLSearchParams({
+    format: "json",
+    lat: String(coordinates.latitude),
+    lon: String(coordinates.longitude),
+    zoom: "18"
+  })
+
+  const response = await fetch(`${PATH_LOCATION}?${params}`)
+
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+
+  return await response.json()
+}

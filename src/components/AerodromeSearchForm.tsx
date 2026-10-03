@@ -219,6 +219,19 @@ const AerodromeSearchForm = () => {
 
     const hasSearched = searchAerodrome && searchAerodrome.icaoId
 
+    const [initialized, setInitialized] = useState(false)
+    useEffect(() => {
+        if (initialized) return
+
+        navigator.geolocation.getCurrentPosition(async (data) => {
+            const location = await fetchLocation(data.coords)
+            handleSelectRegion(location.address["ISO3166-2-lvl4"])
+                .then(() => setSearchOpen(true))
+        })
+
+        setInitialized(true)
+    }, [initialized])
+
     return (
         <FormProvider {...form}>
             <form onSubmit={formSubmit(handleSubmit)}>
