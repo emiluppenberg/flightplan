@@ -1,5 +1,5 @@
 import type { Session } from "@supabase/supabase-js"
-import { type AerodromeFormValues, type AerodromeData, HIGHLIGHTS_TAF_METAR, type EntryNOTAM, type FetchResult, type SupabaseAerodrome, type CodeHighlight, type AppUser, type EntrySNOWTAM, HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, type UserAppData } from "./types"
+import { type AerodromeFormValues, type AerodromeData, HIGHLIGHTS_TAF_METAR, type EntryNOTAM, type FetchResult, type SupabaseAerodrome, type CodeHighlight, type AppUser, type EntrySNOWTAM, HIGHLIGHTS_NOTAM, HIGHLIGHTS_OPERATIONAL_HOURS, type UserAppData, type LocationResource } from "./types"
 import { fetchDeleteSNOWTAM, fetchInitializeUser, fetchRefreshedUserAccessToken, fetchSelectAllAerodromes, fetchSelectConfig, fetchSelectSNOWTAM, fetchUpdateAerodromeNextPollSNOWTAM, fetchUpsertSNOWTAM } from "./api/supabase"
 import { fetchTAF, fetchMETAR, fetchNOTAM, fetchSNOWTAM, POLL_INTERVAL_SNOWTAM, POLL_INTERVAL_TAF_METAR_NOTAM } from "./api/resources";
 import type { UpsertConfigBody } from "./shared";
@@ -392,4 +392,18 @@ export const mapUpsertConfigBody = async (
     highlightsOperationalHours: highlightsOperationalHours.map(highlight => highlight.class),
     updatedAt: Date.now()
   }
+}
+
+export const parseLocationRegionIds = (location: LocationResource): string[] => {
+  return Object.entries(location.address)
+    .filter((entry): entry is [string, string] => {
+      const [key, value] = entry
+
+      return (
+        /^ISO3166-2-lvl\d+$/.test(key) &&
+        typeof value === "string"
+      )
+    })
+    .sort(([a], [b]) => Number(a.match(/\d+$/)![0]) - Number(b.match(/\d+$/)![0]))
+    .map(([_, regionId]) => regionId)
 }

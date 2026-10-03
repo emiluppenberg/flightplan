@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, type Dispatch, type SetStateAction } from "react";
 import type { AerodromeData, AerodromeFormValues, AppUser, CodeHighlight, CodeHighlightReport, Message, UserFormValues } from "./types"
 
 export type FlightPathState = {
@@ -19,6 +19,7 @@ export type FlightPathState = {
     handleSignUp: (values: UserFormValues) => Promise<void>;
     handleDiscardMessage: (index: number) => void;
     handleDiscardError: (index: number) => void;
+    setIsLoading: Dispatch<SetStateAction<boolean>>
     isLoading: boolean;
     messages: Message[];
     errors: Message[];

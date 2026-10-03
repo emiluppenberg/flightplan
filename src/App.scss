@@ -480,6 +480,14 @@ h2 {
       display: flex;
       border-radius: 0;
 
+      &.search-header-buttons {
+        flex-direction: column;
+
+        form > input {
+          width: 100%;
+        }
+      }
+
       .aerodrome-header-icao {
         font: inherit;
         padding: 0.5rem;
