@@ -482,6 +482,10 @@ h2 {
 
       &.search-header-buttons {
         flex-direction: column;
+
+        form > input {
+          width: 100%;
+        }
       }
 
       .aerodrome-header-icao {

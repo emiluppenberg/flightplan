@@ -14,7 +14,7 @@ const AerodromeSearchForm = () => {
     const form = useForm<AerodromeFormValues>({
         defaultValues: searchAerodrome?.formValues
     })
-    const { register, getValues, setValue, handleSubmit: formSubmit } = form;
+    const { getValues, setValue, handleSubmit: formSubmit } = form;
 
     const [error, setError] = useState("")
     const [searchOpen, setSearchOpen] = useState(false)
@@ -171,7 +171,7 @@ const AerodromeSearchForm = () => {
             context.handleSetFormValues(values, searchAerodromeId);
             context.handleSubmit({ ...searchAerodrome, formValues: values }, true);
         } catch (error) {
-            setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for ICAO: ${id}`)
+            setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for code: ${id}`)
         }
     }
 
@@ -187,7 +187,7 @@ const AerodromeSearchForm = () => {
             setSearchType("region aerodromes")
             return true
         } catch (error) {
-            setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for ICAO: ${regionId}`)
+            setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for code: ${regionId}`)
         }
         return false
     }
@@ -211,7 +211,7 @@ const AerodromeSearchForm = () => {
                 context.handleSubmit({ ...searchAerodrome, formValues: values }, true);
             }
         } catch (error) {
-            setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for ICAO: ${searchAerodrome?.formValues.icaoId}`)
+            setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for code: ${searchAerodrome?.formValues.icaoId}`)
         }
     }
 
@@ -250,235 +250,242 @@ const AerodromeSearchForm = () => {
         , [aerodromeTypeFilters, regionAerodromeResponse])
 
     return (
-        <FormProvider {...form}>
-            <form onSubmit={formSubmit(handleSubmit)}>
-                <div className="aerodrome-render-container">
-                    <div className="aerodrome-header-container">
-                        {!aerodromeTypeFiltersOpen && (
-                            <button
-                                type="button"
-                                onClick={() => setAerodromeTypeFiltersOpen(true)}
-                            >Filter aerodrome types</button>
-                        )}
-                        <Expand
-                            isOpen={aerodromeTypeFiltersOpen}
-                            rows={1}>
-                            <AerodromeTypeFiltersField
-                                aerodromeTypeFilters={aerodromeTypeFilters}
-                                aerodromeTypeFiltersRef={aerodromeTypeFiltersRef}
-                                onClose={() => setAerodromeTypeFiltersOpen(false)}
-                                onChecked={(checked, value) => setAerodromeTypeFilters(filters => checked
-                                    ? [...filters, value]
-                                    : filters.filter(filter => filter !== value)
-                                )} />
-                        </Expand>
-                        {searchAerodrome && (
-                            <div className="aerodrome-header-buttons search-header-buttons">
+        <div className="aerodrome-render-container">
+            <div className="aerodrome-header-container">
+                {!aerodromeTypeFiltersOpen && (
+                    <button
+                        type="button"
+                        onClick={() => setAerodromeTypeFiltersOpen(true)}
+                    >Filter aerodrome types</button>
+                )}
+                <Expand
+                    isOpen={aerodromeTypeFiltersOpen}
+                    rows={1}>
+                    <AerodromeTypeFiltersField
+                        aerodromeTypeFilters={aerodromeTypeFilters}
+                        aerodromeTypeFiltersRef={aerodromeTypeFiltersRef}
+                        onClose={() => setAerodromeTypeFiltersOpen(false)}
+                        onChecked={(checked, value) => setAerodromeTypeFilters(filters => checked
+                            ? [...filters, value]
+                            : filters.filter(filter => filter !== value)
+                        )} />
+                </Expand>
+                {searchAerodrome && (
+                    <div className="aerodrome-header-buttons search-header-buttons">
+                        <FormProvider {...form}>
+                            <form onSubmit={formSubmit(handleSubmit)}>
                                 <input
                                     ref={searchAerodromeCodeRef}
                                     type="text"
                                     className="input-search"
                                     placeholder="Search aerodrome by code"
                                     value={searchAerodrome.formValues.icaoId}
-                                    {...register("icaoId", {
-                                        required: true,
-                                        setValueAs: (value: string) => value.trim().toUpperCase(),
-                                        onChange: () => context.handleSetFormValues(getValues(), searchAerodromeId)
-                                    })} />
-                                <input
-                                    ref={searchAerodromeNameRef}
-                                    type="text"
-                                    className="input-search"
-                                    placeholder="Search aerodromes by name"
-                                    value={aerodromeNameParam}
                                     onChange={(e) => {
-                                        ++globalSearchId.current
-                                        setSearchType("aerodrome")
-                                        setAerodromeNameParam(e.target.value)
-                                    }}
-                                    onFocus={async () => {
-                                        ++globalSearchId.current
-                                        setSearchType("aerodrome")
-                                        setSearchOpen(true)
-                                    }} />
-                                <input
-                                    ref={searchRegionNameRef}
-                                    type="text"
-                                    className="input-search"
-                                    placeholder="Search aerodromes by region"
-                                    value={regionNameParam}
-                                    onChange={(e) => {
-                                        ++globalSearchId.current
-                                        setSearchType("region")
-                                        setRegionAerodromeResponse(undefined)
-                                        setRegionNameParam(e.target.value)
-                                    }}
-                                    onFocus={async () => {
-                                        ++globalSearchId.current
-                                        if (regionAerodromeResponse) {
-                                            setSearchType("region aerodromes")
-                                        } else {
-                                            setSearchType("region")
-                                        }
+                                        const icaoId = e.target.value.trim().toUpperCase()
 
-                                        setSearchOpen(true)
+                                        setValue("icaoId", icaoId, {
+                                            shouldDirty: true,
+                                            shouldValidate: true
+                                        })
+
+                                        context.handleSetFormValues({ ...getValues(), icaoId }, searchAerodromeId)
                                     }} />
                                 <button
                                     hidden={true}
                                     type="submit" />
+                            </form>
+                        </FormProvider >
+                        <input
+                            ref={searchAerodromeNameRef}
+                            type="text"
+                            className="input-search"
+                            placeholder="Search aerodromes by name"
+                            value={aerodromeNameParam}
+                            onChange={(e) => {
+                                ++globalSearchId.current
+                                setSearchType("aerodrome")
+                                setAerodromeNameParam(e.target.value)
+                            }}
+                            onFocus={async () => {
+                                ++globalSearchId.current
+                                setSearchType("aerodrome")
+                                setSearchOpen(true)
+                            }} />
+
+                        <input
+                            ref={searchRegionNameRef}
+                            type="text"
+                            className="input-search"
+                            placeholder="Search aerodromes by region"
+                            value={regionNameParam}
+                            onChange={(e) => {
+                                ++globalSearchId.current
+                                setSearchType("region")
+                                setRegionAerodromeResponse(undefined)
+                                setRegionNameParam(e.target.value)
+                            }}
+                            onFocus={async () => {
+                                ++globalSearchId.current
+                                if (regionAerodromeResponse) {
+                                    setSearchType("region aerodromes")
+                                } else {
+                                    setSearchType("region")
+                                }
+
+                                setSearchOpen(true)
+                            }} />
+
+                    </div>
+                )}
+                <Expand
+                    isOpen={searchOpen}
+                    rows={1}>
+                    <div
+                        ref={searchPanelRef}
+                        className="aerodrome-header-search">
+                        {searchType === "aerodrome" && aerodromeResponse && (
+                            filteredAerodromes && filteredAerodromes.length > 0
+                                ? filteredAerodromes.map((aerodrome, index) => (
+                                    <button
+                                        key={`${searchAerodromeId}-aerodrome-${index}`}
+                                        type="button"
+                                        disabled={searchAerodrome?.isLoading ? true : false}
+                                        className={`btn-search-item ${searchAerodrome?.formValues.icaoId === aerodrome.attributes.code ? "open" : ""}`}
+                                        onClick={() => handleSelectAerodrome(aerodrome.attributes.code)}>
+                                        <span className="search-item-icao">{aerodrome.attributes.code}</span>
+                                        <span className="search-item-name">{aerodrome.attributes.name}</span>
+                                    </button>
+                                ))
+                                : <p className="message">
+                                    {aerodromeTypeFilters.length > 0
+                                        ? `No aerodromes found matching types: ${aerodromeTypeFilters.map(filter => filter.replaceAll("_", " ")).join(", ")}`
+                                        : "Select at least one aerodrome type"}
+                                </p>
+                        )}
+                        {searchType === "aerodrome" && (
+                            <div className="sticky">
+                                <button
+                                    type="button"
+                                    className="btn-sticky sibling"
+                                    disabled={aerodromeResponse?.links.prev ? false : true}
+                                    onClick={() => aerodromeResponse?.links.prev && handlePaginationAerodromes(aerodromeResponse.links.prev)}>
+                                    Back
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-sticky sibling"
+                                    disabled={aerodromeResponse?.links.next ? false : true}
+                                    onClick={() => aerodromeResponse?.links.next && handlePaginationAerodromes(aerodromeResponse.links.next)}>
+                                    Next
+                                </button>
                             </div>
                         )}
-                        <Expand
-                            isOpen={searchOpen}
-                            rows={1}>
-                            <div
-                                ref={searchPanelRef}
-                                className="aerodrome-header-search">
-                                {searchType === "aerodrome" && aerodromeResponse && (
-                                    filteredAerodromes && filteredAerodromes.length > 0
-                                        ? filteredAerodromes.map((aerodrome, index) => (
-                                            <button
-                                                key={`${searchAerodromeId}-aerodrome-${index}`}
-                                                type="button"
-                                                disabled={searchAerodrome?.isLoading ? true : false}
-                                                className={`btn-search-item ${searchAerodrome?.formValues.icaoId === aerodrome.attributes.code ? "open" : ""}`}
-                                                onClick={() => handleSelectAerodrome(aerodrome.attributes.code)}>
-                                                <span className="search-item-icao">{aerodrome.attributes.code}</span>
-                                                <span className="search-item-name">{aerodrome.attributes.name}</span>
-                                            </button>
-                                        ))
-                                        : <p className="message">
-                                            {aerodromeTypeFilters.length > 0
-                                                ? `No aerodromes found matching types: ${aerodromeTypeFilters.map(filter => filter.replaceAll("_", " ")).join(", ")}`
-                                                : "Select at least one aerodrome type"}
-                                        </p>
-                                )}
-                                {searchType === "aerodrome" && (
-                                    <div className="sticky">
-                                        <button
-                                            type="button"
-                                            className="btn-sticky sibling"
-                                            disabled={aerodromeResponse?.links.prev ? false : true}
-                                            onClick={() => aerodromeResponse?.links.prev && handlePaginationAerodromes(aerodromeResponse.links.prev)}>
-                                            Back
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="btn-sticky sibling"
-                                            disabled={aerodromeResponse?.links.next ? false : true}
-                                            onClick={() => aerodromeResponse?.links.next && handlePaginationAerodromes(aerodromeResponse.links.next)}>
-                                            Next
-                                        </button>
-                                    </div>
-                                )}
-                                {searchType === "region" && regionResponse?.data.map((region, index) => (
-                                    <button
-                                        key={`region-${index}`}
-                                        type="button"
-                                        className={`btn-search-item`}
-                                        onClick={() => handleSelectRegion(region.id)}>
-                                        <span className="search-item-icao">{region.id}</span>
-                                        <span className="search-item-name">{region.attributes.name}</span>
-                                    </button>
-                                ))}
-                                {searchType === "region" && (
-                                    <div className="sticky">
-                                        <button
-                                            type="button"
-                                            className="btn-sticky sibling"
-                                            disabled={regionResponse?.links.prev ? false : true}
-                                            onClick={() => regionResponse?.links.prev && handlePaginationRegions(regionResponse.links.prev)}>
-                                            Back
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="btn-sticky sibling"
-                                            disabled={regionResponse?.links.next ? false : true}
-                                            onClick={() => regionResponse?.links.next && handlePaginationRegions(regionResponse.links.next)}>
-                                            Next
-                                        </button>
-                                    </div>
-                                )}
-                                {searchType === "region aerodromes" && regionAerodromeResponse && (
-                                    filteredRegionAerodromes && filteredRegionAerodromes.length > 0
-                                        ? filteredRegionAerodromes.map((aerodrome, index) => (
-                                            <button
-                                                key={`region-aerodrome-${index}`}
-                                                type="button"
-                                                disabled={searchAerodrome?.isLoading ? true : false}
-                                                className={`btn-search-item ${searchAerodrome?.formValues.icaoId === aerodrome.attributes.code ? "open" : ""}`}
-                                                onClick={() => handleSelectAerodrome(aerodrome.attributes.code)}>
-                                                <span className="search-item-icao">{aerodrome.attributes.code}</span>
-                                                <span className="search-item-name">{aerodrome.attributes.name}</span>
-                                            </button>
-                                        ))
-                                        : <div>
-                                            <p className="message">
-                                                {regionAerodromeResponse.data.length > 0
-                                                    ? aerodromeTypeFilters.length > 0
-                                                        ? `No aerodromes found matching types: ${aerodromeTypeFilters.map(filter => filter.replaceAll("_", " ")).join(", ")}`
-                                                        : "Select at least one aerodrome type"
-                                                    : "No airports for selected region"}
-                                            </p>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    ++globalSearchId.current
-                                                    setRegionAerodromeResponse(undefined)
-                                                    setSearchType("region")
-                                                }}>
-                                                OK
-                                            </button>
-                                        </div>
-                                )}
-                                {searchType === "region aerodromes" && (
-                                    <div className="sticky">
-                                        <button
-                                            type="button"
-                                            className="btn-sticky sibling"
-                                            onClick={() => {
-                                                ++globalSearchId.current
-                                                setRegionAerodromeResponse(undefined)
-                                                setSearchType("region")
-                                            }}>
-                                            Regions
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="btn-sticky sibling"
-                                            disabled={regionAerodromeResponse?.links.prev ? false : true}
-                                            onClick={() => regionAerodromeResponse?.links.prev && handlePaginationRegionAerodromes(regionAerodromeResponse.links.prev)}>
-                                            Back
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="btn-sticky sibling"
-                                            disabled={regionAerodromeResponse?.links.next ? false : true}
-                                            onClick={() => regionAerodromeResponse?.links.next && handlePaginationRegionAerodromes(regionAerodromeResponse.links.next)}>
-                                            Next
-                                        </button>
-                                    </div>
-                                )}
-
-                            </div>
-                        </Expand>
-                    </div>
-                    {aerodromeRender && (aerodromeRender)}
-                    {error.length > 0 && (
-                        <p className="message warning">{error}</p>
-                    )}
-                    <div className="sticky">
-                        {hasSearched
-                            ? (<button
+                        {searchType === "region" && regionResponse?.data.map((region, index) => (
+                            <button
+                                key={`region-${index}`}
                                 type="button"
-                                onClick={() => context.handleAddAerodrome(searchAerodrome.icaoId)}>
-                                Save {searchAerodrome.icaoId}
-                            </button>)
-                            : (<p className="message info">Search aerodrome to display data</p>)}
+                                className={`btn-search-item`}
+                                onClick={() => handleSelectRegion(region.id)}>
+                                <span className="search-item-icao">{region.id}</span>
+                                <span className="search-item-name">{region.attributes.name}</span>
+                            </button>
+                        ))}
+                        {searchType === "region" && (
+                            <div className="sticky">
+                                <button
+                                    type="button"
+                                    className="btn-sticky sibling"
+                                    disabled={regionResponse?.links.prev ? false : true}
+                                    onClick={() => regionResponse?.links.prev && handlePaginationRegions(regionResponse.links.prev)}>
+                                    Back
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-sticky sibling"
+                                    disabled={regionResponse?.links.next ? false : true}
+                                    onClick={() => regionResponse?.links.next && handlePaginationRegions(regionResponse.links.next)}>
+                                    Next
+                                </button>
+                            </div>
+                        )}
+                        {searchType === "region aerodromes" && regionAerodromeResponse && (
+                            filteredRegionAerodromes && filteredRegionAerodromes.length > 0
+                                ? filteredRegionAerodromes.map((aerodrome, index) => (
+                                    <button
+                                        key={`region-aerodrome-${index}`}
+                                        type="button"
+                                        disabled={searchAerodrome?.isLoading ? true : false}
+                                        className={`btn-search-item ${searchAerodrome?.formValues.icaoId === aerodrome.attributes.code ? "open" : ""}`}
+                                        onClick={() => handleSelectAerodrome(aerodrome.attributes.code)}>
+                                        <span className="search-item-icao">{aerodrome.attributes.code}</span>
+                                        <span className="search-item-name">{aerodrome.attributes.name}</span>
+                                    </button>
+                                ))
+                                : <div>
+                                    <p className="message">
+                                        {regionAerodromeResponse.data.length > 0
+                                            ? aerodromeTypeFilters.length > 0
+                                                ? `No aerodromes found matching types: ${aerodromeTypeFilters.map(filter => filter.replaceAll("_", " ")).join(", ")}`
+                                                : "Select at least one aerodrome type"
+                                            : "No airports for selected region"}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            ++globalSearchId.current
+                                            setRegionAerodromeResponse(undefined)
+                                            setSearchType("region")
+                                        }}>
+                                        OK
+                                    </button>
+                                </div>
+                        )}
+                        {searchType === "region aerodromes" && (
+                            <div className="sticky">
+                                <button
+                                    type="button"
+                                    className="btn-sticky sibling"
+                                    onClick={() => {
+                                        ++globalSearchId.current
+                                        setRegionAerodromeResponse(undefined)
+                                        setSearchType("region")
+                                    }}>
+                                    Regions
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-sticky sibling"
+                                    disabled={regionAerodromeResponse?.links.prev ? false : true}
+                                    onClick={() => regionAerodromeResponse?.links.prev && handlePaginationRegionAerodromes(regionAerodromeResponse.links.prev)}>
+                                    Back
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-sticky sibling"
+                                    disabled={regionAerodromeResponse?.links.next ? false : true}
+                                    onClick={() => regionAerodromeResponse?.links.next && handlePaginationRegionAerodromes(regionAerodromeResponse.links.next)}>
+                                    Next
+                                </button>
+                            </div>
+                        )}
+
                     </div>
-                </div>
-            </form>
-        </FormProvider >
+                </Expand>
+            </div>
+            {aerodromeRender && (aerodromeRender)}
+            {error.length > 0 && (
+                <p className="message warning">{error}</p>
+            )}
+            <div className="sticky">
+                {hasSearched
+                    ? (<button
+                        type="button"
+                        onClick={() => context.handleAddAerodrome(searchAerodrome.icaoId)}>
+                        Save {searchAerodrome.icaoId}
+                    </button>)
+                    : (<p className="message info">Search aerodrome to display data</p>)}
+            </div>
+        </div>
     )
 }
 

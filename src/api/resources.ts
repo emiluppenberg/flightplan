@@ -114,7 +114,7 @@ export const fetchAerodromeIcaoId = async (formIcaoId: string) => {
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error(`No aerodrome found for ICAO: ${formIcaoId}`)
+      throw new Error(`No aerodrome found for code: ${formIcaoId}`)
     } else {
       throw new Error(`There was an unexpected error while fetching ${formIcaoId}: ${response.statusText}`)
     }
