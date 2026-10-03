@@ -75,6 +75,29 @@ export interface ResponseNOTAM {
   error?: string;
 }
 
+export interface RegionsResourceResponse {
+  data: RegionResource[]
+  links: {
+    prev?: string
+    next?: string
+  }
+}
+
+export interface RegionResource {
+  id: string
+  attributes: {
+    name: string
+    code: string
+  },
+  relationships: {
+    country: {
+      data: {
+        id: string
+      }
+    }
+  }
+}
+
 export interface AerodromesResourceResponse {
   data: AerodromeResource[];
   links: {
@@ -101,7 +124,41 @@ export interface AerodromeResource {
     icao_code?: string;
     iata_code?: string;
     local_code?: string;
+  }
+  relationships: {
+    region: {
+      data: {
+        id: string
+      }
+    }
+  }
+}
+
+export interface LocationResource {
+  place_id: number;
+  licence: string;
+  osm_type: string;
+  osm_id: number;
+  lat: string;
+  lon: string;
+  class: string;
+  type: string;
+  place_rank: number;
+  importance: number;
+  addresstype: string;
+  name: string;
+  display_name: string;
+  address: {
+    road: string;
+    village: string;
+    municipality: string;
+    county: string;
+    "ISO3166-2-lvl4": string;
+    postcode: string;
+    country: string;
+    country_code: string;
   };
+  boundingbox: string[];
 }
 
 export type AerodromeFormValues = {

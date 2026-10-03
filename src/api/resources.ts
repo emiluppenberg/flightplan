@@ -1,11 +1,13 @@
-import { type AerodromeFormValues, type EntryTAF, type EntryMETAR, type EntryNOTAM, type ResponseNOTAM, type AerodromesResourceResponse, HIGHLIGHTS_NOTAM, type EntrySNOWTAM, type AerodromeResourceResponse } from "../types"
+import { type AerodromeFormValues, type EntryTAF, type EntryMETAR, type EntryNOTAM, type ResponseNOTAM, type AerodromesResourceResponse, HIGHLIGHTS_NOTAM, type EntrySNOWTAM, type AerodromeResourceResponse, type LocationResource, type RegionsResourceResponse } from "../types"
 import { matchesNotamHighlight, parseDateQuery } from "../utilities"
 
 export const PATH_AERODROMES = "/api/aerodromes"
+export const PATH_AERODROMES_REGIONS = '/api/regions'
 export const PATH_NOTAM = "/api/reports/notam"
 export const PATH_SNOWTAM = "/api/reports/snowtam"
 export const PATH_TAF = '/api/reports/taf'
 export const PATH_METAR = '/api/reports/metar'
+export const PATH_LOCATION = '/api/location'
 
 export const POLL_INTERVAL_TAF_METAR_NOTAM = 5 * 60 * 1000
 export const POLL_INTERVAL_SNOWTAM = 60 * 60 * 1000
@@ -122,7 +124,7 @@ export const fetchAerodromeIcaoId = async (formIcaoId: string) => {
   return result.data.attributes.code.trim().toUpperCase()
 }
 
-export const fetchAerodromes = async (name: string): Promise<AerodromesResourceResponse> => {
+export const fetchAerodromesName = async (name: string): Promise<AerodromesResourceResponse> => {
   const params = new URLSearchParams({
     "filter[name]": name
   })
@@ -136,8 +138,36 @@ export const fetchAerodromes = async (name: string): Promise<AerodromesResourceR
   return await response.json()
 }
 
-export const fetchAerodromesPage = async (link: string): Promise<AerodromesResourceResponse> => {
+export const fetchAerodromesRegionId = async (regionId: string): Promise<AerodromesResourceResponse> => {
+  const params = new URLSearchParams({
+    "page[size]": "100",
+  })
+
+  const response = await fetch(`${PATH_AERODROMES_REGIONS}/${regionId}/airports?${params}`)
+
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+
+  return await response.json()
+}
+
+export const fetchPage = async (link: string): Promise<unknown> => {
   const response = await fetch(link)
+
+  if (!response.ok) {
+    throw new Error(await response.text())
+  }
+
+  return await response.json()
+}
+
+export const fetchRegionsName = async (name: string): Promise<RegionsResourceResponse> => {
+  const params = new URLSearchParams({
+    "filter[name]": name,
+  })
+
+  const response = await fetch(`${PATH_AERODROMES_REGIONS}?${params}`)
 
   if (!response.ok) {
     throw new Error(await response.text())

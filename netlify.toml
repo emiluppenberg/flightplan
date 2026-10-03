@@ -48,6 +48,33 @@
     "User-Agent" = "FlyRep/0.1"
 
 [[redirects]]
+  from = "/api/regions"
+  to = "https://airportsapi.com/api/regions"
+  status = 200
+  force = true
+
+  [redirects.headers]
+    "User-Agent" = "FlyRep/0.1"
+
+[[redirects]]
+  from = "/api/regions/*"
+  to = "https://airportsapi.com/api/regions/:splat"
+  status = 200
+  force = true
+
+  [redirects.headers]
+    "User-Agent" = "FlyRep/0.1"
+
+[[redirects]]
+  from = "/api/location/*"
+  to = "https://nominatim.openstreetmap.org/reverse:splat"
+  status = 200
+  force = true
+
+  [redirects.headers]
+    "User-Agent" = "FlyRep/0.1"
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
