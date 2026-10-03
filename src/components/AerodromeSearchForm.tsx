@@ -5,7 +5,7 @@ import { type RegionsResourceResponse, type AerodromeFormValues, type Aerodromes
 import { searchAerodromeId } from "../utilities"
 import Expand from "./Expand"
 import AerodromeRender from "./AerodromeRender"
-import { fetchAerodromesName, fetchPage, fetchAerodromeIcaoId, fetchRegionsName, fetchAerodromesRegionId } from "../api/resources"
+import { fetchAerodromesName, fetchPage, fetchAerodromeIcaoId, fetchRegionsName, fetchAerodromesRegionId, fetchLocation } from "../api/resources"
 
 const AerodromeSearchForm = () => {
     const context = useFlightPathContext()
@@ -54,21 +54,16 @@ const AerodromeSearchForm = () => {
     const previousAerodromeNameParam = useRef("")
     const previousRegionNameParam = useRef("")
 
-    const aerodromeNameSearchId = useRef(0)
-    const regionNameSearchId = useRef(0)
-    const selectRegionSearchId = useRef(0)
-    const paginationAerodromesSearchId = useRef(0)
-    const paginationRegionAerodromesSearchId = useRef(0)
-    const paginationRegionsSearchId = useRef(0)
+    const globalSearchId = useRef(0)
 
     const handleSearchAerodromesName = async () => {
         try {
             setError("")
 
-            const searchId = ++aerodromeNameSearchId.current
+            const searchId = ++globalSearchId.current
             const aerodromes = await fetchAerodromesName(aerodromeNameParam);
 
-            if (searchId < aerodromeNameSearchId.current) return
+            if (searchId < globalSearchId.current) return
             setAerodromeResponse(aerodromes)
 
         } catch (error) {
@@ -80,10 +75,10 @@ const AerodromeSearchForm = () => {
         try {
             setError("")
 
-            const searchId = ++regionNameSearchId.current
+            const searchId = ++globalSearchId.current
             const regions = await fetchRegionsName(regionNameParam)
 
-            if (searchId < regionNameSearchId.current) return
+            if (searchId < globalSearchId.current) return
             setRegionAerodromeResponse(undefined)
             setRegionResponse(regions)
         } catch (error) {
@@ -112,10 +107,10 @@ const AerodromeSearchForm = () => {
         try {
             setError("")
 
-            const searchId = ++paginationAerodromesSearchId.current
+            const searchId = ++globalSearchId.current
             const response = await fetchPage(page) as AerodromesResourceResponse;
 
-            if (searchId < paginationAerodromesSearchId.current) return
+            if (searchId < globalSearchId.current) return
             setAerodromeResponse(response)
         } catch (error) {
             setError(error instanceof Error ? error.message : "There was an unexpected error during aerodrome pagination")
@@ -126,10 +121,10 @@ const AerodromeSearchForm = () => {
         try {
             setError("")
 
-            const searchId = ++paginationRegionAerodromesSearchId.current
+            const searchId = ++globalSearchId.current
             const response = await fetchPage(page) as AerodromesResourceResponse;
 
-            if (searchId < paginationRegionAerodromesSearchId.current) return
+            if (searchId < globalSearchId.current) return
             setRegionAerodromeResponse(response)
         } catch (error) {
             setError(error instanceof Error ? error.message : "There was an unexpected error during region-aerodrome pagination")
@@ -140,10 +135,10 @@ const AerodromeSearchForm = () => {
         try {
             setError("")
 
-            const searchId = ++paginationRegionsSearchId.current
+            const searchId = ++globalSearchId.current
             const response = await fetchPage(page) as RegionsResourceResponse;
 
-            if (searchId < paginationRegionsSearchId.current) return
+            if (searchId < globalSearchId.current) return
             setRegionResponse(response)
         } catch (error) {
             setError(error instanceof Error ? error.message : "There was an unexpected error during regions pagination")
@@ -152,6 +147,8 @@ const AerodromeSearchForm = () => {
 
     const handleSelectAerodrome = async (id: string) => {
         if (!searchAerodrome) return
+
+        ++globalSearchId.current
 
         try {
             setError("")
@@ -177,10 +174,10 @@ const AerodromeSearchForm = () => {
         try {
             setError("")
 
-            const searchId = ++selectRegionSearchId.current
+            const searchId = ++globalSearchId.current
             const resourceResponse = await fetchAerodromesRegionId(regionId)
 
-            if (searchId < selectRegionSearchId.current) return
+            if (searchId < globalSearchId.current) return
             setRegionAerodromeResponse(resourceResponse)
             setSearchType("region aerodromes")
 
@@ -188,7 +185,6 @@ const AerodromeSearchForm = () => {
             setError(error instanceof Error ? error.message : `There was an unexpected error while fetching data for ICAO: ${regionId}`)
         }
     }
-
 
     const handleSubmit = async () => {
         setError("")
@@ -242,7 +238,7 @@ const AerodromeSearchForm = () => {
                                 <input
                                     type="text"
                                     className="input-search"
-                                    placeholder="Search aerodrome by ICAO"
+                                    placeholder="Search aerodrome by code"
                                     value={searchAerodrome.formValues.icaoId}
                                     {...register("icaoId", {
                                         required: true,
@@ -256,10 +252,12 @@ const AerodromeSearchForm = () => {
                                     placeholder="Search aerodromes by name"
                                     value={aerodromeNameParam}
                                     onChange={(e) => {
+                                        ++globalSearchId.current
                                         setSearchType("aerodrome")
                                         setAerodromeNameParam(e.target.value)
                                     }}
                                     onFocus={async () => {
+                                        ++globalSearchId.current
                                         setSearchType("aerodrome")
                                         setSearchOpen(true)
                                     }} />
@@ -270,10 +268,12 @@ const AerodromeSearchForm = () => {
                                     placeholder="Search aerodromes by region"
                                     value={regionNameParam}
                                     onChange={(e) => {
+                                        ++globalSearchId.current
                                         setSearchType("region")
                                         setRegionNameParam(e.target.value)
                                     }}
                                     onFocus={async () => {
+                                        ++globalSearchId.current
                                         if (regionAerodromeResponse) {
                                             setSearchType("region aerodromes")
                                         } else {
@@ -369,6 +369,7 @@ const AerodromeSearchForm = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => {
+                                                    ++globalSearchId.current
                                                     setRegionAerodromeResponse(undefined)
                                                     setSearchType("region")
                                                 }}>
@@ -381,6 +382,7 @@ const AerodromeSearchForm = () => {
                                             type="button"
                                             className="btn-sticky sibling"
                                             onClick={() => {
+                                                ++globalSearchId.current
                                                 setRegionAerodromeResponse(undefined)
                                                 setSearchType("region")
                                             }}>
