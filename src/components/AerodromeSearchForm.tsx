@@ -60,13 +60,28 @@ const AerodromeSearchForm = () => {
     const previousRegionNameParam = useRef("")
 
     const globalSearchId = useRef(0)
+    const pendingNetworkRequests = useRef(0)
+    const runNetworkRequest = useCallback(async <T,>(request: () => Promise<T>): Promise<T> => {
+        pendingNetworkRequests.current += 1
+        context.setIsLoading(true)
+
+        try {
+            return await request()
+        } finally {
+            pendingNetworkRequests.current -= 1
+
+            if (pendingNetworkRequests.current === 0) {
+                context.setIsLoading(false)
+            }
+        }
+    }, [context.setIsLoading])
 
     const handleSearchAerodromesName = async () => {
         try {
             setError("")
 
             const searchId = ++globalSearchId.current
-            const aerodromes = await fetchAerodromesName(aerodromeNameParam);
+            const aerodromes = await runNetworkRequest(() => fetchAerodromesName(aerodromeNameParam));
 
             if (searchId < globalSearchId.current) return
             setAerodromeResponse(aerodromes)
@@ -81,7 +96,7 @@ const AerodromeSearchForm = () => {
             setError("")
 
             const searchId = ++globalSearchId.current
-            const regions = await fetchRegionsName(regionNameParam)
+            const regions = await runNetworkRequest(() => fetchRegionsName(regionNameParam))
 
             if (searchId < globalSearchId.current) return
             setRegionAerodromeResponse(undefined)
@@ -104,7 +119,7 @@ const AerodromeSearchForm = () => {
     }, [aerodromeNameParam, regionNameParam])
 
     useEffect(() => {
-        const intervalId = setInterval(handleSearchInterval, 1000)
+        const intervalId = setInterval(handleSearchInterval, 100)
         return (() => clearInterval(intervalId))
     }, [handleSearchInterval])
 
@@ -113,7 +128,7 @@ const AerodromeSearchForm = () => {
             setError("")
 
             const searchId = ++globalSearchId.current
-            const response = await fetchPage(page) as AerodromesResourceResponse;
+            const response = await runNetworkRequest(() => fetchPage(page)) as AerodromesResourceResponse;
 
             if (searchId < globalSearchId.current) return
             setAerodromeResponse(response)
@@ -127,7 +142,7 @@ const AerodromeSearchForm = () => {
             setError("")
 
             const searchId = ++globalSearchId.current
-            const response = await fetchPage(page) as AerodromesResourceResponse;
+            const response = await runNetworkRequest(() => fetchPage(page)) as AerodromesResourceResponse;
 
             if (searchId < globalSearchId.current) return
             setRegionAerodromeResponse(response)
@@ -141,7 +156,7 @@ const AerodromeSearchForm = () => {
             setError("")
 
             const searchId = ++globalSearchId.current
-            const response = await fetchPage(page) as RegionsResourceResponse;
+            const response = await runNetworkRequest(() => fetchPage(page)) as RegionsResourceResponse;
 
             if (searchId < globalSearchId.current) return
             setRegionResponse(response)
@@ -180,7 +195,7 @@ const AerodromeSearchForm = () => {
             setError("")
 
             const searchId = ++globalSearchId.current
-            const resourceResponse = await fetchAerodromesRegionId(regionId)
+            const resourceResponse = await runNetworkRequest(() => fetchAerodromesRegionId(regionId))
 
             if (searchId < globalSearchId.current) return
             setRegionAerodromeResponse(resourceResponse)
@@ -199,7 +214,7 @@ const AerodromeSearchForm = () => {
             if (searchAerodrome && !searchAerodrome.isLoading) {
                 const values: AerodromeFormValues = {
                     ...getValues(),
-                    icaoId: await fetchAerodromeIcaoId(searchAerodrome.formValues.icaoId),
+                    icaoId: await runNetworkRequest(() => fetchAerodromeIcaoId(searchAerodrome.formValues.icaoId)),
                 }
 
                 setValue("icaoId", values.icaoId, {
@@ -225,20 +240,20 @@ const AerodromeSearchForm = () => {
     useEffect(() => {
         if (initialized) return
 
-
         const searchId = ++globalSearchId.current
 
         navigator.geolocation.getCurrentPosition(async (data) => {
             try {
                 setError("")
-                const location = await fetchLocation(data.coords)
+
+                const location = await runNetworkRequest(() => fetchLocation(data.coords))
 
                 if (searchId < globalSearchId.current) return
 
                 const regionIds = parseLocationRegionIds(location)
 
                 for (const regionId of regionIds) {
-                    if (await handleSelectRegion(regionId)) {
+                    if (await runNetworkRequest(() => handleSelectRegion(regionId))) {
                         setSearchOpen(true)
                         break
                     }
@@ -246,7 +261,9 @@ const AerodromeSearchForm = () => {
             } catch (error) {
                 setError(error instanceof Error ? error.message : "There was an unexpected error while reverse-geocoding your position")
             }
-        }, (error) => setError(`There was an error while retrieving your device's location: ${error.message} ${error.code} `))
+        }, (error) => {
+            setError(`There was an error while retrieving your device's location: ${error.message} ${error.code} `)
+        })
 
         setInitialized(true)
     }, [initialized])

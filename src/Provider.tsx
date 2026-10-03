@@ -644,6 +644,7 @@ export const FlightPathProvider = () => {
                 handleSignUp,
                 handleDiscardMessage,
                 handleDiscardError,
+                setIsLoading,
                 isLoading,
                 messages,
                 errors,
