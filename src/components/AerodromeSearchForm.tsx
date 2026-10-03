@@ -6,6 +6,7 @@ import { searchAerodromeId } from "../utilities"
 import Expand from "./Expand"
 import AerodromeRender from "./AerodromeRender"
 import { fetchAerodromesName, fetchPage, fetchAerodromeIcaoId, fetchRegionsName, fetchAerodromesRegionId, fetchLocation } from "../api/resources"
+import AerodromeTypeFiltersField from "./AerodromeTypeFiltersField"
 
 const AerodromeSearchForm = () => {
     const context = useFlightPathContext()
@@ -228,11 +229,39 @@ const AerodromeSearchForm = () => {
         setInitialized(true)
     }, [initialized])
 
+    const [aerodromeTypeFiltersOpen, setAerodromeTypeFiltersOpen] = useState(false)
+    const [aerodromeTypeFilters, setAerodromeTypeFilters] = useState<("large_airport" | "medium_airport" | "small_airport" | "seaplane_base" | "heliport" | "balloonport" | "closed")[]>(["large_airport", "medium_airport", "small_airport"])
+    const filteredAerodromes = useMemo(() =>
+        aerodromeResponse?.data.filter(aerodrome =>
+            aerodromeTypeFilters.some(filter => filter === aerodrome.attributes.type))
+        , [aerodromeTypeFilters, aerodromeResponse])
+    const filteredRegionAerodromes = useMemo(() =>
+        regionAerodromeResponse?.data.filter(aerodrome =>
+            aerodromeTypeFilters.some(filter => filter === aerodrome.attributes.type))
+        , [aerodromeTypeFilters, regionAerodromeResponse])
+
     return (
         <FormProvider {...form}>
             <form onSubmit={formSubmit(handleSubmit)}>
                 <div className="aerodrome-render-container">
                     <div className="aerodrome-header-container">
+                        {!aerodromeTypeFiltersOpen && (
+                            <button
+                                type="button"
+                                onClick={() => setAerodromeTypeFiltersOpen(true)}
+                            >Filter aerodrome types</button>
+                        )}
+                        <Expand
+                            isOpen={aerodromeTypeFiltersOpen}
+                            rows={1}>
+                            <AerodromeTypeFiltersField
+                                aerodromeTypeFilters={aerodromeTypeFilters}
+                                onClose={() => setAerodromeTypeFiltersOpen(false)}
+                                onChecked={(checked, value) => setAerodromeTypeFilters(filters => checked
+                                    ? [...filters, value]
+                                    : filters.filter(filter => filter !== value)
+                                )} />
+                        </Expand>
                         {searchAerodrome && (
                             <div className="aerodrome-header-buttons search-header-buttons">
                                 <input
@@ -293,17 +322,25 @@ const AerodromeSearchForm = () => {
                             <div
                                 ref={searchPanelRef}
                                 className="aerodrome-header-search">
-                                {searchType === "aerodrome" && aerodromeResponse?.data.map((aerodrome, index) => (
-                                    <button
-                                        key={`${searchAerodromeId}-aerodrome-${index}`}
-                                        type="button"
-                                        disabled={searchAerodrome?.isLoading ? true : false}
-                                        className={`btn-search-item ${searchAerodrome?.formValues.icaoId === aerodrome.attributes.code ? "open" : ""}`}
-                                        onClick={() => handleSelectAerodrome(aerodrome.attributes.code)}>
-                                        <span className="search-item-icao">{aerodrome.attributes.code}</span>
-                                        <span className="search-item-name">{aerodrome.attributes.name}</span>
-                                    </button>
-                                ))}
+                                {searchType === "aerodrome" && aerodromeResponse && (
+                                    filteredAerodromes && filteredAerodromes.length > 0
+                                        ? filteredAerodromes.map((aerodrome, index) => (
+                                            <button
+                                                key={`${searchAerodromeId}-aerodrome-${index}`}
+                                                type="button"
+                                                disabled={searchAerodrome?.isLoading ? true : false}
+                                                className={`btn-search-item ${searchAerodrome?.formValues.icaoId === aerodrome.attributes.code ? "open" : ""}`}
+                                                onClick={() => handleSelectAerodrome(aerodrome.attributes.code)}>
+                                                <span className="search-item-icao">{aerodrome.attributes.code}</span>
+                                                <span className="search-item-name">{aerodrome.attributes.name}</span>
+                                            </button>
+                                        ))
+                                        : <p className="message">
+                                            {aerodromeTypeFilters.length > 0
+                                                ? `No aerodromes found matching types: ${aerodromeTypeFilters.map(filter => filter.replaceAll("_", " ")).join(", ")}`
+                                                : "Select at least one aerodrome type"}
+                                        </p>
+                                )}
                                 {searchType === "aerodrome" && (
                                     <div className="sticky">
                                         <button
@@ -350,10 +387,9 @@ const AerodromeSearchForm = () => {
                                         </button>
                                     </div>
                                 )}
-                                {searchType === "region aerodromes" &&
-                                    (regionAerodromeResponse &&
-                                        regionAerodromeResponse.data.length > 0
-                                        ? regionAerodromeResponse?.data.map((aerodrome, index) => (
+                                {searchType === "region aerodromes" && regionAerodromeResponse && (
+                                    filteredRegionAerodromes && filteredRegionAerodromes.length > 0
+                                        ? filteredRegionAerodromes.map((aerodrome, index) => (
                                             <button
                                                 key={`region-aerodrome-${index}`}
                                                 type="button"
@@ -365,7 +401,13 @@ const AerodromeSearchForm = () => {
                                             </button>
                                         ))
                                         : <div>
-                                            <p className="message">No airports for selected region</p>
+                                            <p className="message">
+                                                {regionAerodromeResponse.data.length > 0
+                                                    ? aerodromeTypeFilters.length > 0
+                                                        ? `No aerodromes found matching types: ${aerodromeTypeFilters.map(filter => filter.replaceAll("_", " ")).join(", ")}`
+                                                        : "Select at least one aerodrome type"
+                                                    : "No airports for selected region"}
+                                            </p>
                                             <button
                                                 type="button"
                                                 onClick={() => {
@@ -375,7 +417,8 @@ const AerodromeSearchForm = () => {
                                                 }}>
                                                 OK
                                             </button>
-                                        </div>)}
+                                        </div>
+                                )}
                                 {searchType === "region aerodromes" && (
                                     <div className="sticky">
                                         <button
