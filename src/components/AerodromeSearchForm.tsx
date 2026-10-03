@@ -18,18 +18,22 @@ const AerodromeSearchForm = () => {
 
     const [error, setError] = useState("")
     const [searchOpen, setSearchOpen] = useState(false)
+    const aerodromeTypeFiltersRef = useRef<HTMLFieldSetElement>(null)
+    const searchAerodromeCodeRef = useRef<HTMLInputElement>(null)
     const searchAerodromeNameRef = useRef<HTMLInputElement>(null)
     const searchRegionNameRef = useRef<HTMLInputElement>(null)
     const searchPanelRef = useRef<HTMLDivElement>(null)
     const handleSearchOpen = (e: Event) => {
         if (!(e.target instanceof Node)) return
 
-        const isInsideSearchPanel =
+        const keepSearchOpen =
+            aerodromeTypeFiltersRef.current?.contains(e.target) ||
+            searchAerodromeCodeRef.current?.contains(e.target) ||
             searchAerodromeNameRef.current?.contains(e.target) ||
             searchRegionNameRef.current?.contains(e.target) ||
             searchPanelRef.current?.contains(e.target)
 
-        if (!isInsideSearchPanel) {
+        if (!keepSearchOpen) {
             setSearchOpen(false)
         }
     }
@@ -261,6 +265,7 @@ const AerodromeSearchForm = () => {
                             rows={1}>
                             <AerodromeTypeFiltersField
                                 aerodromeTypeFilters={aerodromeTypeFilters}
+                                aerodromeTypeFiltersRef={aerodromeTypeFiltersRef}
                                 onClose={() => setAerodromeTypeFiltersOpen(false)}
                                 onChecked={(checked, value) => setAerodromeTypeFilters(filters => checked
                                     ? [...filters, value]
@@ -270,6 +275,7 @@ const AerodromeSearchForm = () => {
                         {searchAerodrome && (
                             <div className="aerodrome-header-buttons search-header-buttons">
                                 <input
+                                    ref={searchAerodromeCodeRef}
                                     type="text"
                                     className="input-search"
                                     placeholder="Search aerodrome by code"
@@ -304,6 +310,7 @@ const AerodromeSearchForm = () => {
                                     onChange={(e) => {
                                         ++globalSearchId.current
                                         setSearchType("region")
+                                        setRegionAerodromeResponse(undefined)
                                         setRegionNameParam(e.target.value)
                                     }}
                                     onFocus={async () => {

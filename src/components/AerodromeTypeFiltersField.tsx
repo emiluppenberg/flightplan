@@ -1,14 +1,17 @@
+import type { Ref } from "react"
+
 interface AerodromeTypeFiltersFieldProps {
     onClose: () => void
     onChecked: (checked: boolean, value: "large_airport" | "medium_airport" | "small_airport" | "seaplane_base" | "heliport" | "balloonport" | "closed") => void
     aerodromeTypeFilters: ("large_airport" | "medium_airport" | "small_airport" | "seaplane_base" | "heliport" | "balloonport" | "closed")[]
+    aerodromeTypeFiltersRef: Ref<HTMLFieldSetElement>
 }
 
 const AerodromeTypeFiltersField = (props: AerodromeTypeFiltersFieldProps) => {
     return (
         <div className="form">
             <div className="form-row">
-                <fieldset>
+                <fieldset ref={props.aerodromeTypeFiltersRef}>
                     <button
                         type="button"
                         className="title"
