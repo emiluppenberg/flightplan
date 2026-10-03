@@ -288,6 +288,7 @@ const AerodromeSearchForm = () => {
                         <FormProvider {...form}>
                             <form onSubmit={formSubmit(handleSubmit)}>
                                 <input
+                                    required
                                     ref={searchAerodromeCodeRef}
                                     type="text"
                                     className="input-search"
