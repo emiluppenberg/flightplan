@@ -351,9 +351,28 @@ const AerodromeSearchForm = () => {
                                                 <span className="search-item-name">{aerodrome.attributes.name}</span>
                                             </button>
                                         ))
-                                        : <p className="message">No airports for selected region</p>)}
+                                        : <div>
+                                            <p className="message">No airports for selected region</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setRegionAerodromeResponse(undefined)
+                                                    setSearchType("region")
+                                                }}>
+                                                OK
+                                            </button>
+                                        </div>)}
                                 {searchType === "region aerodromes" && (
                                     <div className="sticky">
+                                        <button
+                                            type="button"
+                                            className="btn-sticky sibling"
+                                            onClick={() => {
+                                                setRegionAerodromeResponse(undefined)
+                                                setSearchType("region")
+                                            }}>
+                                            Regions
+                                        </button>
                                         <button
                                             type="button"
                                             className="btn-sticky sibling"
