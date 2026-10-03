@@ -66,8 +66,8 @@
     "User-Agent" = "FlyRep/0.1"
 
 [[redirects]]
-  from = "/api/location/*"
-  to = "https://nominatim.openstreetmap.org/reverse:splat"
+  from = "/api/location"
+  to = "https://nominatim.openstreetmap.org/reverse"
   status = 200
   force = true
 
