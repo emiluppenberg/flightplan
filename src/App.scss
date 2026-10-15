@@ -1034,9 +1034,8 @@ h2 {
 }
 
 .empty-state {
-  width: min(100%, 900px);
+  width: 100%;
   min-height: min(480px, 70vh);
-  margin: 0 auto;
   padding: 46px 32px;
   display: flex;
   flex-direction: column;
@@ -1642,6 +1641,7 @@ h2 {
     font-size: .84rem;
   }
 
+  .section-heading,
   .aerodromes-container,
   .search-container {
     padding-inline: 12px;
