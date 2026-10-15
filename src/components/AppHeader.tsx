@@ -33,7 +33,7 @@ const AppHeader = ({ showHighlights, onToggleHighlights }: AppHeaderProps) => {
                         <img src={SVG_URLS.search} width="18" alt="" /><span>Search</span>
                     </NavLink>
                     <NavLink
-                        to="/"
+                        to="/my-briefings"
                         aria-label="My briefings"
                         className="control-button btn-aerodromes">
                         <img src={SVG_URLS.aerodromes} width="18" alt="" /><span>My briefings</span>

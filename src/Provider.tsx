@@ -32,14 +32,10 @@ export const FlightPathProvider = () => {
     const upsertConfigQueued = useRef(false)
     const preventRestoreSession = useRef(false)
     const pathname = useRef(location.pathname)
-    const hasAerodromes = useRef(aerodromes.length > 1)
     const isUser = useRef(false)
     useEffect(() => {
         pathname.current = location.pathname
     }, [location.pathname])
-    useEffect(() => {
-        hasAerodromes.current = aerodromes.length > 1
-    }, [aerodromes.length])
     useEffect(() => {
         isUser.current = user !== undefined
     }, [user])
@@ -102,8 +98,13 @@ export const FlightPathProvider = () => {
         const restoreSession = async () => {
             let userData: UserAppData | undefined = undefined
             setIsLoading(true)
+            const confirmationLink = isConfirmationLink()
 
-            if (isConfirmationLink()) {
+            if (!confirmationLink && pathname.current === "/") {
+                navigate(`/${ROUTES.myBriefings}`, { replace: true })
+            }
+
+            if (confirmationLink) {
                 const confirmedResult = await capture(() => consumeSupabaseConfirmationLink())
 
                 if (confirmedResult.data) {
@@ -157,7 +158,6 @@ export const FlightPathProvider = () => {
             }
 
             if (userData) {
-                hasAerodromes.current = userData.aerodromes.length > 0
                 setAerodromes([...userData.aerodromes, createAerodrome(searchAerodromeId)])
                 setHighlightsTAF([...userData.highlightsTaf])
                 setHighlightsMETAR([...userData.highlightsMetar])
@@ -173,8 +173,8 @@ export const FlightPathProvider = () => {
             setInitialized(true);
             setIsLoading(false)
 
-            if (!hasAerodromes.current && pathname.current === "/") {
-                navigate(`/${ROUTES.search}`)
+            if (confirmationLink && pathname.current === "/") {
+                navigate(`/${ROUTES.myBriefings}`, { replace: true })
             }
         }
 
@@ -515,7 +515,6 @@ export const FlightPathProvider = () => {
                     }
                 }
 
-                hasAerodromes.current = userData.aerodromes.length > 0
                 setAerodromes([...userData.aerodromes, createAerodrome(searchAerodromeId)])
                 setHighlightsTAF([...userData.highlightsTaf])
                 setHighlightsMETAR([...userData.highlightsMetar])
@@ -527,11 +526,7 @@ export const FlightPathProvider = () => {
                     setErrors(current => [...current, ...userData.errors!.map(message => ({ message, time: Date.now() }))])
                 }
 
-                if (!hasAerodromes.current) {
-                    navigate(`/${ROUTES.search}`)
-                } else {
-                    navigate("/")
-                }
+                navigate(`/${ROUTES.myBriefings}`, { replace: true })
             }
         } catch (e) {
             setErrors(current => [...current, { message: e instanceof Error ? e.message : "There was an unexpected error while signing in", time: Date.now() }])
@@ -614,7 +609,7 @@ export const FlightPathProvider = () => {
         try {
             const responseMessage = await fetchSignUpUser({ ...values });
             setMessages([...messages, { message: responseMessage }])
-            navigate("/")
+            navigate(`/${ROUTES.myBriefings}`, { replace: true })
         } catch (e) {
             setErrors(current => [...current, { message: e instanceof Error ? e.message : "There was an unexpected error while signing up", time: Date.now() }])
         } finally {

@@ -11,7 +11,7 @@ const Account = () => {
     const isSignUp = searchParams.get("mode") === "sign-up"
 
     if (context.user) {
-        return <Navigate to="/" replace />
+        return <Navigate to="/my-briefings" replace />
     }
 
     const setMode = (mode: "sign-in" | "sign-up") => {

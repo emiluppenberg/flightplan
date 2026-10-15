@@ -15,6 +15,7 @@ export const SVG_URLS = {
 } as const;
 
 export const ROUTES = {
+  myBriefings: "my-briefings",
   search: 'search',
   account: "account",
 }
