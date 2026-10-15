@@ -3,6 +3,7 @@ import { useFlightPathContext } from "../Context"
 export interface MessagesProps {
     message?: string
     warning?: boolean
+    onDismiss?: () => void
 }
 
 const MessageRow = ({ message, warning, onDismiss }: {
@@ -24,7 +25,8 @@ const Messages = (props: MessagesProps) => {
         return (
             <MessageRow
                 message={message}
-                warning={props.warning} />
+                warning={props.warning}
+                onDismiss={props.onDismiss} />
         )
     }
 

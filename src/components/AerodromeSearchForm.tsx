@@ -18,6 +18,7 @@ const AerodromeSearchForm = () => {
     const { getValues, setValue, handleSubmit: formSubmit } = form;
 
     const [error, setError] = useState("")
+    const [message, setMessage] = useState("")
     const [searchControlsOpen, setSearchControlsOpen] = useState(false)
     const [searchOpen, setSearchOpen] = useState(false)
     const aerodromeTypeFiltersRef = useRef<HTMLFieldSetElement>(null)
@@ -517,12 +518,18 @@ const AerodromeSearchForm = () => {
             {error.length > 0 && (
                 <Messages message={error} warning />
             )}
+            {message.length > 0 && (
+                <Messages message={message} onDismiss={() => setMessage("")} />
+            )}
             <div className="sticky">
                 {hasSearched
                     ? (<button
                         type="button"
                         className="primary-action"
-                        onClick={() => context.handleAddAerodrome(searchAerodrome.icaoId)}>
+                        onClick={() => {
+                            context.handleAddAerodrome(searchAerodrome.icaoId)
+                            setMessage(`${searchAerodrome.icaoId} added to briefings`)
+                        }}>
                         <span aria-hidden="true">+</span>
                         <span>Save {searchAerodrome.icaoId}</span>
                     </button>)
