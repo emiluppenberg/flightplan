@@ -1644,6 +1644,10 @@ h2 {
     --sidebar-width: clamp(156px, 40vw, 260px);
   }
 
+  .search-container>.aerodrome-render-container {
+    overflow-y: auto;
+  }
+
   .app-header .app-header-row.top {
     min-height: 68px;
     padding: 0 16px;
@@ -1692,6 +1696,21 @@ h2 {
 }
 
 @media (max-width: 520px) {
+  .page-workspace.highlights-open .search-container .aerodrome-header-search .btn-search-item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    padding: 8px 10px;
+  }
+
+  .page-workspace.highlights-open .search-container .search-item-name {
+    overflow-wrap: anywhere;
+  }
+
+  .page-workspace.highlights-open .search-container .search-results-actions button {
+    min-width: 0;
+    padding: 6px 2px;
+  }
+
   .page-workspace .config-sidebar {
     padding: 10px;
   }
