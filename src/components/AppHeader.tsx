@@ -16,7 +16,8 @@ const AppHeader = () => {
                 <div className="top-buttons left">
                     <button
                         type="button"
-                        className={`btn-highlight ${showHighlights && "open"}`}
+                        className="control-button btn-highlight"
+                        aria-pressed={showHighlights}
                         aria-label="Highlight settings"
                         title="Highlight settings"
                         onClick={() => setShowHighlights(value => !value)}>
@@ -24,30 +25,23 @@ const AppHeader = () => {
                     </button>
                     <NavLink
                         to="/search"
-                        className={({ isActive }) => `btn-search ${isActive && "open"}`}>
+                        className="control-button btn-search">
                         <img src={SVG_URLS.search} width="18" alt="" /><span>Search</span>
                     </NavLink>
                     <NavLink
                         to="/"
-                        className={({ isActive }) => `btn-aerodromes ${isActive && "open"}`}>
+                        className="control-button btn-aerodromes">
                         <img src={SVG_URLS.aerodromes} width="18" alt="" /><span>My briefings</span>
                     </NavLink>
                 </div>
                 <AppLogo />
                 <div className="top-buttons right">
                     {!context.user && (
-                        <>
-                            <NavLink
-                                to="/sign-in"
-                                className={({ isActive }) => `${isActive && "open"}`}>
-                                Sign in
-                            </NavLink>
-                            <NavLink
-                                to="/sign-up"
-                                className={({ isActive }) => `${isActive && "open"}`}>
-                                Sign up
-                            </NavLink>
-                        </>
+                        <NavLink
+                            to="/account"
+                            className={({ isActive }) => `${isActive && "open"}`}>
+                            Sign in
+                        </NavLink>
                     )}
                     {context.user && (
                         <button type="button" onClick={context.handleSignOut}>Sign Out</button>

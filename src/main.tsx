@@ -1,12 +1,11 @@
 import { createRoot } from 'react-dom/client'
 import './index.scss'
 import './App.scss'
-import { BrowserRouter, Route, Routes } from 'react-router'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { FlightPathProvider } from './Provider'
 import Aerodromes from './pages/Aerodromes'
 import Search from './pages/Search'
-import SignIn from './pages/SignIn'
-import SignUp from './pages/SignUp'
+import Account from './pages/Account'
 
 const rootElement = document.getElementById('root')
 
@@ -20,8 +19,9 @@ createRoot(rootElement).render(
       <Route path="/" element={<FlightPathProvider />}>
         <Route index element={<Aerodromes />} />
         <Route path="search" element={<Search />} />
-        <Route path="sign-in" element={<SignIn />} />
-        <Route path="sign-up" element={<SignUp />} />
+        <Route path="account" element={<Account />} />
+        <Route path="sign-in" element={<Navigate to="/account" replace />} />
+        <Route path="sign-up" element={<Navigate to="/account?mode=sign-up" replace />} />
       </Route>
     </Routes>
   </BrowserRouter>

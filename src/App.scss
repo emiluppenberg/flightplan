@@ -790,6 +790,37 @@ h2 {
   height: 16px;
 }
 
+.page .control-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: auto;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #a4bfcb;
+  font-size: .82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.page .control-button:is([aria-pressed="true"], [aria-current="page"]) {
+  border-color: #397182;
+  background: #1b4556;
+  color: #d7f8f8;
+  box-shadow: inset 0 -2px #61d5db;
+}
+
+.page .control-button:hover:not(:disabled) {
+  border-color: #4b8291;
+  border-radius: 7px;
+  background: #204c5d;
+  color: #fff;
+}
+
 .app-header {
   position: relative;
   z-index: 10;
@@ -812,14 +843,17 @@ h2 {
 
 .app-header .app-header-row.top .top-buttons.left {
   min-width: 0;
+  width: fit-content;
+  max-width: 100%;
+  gap: 4px;
 }
 
 .app-header .app-header-row.top .top-buttons.right {
   white-space: nowrap;
 }
 
-.app-header .app-header-row.top .top-buttons a,
-.app-header .app-header-row.top .top-buttons button {
+.app-header .app-header-row.top .top-buttons.right a,
+.app-header .app-header-row.top .top-buttons.right button {
   width: auto;
   min-height: 40px;
   padding: 8px 13px;
@@ -837,18 +871,21 @@ h2 {
 
 .app-header .app-header-row.top .top-buttons .btn-highlight {
   width: 40px;
-  border-color: #294759;
-  margin-right: 7px;
+  margin-right: 0;
 }
 
-.app-header .app-header-row.top .top-buttons .open {
+.app-header .app-header-row.top .top-buttons.left .btn-highlight {
+  padding: 8px;
+}
+
+.app-header .app-header-row.top .top-buttons.right .open {
   color: #b8f2f1;
   background: rgba(97, 213, 219, .13);
   border-color: #356e7a;
 }
 
-.app-header .app-header-row.top .top-buttons a:hover,
-.app-header .app-header-row.top .top-buttons button:hover {
+.app-header .app-header-row.top .top-buttons.right a:hover,
+.app-header .app-header-row.top .top-buttons.right button:hover {
   color: #fff;
   background: #183648;
   border-color: #356071;
@@ -1476,6 +1513,17 @@ h2 {
   font-size: .89rem;
 }
 
+.sign-in-container .auth-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 30px;
+  padding: 4px;
+  border: 1px solid #2e4d60;
+  border-radius: 10px;
+  background: #0b1c2a;
+}
+
 .sign-in-container .form {
   gap: 14px;
 }
@@ -1564,8 +1612,8 @@ h2 {
     padding: 8px 12px 0;
   }
 
-  .app-header .app-header-row.top .top-buttons a,
-  .app-header .app-header-row.top .top-buttons button {
+  .app-header .app-header-row.top .top-buttons.right a,
+  .app-header .app-header-row.top .top-buttons.right button {
     padding: 6px 10px;
     min-height: 36px;
     font-size: .78rem;

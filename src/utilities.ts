@@ -16,8 +16,7 @@ export const SVG_URLS = {
 
 export const ROUTES = {
   search: 'search',
-  signIn: "sign-in",
-  signUp: "sign-up",
+  account: "account",
 }
 
 export const sessionStorageKey = "sb-cgllylmfqjwakuhemjxv-auth-token"
@@ -405,5 +404,5 @@ export const parseLocationRegionIds = (location: LocationResource): string[] => 
       )
     })
     .sort(([a], [b]) => Number(a.match(/\d+$/)![0]) - Number(b.match(/\d+$/)![0]))
-    .map(([_, regionId]) => regionId)
+    .map(([, regionId]) => regionId)
 }
