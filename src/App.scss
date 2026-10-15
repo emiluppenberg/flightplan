@@ -228,7 +228,7 @@ h2 {
 
     &.top {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) auto;
 
       .top-buttons {
         display: flex;
@@ -1133,17 +1133,9 @@ h2 {
   box-shadow: 0 20px 48px rgba(0, 0, 0, .1);
 }
 
-.empty-state-mark {
-  display: grid;
-  place-items: center;
-  width: 72px;
-  height: 72px;
+.empty-state .app-logo {
+  width: clamp(160px, 24vw, 220px);
   margin-bottom: 27px;
-  color: #61d5db;
-  background: #123447;
-  border: 1px solid #3c7786;
-  border-radius: 50%;
-  font-size: 2.4rem;
 }
 
 .empty-state h2 {
@@ -1693,25 +1685,7 @@ h2 {
   .app-header .app-header-row.top {
     min-height: 68px;
     padding: 0 16px;
-    grid-template-columns: 1fr auto;
     gap: 10px;
-  }
-
-  .app-logo {
-    grid-column: 1;
-    grid-row: 1;
-    justify-self: start;
-  }
-
-  .app-header .app-header-row.top .top-buttons.left {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    padding-bottom: 10px;
-  }
-
-  .app-header .app-header-row.top .top-buttons.right {
-    grid-column: 2;
-    grid-row: 1;
   }
 
   .section-heading {
@@ -1856,5 +1830,16 @@ h2 {
 
   .loading-spinner {
     animation: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .app-header .app-header-row.top .top-buttons.left .control-button:not(.btn-highlight) {
+    width: 36px;
+    padding: 8px;
+  }
+
+  .app-header .app-header-row.top .top-buttons.left .control-button span {
+    display: none;
   }
 }

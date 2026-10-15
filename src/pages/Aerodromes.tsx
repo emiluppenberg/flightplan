@@ -5,6 +5,7 @@ import { useWorkspaceWidth } from '../hooks'
 import { searchAerodromeId } from '../utilities'
 import Messages from '../components/Messages'
 import LoadingSpinner from '../components/LoadingSpinner'
+import AppLogo from '../components/AppLogo'
 import { Link, useOutletContext } from 'react-router'
 
 const Aerodromes = () => {
@@ -38,7 +39,7 @@ const Aerodromes = () => {
       <div className={`aerodromes-container ${splitRender && "split"}`}>
         {aerodromes.length === 0 && (
           <div className="empty-state">
-            <div className="empty-state-mark" aria-hidden="true">✳</div>
+            <AppLogo />
             <h2>Build your briefing board</h2>
             <p>Search for an aerodrome to review TAFs, METARs, NOTAMs, and operational hours. Save it here for a quick return.</p>
             <Link className="primary-action" to="/search">Search aerodromes <span aria-hidden="true">↗</span></Link>

@@ -1,4 +1,3 @@
-import AppLogo from "./AppLogo"
 import { SVG_URLS } from "../utilities";
 import { useFlightPathContext } from "../Context";
 import { NavLink } from "react-router";
@@ -28,16 +27,17 @@ const AppHeader = ({ showHighlights, onToggleHighlights }: AppHeaderProps) => {
                     </button>
                     <NavLink
                         to="/search"
+                        aria-label="Search"
                         className="control-button btn-search">
                         <img src={SVG_URLS.search} width="18" alt="" /><span>Search</span>
                     </NavLink>
                     <NavLink
                         to="/"
+                        aria-label="My briefings"
                         className="control-button btn-aerodromes">
                         <img src={SVG_URLS.aerodromes} width="18" alt="" /><span>My briefings</span>
                     </NavLink>
                 </div>
-                <AppLogo />
                 <div className="top-buttons right">
                     {!context.user && (
                         <NavLink
