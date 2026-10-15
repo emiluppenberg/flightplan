@@ -509,10 +509,10 @@ export const FlightPathProvider = () => {
 
             if (signInResult.data) {
                 setUser(signInResult.data)
+                await new Promise(resolve => setTimeout(resolve, 1000))
                 let userData = await captureUserData(signInResult.data.session.access_token)
 
                 if (userData.errors) {
-                    setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
                     let retry = window.confirm("There was an error while initializing your session - retry?")
 
                     while (retry) {
