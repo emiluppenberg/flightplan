@@ -55,27 +55,6 @@ $color-search: #f4bb72;
   }
 }
 
-img {
-  &.loading {
-    animation: loading-pulse 1s ease-in-out infinite;
-    transform-origin: center;
-  }
-}
-
-@keyframes loading-pulse {
-  0% {
-    transform: scale(1);
-  }
-
-  33% {
-    transform: scale(1.10);
-  }
-
-  66% {
-    transform: scale(0.90);
-  }
-}
-
 .message-row {
   display: flex;
   justify-content: center;
@@ -1011,10 +990,6 @@ h2 {
   height: auto;
 }
 
-.app-logo.loading {
-  animation: loading-pulse 1s ease-in-out infinite;
-}
-
 .section-heading {
   width: min(100%, 1440px);
   margin: 0 auto;
@@ -1024,6 +999,35 @@ h2 {
   justify-content: space-between;
   gap: 20px;
   flex: none;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.section-title h1 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.loading-spinner {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(97, 213, 219, .25);
+  border-top-color: #61d5db;
+  border-right-color: #a0eeee;
+  border-radius: 50%;
+  animation: loading-spin .8s linear infinite;
+}
+
+@keyframes loading-spin {
+  to { transform: rotate(360deg); }
 }
 
 .eyebrow {
@@ -1530,6 +1534,44 @@ h2 {
   padding: 0;
 }
 
+.form .form-row fieldset .options.checkbox-options label {
+  position: relative;
+  border: 1px solid #2b4a5b;
+  border-radius: 7px;
+  background: #102b3a;
+  color: #c4dce5;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.form .form-row fieldset .options.checkbox-options label:hover {
+  border-color: #518092;
+  background: #193b4b;
+}
+
+.form .form-row fieldset .options.checkbox-options label:has(input:checked) {
+  border-color: #61d5db;
+  background: #1b4d5a;
+  color: #efffff;
+  box-shadow: inset 3px 0 #61d5db;
+}
+
+.form .form-row fieldset .options.checkbox-options label:has(input:focus-visible) {
+  outline: 2px solid #a0eeee;
+  outline-offset: 2px;
+}
+
+.form .form-row fieldset .options.checkbox-options input[type="checkbox"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+}
+
 .message-row {
   margin: 8px auto;
   padding: 10px 16px;
@@ -1696,6 +1738,15 @@ h2 {
 }
 
 @media (max-width: 520px) {
+  .page-workspace.highlights-open .search-container .checkbox-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page-workspace.highlights-open .search-container .checkbox-options label {
+    padding-inline: 8px;
+    white-space: normal;
+  }
+
   .page-workspace.highlights-open .search-container .aerodrome-header-search .btn-search-item {
     grid-template-columns: minmax(0, 1fr);
     gap: 4px;
@@ -1803,7 +1854,7 @@ h2 {
     transition: none;
   }
 
-  .app-logo.loading {
+  .loading-spinner {
     animation: none;
   }
 }

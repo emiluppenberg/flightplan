@@ -30,7 +30,7 @@ const HighlightsField = (props: HighlightsFieldProps) => {
     return (
         <fieldset>
             <div className="title">{props.title}</div>
-            <div className="options">
+            <div className="options checkbox-options">
                 <label className="toggle-all">
                     Select all
                     <input

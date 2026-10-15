@@ -4,6 +4,7 @@ import { useFlightPathContext } from '../Context'
 import { useWorkspaceWidth } from '../hooks'
 import { searchAerodromeId } from '../utilities'
 import Messages from '../components/Messages'
+import LoadingSpinner from '../components/LoadingSpinner'
 import { Link, useOutletContext } from 'react-router'
 
 const Aerodromes = () => {
@@ -24,7 +25,10 @@ const Aerodromes = () => {
       <Messages />
       <div className="section-heading">
         <div>
-          <h1 className="eyebrow">MY BRIEFINGS</h1>
+          <div className="section-title">
+            <h1 className="eyebrow">MY BRIEFINGS</h1>
+            <LoadingSpinner />
+          </div>
           <p>
             Saved aerodromes and live conditions.
           </p>

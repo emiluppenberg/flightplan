@@ -18,7 +18,7 @@ const AerodromeTypeFiltersField = (props: AerodromeTypeFiltersFieldProps) => {
                         className="title"
                         onClick={props.onClose}
                     >Done</button>
-                    <div className="options">
+                    <div className="options checkbox-options">
                         <label className="config">
                             closed
                             <input
