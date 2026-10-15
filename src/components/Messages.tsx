@@ -1,33 +1,49 @@
 import { useFlightPathContext } from "../Context"
 
-const Messages = () => {
+export interface MessagesProps {
+    message?: string
+    warning?: boolean
+    onDismiss?: () => void
+}
+
+const MessageRow = ({ message, warning, onDismiss }: {
+    message: string
+    warning?: boolean
+    onDismiss?: () => void
+}) => (
+    <div className="message-row">
+        <p className={`message ${warning ? "warning" : "info"}`}>{message}</p>
+        {onDismiss && (<button type="button" onClick={onDismiss}>OK</button>)}
+    </div>
+)
+
+const Messages = (props: MessagesProps) => {
     const context = useFlightPathContext()
+    const message = props.message
+
+    if (message !== undefined) {
+        return (
+            <MessageRow
+                message={message}
+                warning={props.warning}
+                onDismiss={props.onDismiss} />
+        )
+    }
 
     return (
         <div>
             {context.messages.map((message, index) => (
-                <div
+                <MessageRow
                     key={`message-${index}`}
-                    className="message-row">
-                    <p className="message">{message.message}</p>
-                    <button
-                        type="button"
-                        onClick={() => context.handleDiscardMessage(index)}>
-                        OK
-                    </button>
-                </div>
+                    message={message.message}
+                    onDismiss={() => context.handleDiscardMessage(index)} />
             ))}
             {context.errors.map((error, index) => (
-                <div
+                <MessageRow
                     key={`error-${index}`}
-                    className="message-row">
-                    <p className="message warning">{error.message}{error.time && (" - " + new Date(error.time).toLocaleTimeString("sv-SE"))}</p>
-                    <button
-                        type="button"
-                        onClick={() => context.handleDiscardError(index)}>
-                        OK
-                    </button>
-                </div>
+                    message={`${error.message}${error.time ? " - " + new Date(error.time).toLocaleTimeString("sv-SE") : ""}`}
+                    warning
+                    onDismiss={() => context.handleDiscardError(index)} />
             ))}
         </div>
     )

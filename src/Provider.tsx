@@ -5,6 +5,8 @@ import { createAerodrome, searchAerodromeId, capture, captureSyncSNOWTAM, consum
 import { fetchInitializeUser, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUserAccessToken, fetchSignOutUser, fetchUpsertConfig } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
+import Config from "./components/Config";
+import Expand from "./components/Expand";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import type { UpsertConfigBody } from "./shared";
 
@@ -20,6 +22,8 @@ export const FlightPathProvider = () => {
     const [errors, setErrors] = useState<Message[]>([])
     const [user, setUser] = useState<AppUser>()
     const [initialized, setInitialized] = useState(false)
+    const [showHighlights, setShowHighlights] = useState(false)
+    const parentContainerRef = useRef<HTMLDivElement>(null)
     const navigate = useNavigate()
     const location = useLocation()
 
@@ -28,14 +32,10 @@ export const FlightPathProvider = () => {
     const upsertConfigQueued = useRef(false)
     const preventRestoreSession = useRef(false)
     const pathname = useRef(location.pathname)
-    const hasAerodromes = useRef(aerodromes.length > 1)
     const isUser = useRef(false)
     useEffect(() => {
         pathname.current = location.pathname
     }, [location.pathname])
-    useEffect(() => {
-        hasAerodromes.current = aerodromes.length > 1
-    }, [aerodromes.length])
     useEffect(() => {
         isUser.current = user !== undefined
     }, [user])
@@ -98,17 +98,26 @@ export const FlightPathProvider = () => {
         const restoreSession = async () => {
             let userData: UserAppData | undefined = undefined
             setIsLoading(true)
+            const confirmationLink = isConfirmationLink()
 
-            if (isConfirmationLink()) {
+            if (!confirmationLink && pathname.current === "/") {
+                navigate(`/${ROUTES.myBriefings}`, { replace: true })
+            }
+
+            if (confirmationLink) {
                 const confirmedResult = await capture(() => consumeSupabaseConfirmationLink())
+
+                if (pathname.current === "/") {
+                    navigate(`/${ROUTES.myBriefings}`, { replace: true })
+                }
 
                 if (confirmedResult.data) {
                     setMessages([...messages, { message: "Welcome to FlyRep" }])
                     setUser(confirmedResult.data)
+                    await new Promise(resolve => setTimeout(resolve, 1000))
                     userData = await captureUserData(confirmedResult.data.session.access_token)
 
                     if (userData.errors) {
-                        setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
                         let retry = window.confirm("There was an error while initializing your session - retry?")
 
                         while (retry) {
@@ -130,10 +139,10 @@ export const FlightPathProvider = () => {
 
                 if (initializeResult.data) {
                     setUser(initializeResult.data)
+                    await new Promise(resolve => setTimeout(resolve, 1000))
                     userData = await captureUserData(initializeResult.data.session.access_token)
 
                     if (userData.errors) {
-                        setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
                         let retry = window.confirm("There was an error while initializing your session - retry?")
 
                         while (retry) {
@@ -153,7 +162,6 @@ export const FlightPathProvider = () => {
             }
 
             if (userData) {
-                hasAerodromes.current = userData.aerodromes.length > 0
                 setAerodromes([...userData.aerodromes, createAerodrome(searchAerodromeId)])
                 setHighlightsTAF([...userData.highlightsTaf])
                 setHighlightsMETAR([...userData.highlightsMetar])
@@ -165,20 +173,26 @@ export const FlightPathProvider = () => {
                     setErrors(userData.errors.map(message => ({ message, time: Date.now() })))
                 }
             }
-
-            setInitialized(true);
-            setIsLoading(false)
-
-            if (!hasAerodromes.current && pathname.current === "/") {
-                navigate(`/${ROUTES.search}`)
-            }
         }
 
         if (!preventRestoreSession.current) {
             preventRestoreSession.current = true
-            void restoreSession().finally(() => {
-                preventRestoreSession.current = false
-            });
+            void restoreSession()
+                .catch(error => {
+                    setErrors(current => [...current, {
+                        message: error instanceof Error ? error.message : "There was an unexpected error while initializing your session",
+                        time: Date.now()
+                    }])
+
+                    if (pathname.current === "/") {
+                        navigate(`/${ROUTES.myBriefings}`, { replace: true })
+                    }
+                })
+                .finally(() => {
+                    preventRestoreSession.current = false
+                    setInitialized(true)
+                    setIsLoading(false)
+                });
         }
     }, [location.pathname])
 
@@ -385,8 +399,8 @@ export const FlightPathProvider = () => {
         }
     }
 
-    const handleAddAerodrome = async (icaoId: string | null) => {
-        if (!icaoId) return
+    const handleAddAerodrome = async (icaoId: string | null): Promise<boolean> => {
+        if (!icaoId) return false
 
         let supabaseAerodrome: SupabaseAerodrome | undefined = undefined
         let nextPollSNOWTAM = Date.now()
@@ -398,7 +412,7 @@ export const FlightPathProvider = () => {
 
         if (isDuplicate) {
             window.alert(`You have already saved ${icaoId}`)
-            return;
+            return false;
         }
 
         if (user) {
@@ -451,6 +465,7 @@ export const FlightPathProvider = () => {
             isLoading: false,
             supabaseId: supabaseAerodrome?.id
         }])
+        return true
     }
 
     const handleDeleteAerodrome = async (id: string) => {
@@ -494,10 +509,10 @@ export const FlightPathProvider = () => {
 
             if (signInResult.data) {
                 setUser(signInResult.data)
+                await new Promise(resolve => setTimeout(resolve, 1000))
                 let userData = await captureUserData(signInResult.data.session.access_token)
 
                 if (userData.errors) {
-                    setErrors(current => [...current, ...userData!.errors!.map(error => ({ message: error }))])
                     let retry = window.confirm("There was an error while initializing your session - retry?")
 
                     while (retry) {
@@ -510,7 +525,6 @@ export const FlightPathProvider = () => {
                     }
                 }
 
-                hasAerodromes.current = userData.aerodromes.length > 0
                 setAerodromes([...userData.aerodromes, createAerodrome(searchAerodromeId)])
                 setHighlightsTAF([...userData.highlightsTaf])
                 setHighlightsMETAR([...userData.highlightsMetar])
@@ -522,11 +536,7 @@ export const FlightPathProvider = () => {
                     setErrors(current => [...current, ...userData.errors!.map(message => ({ message, time: Date.now() }))])
                 }
 
-                if (!hasAerodromes.current) {
-                    navigate(`/${ROUTES.search}`)
-                } else {
-                    navigate("/")
-                }
+                navigate(`/${ROUTES.myBriefings}`, { replace: true })
             }
         } catch (e) {
             setErrors(current => [...current, { message: e instanceof Error ? e.message : "There was an unexpected error while signing in", time: Date.now() }])
@@ -609,7 +619,7 @@ export const FlightPathProvider = () => {
         try {
             const responseMessage = await fetchSignUpUser({ ...values });
             setMessages([...messages, { message: responseMessage }])
-            navigate("/")
+            navigate(`/${ROUTES.myBriefings}`, { replace: true })
         } catch (e) {
             setErrors(current => [...current, { message: e instanceof Error ? e.message : "There was an unexpected error while signing up", time: Date.now() }])
         } finally {
@@ -651,8 +661,19 @@ export const FlightPathProvider = () => {
                 user
             }}>
             <main className="page">
-                <AppHeader />
-                <Outlet />
+                <AppHeader
+                    showHighlights={showHighlights}
+                    onToggleHighlights={() => setShowHighlights(value => !value)} />
+                <div className={`page-workspace${showHighlights ? " highlights-open" : ""}`}>
+                    <Expand isOpen={showHighlights} mode="horizontal" rows={1}>
+                        <aside id="highlight-settings" className="config-sidebar" aria-label="Highlight settings">
+                            <Config />
+                        </aside>
+                    </Expand>
+                    <div ref={parentContainerRef} className="parent-container">
+                        <Outlet context={parentContainerRef} />
+                    </div>
+                </div>
             </main>
         </FlightPathContext>
     )

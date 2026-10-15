@@ -1,13 +1,17 @@
-import { useMemo } from 'react'
+import { useMemo, type RefObject } from 'react'
 import AerodromeRender from '../components/AerodromeRender'
 import { useFlightPathContext } from '../Context'
-import { useWindowWidth } from '../hooks'
+import { useWorkspaceWidth } from '../hooks'
 import { searchAerodromeId } from '../utilities'
 import Messages from '../components/Messages'
+import LoadingSpinner from '../components/LoadingSpinner'
+import AppLogo from '../components/AppLogo'
+import { Link, useOutletContext } from 'react-router'
 
 const Aerodromes = () => {
   const context = useFlightPathContext()
-  const splitRender = useWindowWidth() >= 500
+  const parentContainerRef = useOutletContext<RefObject<HTMLDivElement | null>>()
+  const splitRender = useWorkspaceWidth(parentContainerRef) >= 960
 
   const aerodromes = useMemo(() =>
     context.aerodromes.filter(aerodrome => aerodrome.id !== searchAerodromeId),
@@ -19,9 +23,34 @@ const Aerodromes = () => {
 
   return (
     <>
-      <Messages />
+      <div className="page-messages">
+        <Messages />
+      </div>
+      <div className="section-heading">
+        <div>
+          <div className="section-title">
+            <h1 className="eyebrow">MY BRIEFINGS</h1>
+            <LoadingSpinner />
+          </div>
+          <p>
+            Saved aerodromes and live conditions.
+          </p>
+        </div>
+        <Link className="primary-action add-aerodrome-action" to="/search" aria-label="Add aerodrome">
+          <span aria-hidden="true">+</span>
+          <span className="add-aerodrome-label">Add aerodrome</span>
+        </Link>
+      </div>
       <div className={`aerodromes-container ${splitRender && "split"}`}>
-        <div className={`renders-container ${splitRender && "split"}`}>
+        {aerodromes.length === 0 && (
+          <div className="empty-state">
+            <AppLogo />
+            <h2>Build your briefing board</h2>
+            <p>Search for an aerodrome to review TAFs, METARs, NOTAMs, and operational hours. Save it here for a quick return.</p>
+            <Link className="primary-action" to="/search">Search aerodromes <span aria-hidden="true">↗</span></Link>
+          </div>
+        )}
+        {aerodromes.length > 0 && <div className={`renders-container ${splitRender && "split"}`}>
           {aerodromes.map((aerodrome, index) => {
             if (splitRender && index >= splitIndex) return
 
@@ -31,8 +60,8 @@ const Aerodromes = () => {
                 aerodrome={aerodrome} />
             )
           })}
-        </div>
-        {splitRender && (
+        </div>}
+        {aerodromes.length > 0 && splitRender && (
           <div className="renders-container split">
             {aerodromes.map((aerodrome, index) => {
               if (index < splitIndex) return

@@ -19,22 +19,26 @@ const UserForm = (props: UserFormProps) => {
             <form onSubmit={handleFormSubmit}>
                 <div className="form">
                     <div className="form-row">
-                        <input
-                            placeholder="Enter email"
-                            type="email"
-                            {...register("email", {
-                                required: true
-                            })}
-                        />
+                        <label className="auth-field">
+                            <span>Email address</span>
+                            <input
+                                placeholder="name@example.com"
+                                type="email"
+                                autoComplete="email"
+                                {...register("email", { required: true })}
+                            />
+                        </label>
                     </div>
                     <div className="form-row">
-                        <input
-                            placeholder="Enter password"
-                            type="password"
-                            {...register("password", {
-                                required: true
-                            })}
-                        />
+                        <label className="auth-field">
+                            <span>Password</span>
+                            <input
+                                placeholder="Enter your password"
+                                type="password"
+                                autoComplete={props.submitText === "Sign up" ? "new-password" : "current-password"}
+                                {...register("password", { required: true })}
+                            />
+                        </label>
                     </div>
                     <div className="form-row">
                         <button type="submit">{props.submitText}</button>
