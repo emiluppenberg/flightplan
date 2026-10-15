@@ -5,6 +5,8 @@ import { createAerodrome, searchAerodromeId, capture, captureSyncSNOWTAM, consum
 import { fetchInitializeUser, fetchInsertAerodrome, fetchDeleteAerodrome, fetchSignInUser, fetchSignUpUser, fetchRefreshedUserAccessToken, fetchSignOutUser, fetchUpsertConfig } from "./api/supabase";
 import { fetchTAF, fetchMETAR, fetchNOTAM, POLL_INTERVAL_TAF_METAR_NOTAM, POLL_INTERVAL_SNOWTAM, fetchSNOWTAM, } from "./api/resources";
 import AppHeader from "./components/AppHeader";
+import Config from "./components/Config";
+import Expand from "./components/Expand";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import type { UpsertConfigBody } from "./shared";
 
@@ -20,6 +22,8 @@ export const FlightPathProvider = () => {
     const [errors, setErrors] = useState<Message[]>([])
     const [user, setUser] = useState<AppUser>()
     const [initialized, setInitialized] = useState(false)
+    const [showHighlights, setShowHighlights] = useState(false)
+    const parentContainerRef = useRef<HTMLDivElement>(null)
     const navigate = useNavigate()
     const location = useLocation()
 
@@ -651,8 +655,19 @@ export const FlightPathProvider = () => {
                 user
             }}>
             <main className="page">
-                <AppHeader />
-                <Outlet />
+                <AppHeader
+                    showHighlights={showHighlights}
+                    onToggleHighlights={() => setShowHighlights(value => !value)} />
+                <div className={`page-workspace${showHighlights ? " highlights-open" : ""}`}>
+                    <Expand isOpen={showHighlights} mode="horizontal" rows={1}>
+                        <aside id="highlight-settings" className="config-sidebar" aria-label="Highlight settings">
+                            <Config />
+                        </aside>
+                    </Expand>
+                    <div ref={parentContainerRef} className="parent-container">
+                        <Outlet context={parentContainerRef} />
+                    </div>
+                </div>
             </main>
         </FlightPathContext>
     )

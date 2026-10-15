@@ -1,14 +1,15 @@
-import { useState } from "react";
 import AppLogo from "./AppLogo"
-import Config from "./Config";
-import Expand from "./Expand";
 import { SVG_URLS } from "../utilities";
 import { useFlightPathContext } from "../Context";
 import { NavLink } from "react-router";
 
-const AppHeader = () => {
+type AppHeaderProps = {
+    showHighlights: boolean;
+    onToggleHighlights: () => void;
+}
+
+const AppHeader = ({ showHighlights, onToggleHighlights }: AppHeaderProps) => {
     const context = useFlightPathContext()
-    const [showHighlights, setShowHighlights] = useState(false)
 
     return (
         <div className="app-header">
@@ -18,9 +19,11 @@ const AppHeader = () => {
                         type="button"
                         className="control-button btn-highlight"
                         aria-pressed={showHighlights}
+                        aria-expanded={showHighlights}
+                        aria-controls="highlight-settings"
                         aria-label="Highlight settings"
                         title="Highlight settings"
-                        onClick={() => setShowHighlights(value => !value)}>
+                        onClick={onToggleHighlights}>
                         <img src={SVG_URLS.highlight} width="18" alt="" />
                     </button>
                     <NavLink
@@ -48,13 +51,6 @@ const AppHeader = () => {
                     )}
                 </div>
             </div>
-            <Expand
-                isOpen={showHighlights}
-                rows={1}>
-                <div className="app-header-row config">
-                    <Config />
-                </div>
-            </Expand>
         </div>
     )
 }

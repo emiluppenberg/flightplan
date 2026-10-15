@@ -266,25 +266,6 @@ h2 {
         }
       }
     }
-
-    &.config {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      align-items: stretch;
-      overflow-y: auto;
-      padding: 0.5rem;
-      max-height: 50vh;
-
-      @media (max-width: 500px),
-      (max-height: 500px) {
-        max-height: 30vh;
-      }
-
-      fieldset {
-        background: $color-second;
-      }
-    }
   }
 }
 
@@ -408,20 +389,36 @@ h2 {
 
 .expand {
   display: grid;
-  grid-template-rows: 0fr;
   visibility: hidden;
   transition:
-    grid-template-rows 250ms ease,
     visibility 0s 250ms;
 
   &.open {
-    grid-template-rows: var(--expand-rows);
     visibility: visible;
     transition-delay: 0s;
   }
 
+  &.vertical {
+    grid-template-rows: var(--expand-track);
+    transition: grid-template-rows 250ms ease, visibility 0s 250ms;
+
+    &.open {
+      transition-delay: 0s;
+    }
+  }
+
+  &.horizontal {
+    grid-template-columns: var(--expand-track);
+    transition: grid-template-columns 250ms ease, visibility 0s 250ms;
+
+    &.open {
+      transition-delay: 0s;
+    }
+  }
+
   >.expand-content {
     min-height: 0;
+    min-width: 0;
     overflow: hidden;
   }
 }
@@ -901,26 +898,110 @@ h2 {
   background: #9be9e9;
 }
 
-.app-header .app-header-row.config {
-  padding: 22px max(3.5vw, 18px);
-  background: #102435;
-  border-bottom: 1px solid #345267;
-  box-shadow: 0 20px 32px rgba(0, 0, 0, .24);
+.page-workspace {
+  --sidebar-width: min(260px, 30vw);
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: 0px minmax(0, 1fr);
+  transition: grid-template-columns 250ms ease;
 }
 
-.app-header .app-header-row.config fieldset {
+.page-workspace.highlights-open {
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+}
+
+.page-workspace>.expand.horizontal {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.page-workspace>.expand.horizontal>.expand-content {
+  height: 100%;
+}
+
+.parent-container {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.page-workspace .config-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: var(--sidebar-width);
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+  background: #102435;
+  border: 1px solid #345267;
+  border-top: 0;
+  border-radius: 0 0 12px 0;
+}
+
+.page-workspace .config-sidebar .form-row {
+  flex-direction: column;
+}
+
+.page-workspace .config-sidebar .form-row fieldset {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 12px;
   background: #0c1c2a;
 }
 
-.app-header .app-header-row.config .title {
+.page-workspace .config-sidebar .form-row fieldset .title {
+  justify-content: flex-start;
   color: #9ce2e5;
   font: 700 .72rem var(--sans);
   letter-spacing: .12em;
 }
 
-.app-header .app-header-row.config .options label {
-  padding: 7px 14px;
+.page-workspace .config-sidebar .form-row fieldset .options {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 2px;
+  width: 100%;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+
+.page-workspace .config-sidebar .form-row fieldset .options label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  white-space: pre-line;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  height: auto;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 6px;
   font-size: .81rem;
+}
+
+.page-workspace .config-sidebar .form-row fieldset .options label.config {
+  flex-wrap: wrap;
+  white-space: normal;
+}
+
+.page-workspace .config-sidebar .form-row fieldset .options label.config input {
+  width: 74px;
 }
 
 .app-logo {
@@ -1559,6 +1640,10 @@ h2 {
 }
 
 @media (max-width: 760px) {
+  .page-workspace {
+    --sidebar-width: clamp(156px, 40vw, 260px);
+  }
+
   .app-header .app-header-row.top {
     min-height: 68px;
     padding: 0 16px;
@@ -1607,6 +1692,19 @@ h2 {
 }
 
 @media (max-width: 520px) {
+  .page-workspace .config-sidebar {
+    padding: 10px;
+  }
+
+  .page-workspace .config-sidebar .form-row fieldset {
+    padding: 8px;
+  }
+
+  .page-workspace .config-sidebar .form-row fieldset .options label {
+    gap: 4px;
+    padding-inline: 4px;
+  }
+
   .app-header .app-header-row.top {
     padding: 8px 12px 0;
   }

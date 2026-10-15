@@ -513,7 +513,7 @@ export const HIGHLIGHTS_NOTAM: CodeHighlight[] = [
   },
   {
     report: "NOTAM",
-    label: "restricted/prohibited/danger",
+    label: "restricted/\nprohibited/\ndanger",
     class: "highlight-restricted-prohibited-danger",
     priority: 1,
     regEx: /\bQ(?:RA|RD|RM|RO|RP|RR|RT)[A-Z]{2}\b/

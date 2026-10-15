@@ -1,14 +1,15 @@
-import { useMemo } from 'react'
+import { useMemo, type RefObject } from 'react'
 import AerodromeRender from '../components/AerodromeRender'
 import { useFlightPathContext } from '../Context'
-import { useWindowWidth } from '../hooks'
+import { useWorkspaceWidth } from '../hooks'
 import { searchAerodromeId } from '../utilities'
 import Messages from '../components/Messages'
-import { Link } from 'react-router'
+import { Link, useOutletContext } from 'react-router'
 
 const Aerodromes = () => {
   const context = useFlightPathContext()
-  const splitRender = useWindowWidth() >= 960
+  const parentContainerRef = useOutletContext<RefObject<HTMLDivElement | null>>()
+  const splitRender = useWorkspaceWidth(parentContainerRef) >= 960
 
   const aerodromes = useMemo(() =>
     context.aerodromes.filter(aerodrome => aerodrome.id !== searchAerodromeId),
