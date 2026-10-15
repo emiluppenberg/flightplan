@@ -17,20 +17,17 @@ const AerodromeSearchForm = () => {
     const { getValues, setValue, handleSubmit: formSubmit } = form;
 
     const [error, setError] = useState("")
+    const [searchControlsOpen, setSearchControlsOpen] = useState(false)
     const [searchOpen, setSearchOpen] = useState(false)
     const aerodromeTypeFiltersRef = useRef<HTMLFieldSetElement>(null)
-    const searchAerodromeCodeRef = useRef<HTMLInputElement>(null)
-    const searchAerodromeNameRef = useRef<HTMLInputElement>(null)
-    const searchRegionNameRef = useRef<HTMLInputElement>(null)
+    const searchFieldsetRef = useRef<HTMLFieldSetElement>(null)
     const searchPanelRef = useRef<HTMLDivElement>(null)
     const handleSearchOpen = (e: Event) => {
         if (!(e.target instanceof Node)) return
 
         const keepSearchOpen =
             aerodromeTypeFiltersRef.current?.contains(e.target) ||
-            searchAerodromeCodeRef.current?.contains(e.target) ||
-            searchAerodromeNameRef.current?.contains(e.target) ||
-            searchRegionNameRef.current?.contains(e.target) ||
+            searchFieldsetRef.current?.contains(e.target) ||
             searchPanelRef.current?.contains(e.target)
 
         if (!keepSearchOpen) {
@@ -300,74 +297,98 @@ const AerodromeSearchForm = () => {
                             : filters.filter(filter => filter !== value)
                         )} />
                 </Expand>
-                {searchAerodrome && (
-                    <div className="aerodrome-header-buttons search-header-buttons">
-                        <FormProvider {...form}>
-                            <form onSubmit={formSubmit(handleSubmit)}>
-                                <input
-                                    required
-                                    ref={searchAerodromeCodeRef}
-                                    type="text"
-                                    className="input-search"
-                                    placeholder="ICAO code (e.g. EDDB)"
-                                    value={searchAerodrome.formValues.icaoId}
-                                    onChange={(e) => {
-                                        const icaoId = e.target.value.trim().toUpperCase()
-
-                                        setValue("icaoId", icaoId, {
-                                            shouldDirty: true,
-                                            shouldValidate: true
-                                        })
-
-                                        context.handleSetFormValues({ ...getValues(), icaoId }, searchAerodromeId)
-                                    }} />
-                                <button
-                                    hidden={true}
-                                    type="submit" />
-                            </form>
-                        </FormProvider >
-                        <input
-                            ref={searchAerodromeNameRef}
-                            type="text"
-                            className="input-search"
-                            placeholder="Aerodrome name"
-                            value={aerodromeNameParam}
-                            onChange={(e) => {
-                                ++globalSearchId.current
-                                setSearchType("aerodrome")
-                                setAerodromeNameParam(e.target.value)
-                            }}
-                            onFocus={async () => {
-                                ++globalSearchId.current
-                                setSearchType("aerodrome")
-                                setSearchOpen(true)
-                            }} />
-
-                        <input
-                            ref={searchRegionNameRef}
-                            type="text"
-                            className="input-search"
-                            placeholder="Region or country"
-                            value={regionNameParam}
-                            onChange={(e) => {
-                                ++globalSearchId.current
-                                setSearchType("region")
-                                setRegionAerodromeResponse(undefined)
-                                setRegionNameParam(e.target.value)
-                            }}
-                            onFocus={async () => {
-                                ++globalSearchId.current
-                                if (regionAerodromeResponse) {
-                                    setSearchType("region aerodromes")
-                                } else {
-                                    setSearchType("region")
-                                }
-
-                                setSearchOpen(true)
-                            }} />
-
-                    </div>
+                {searchAerodrome && !searchControlsOpen && (
+                    <button
+                        type="button"
+                        className="search-controls-toggle"
+                        aria-expanded={false}
+                        aria-controls="aerodrome-search-controls"
+                        onClick={() => setSearchControlsOpen(true)}
+                    ><span>Search aerodromes</span><span aria-hidden="true">＋</span></button>
                 )}
+                <Expand
+                    isOpen={searchControlsOpen}
+                    rows={1}>
+                    <div id="aerodrome-search-controls">
+                        {searchAerodrome && (
+                            <div className="form">
+                                <div className="form-row">
+                                    <fieldset ref={searchFieldsetRef} aria-label="Search aerodromes">
+                                        <span className="filter-heading">Search aerodromes</span>
+                                        <button
+                                            type="button"
+                                            className="title"
+                                            onClick={() => {
+                                                setSearchControlsOpen(false)
+                                                setSearchOpen(false)
+                                            }}>
+                                            Done
+                                        </button>
+                                        <div className="aerodrome-header-buttons search-header-buttons">
+                                            <FormProvider {...form}>
+                                                <form onSubmit={formSubmit(handleSubmit)}>
+                                                    <input
+                                                        required
+                                                        type="text"
+                                                        className="input-search"
+                                                        placeholder="ICAO code (e.g. EDDB)"
+                                                        value={searchAerodrome.formValues.icaoId}
+                                                        onChange={(e) => {
+                                                            const icaoId = e.target.value.trim().toUpperCase()
+
+                                                            setValue("icaoId", icaoId, {
+                                                                shouldDirty: true,
+                                                                shouldValidate: true
+                                                            })
+
+                                                            context.handleSetFormValues({ ...getValues(), icaoId }, searchAerodromeId)
+                                                        }} />
+                                                    <button
+                                                        hidden={true}
+                                                        type="submit" />
+                                                </form>
+                                            </FormProvider>
+                                            <input
+                                                type="text"
+                                                className="input-search"
+                                                placeholder="Aerodrome name"
+                                                value={aerodromeNameParam}
+                                                onChange={(e) => {
+                                                    ++globalSearchId.current
+                                                    setSearchType("aerodrome")
+                                                    setAerodromeNameParam(e.target.value)
+                                                }}
+                                                onFocus={() => {
+                                                    ++globalSearchId.current
+                                                    setSearchType("aerodrome")
+                                                    setSearchOpen(true)
+                                                }} />
+                                            <input
+                                                type="text"
+                                                className="input-search"
+                                                placeholder="Region or country"
+                                                value={regionNameParam}
+                                                onChange={(e) => {
+                                                    ++globalSearchId.current
+                                                    setSearchType("region")
+                                                    setRegionAerodromeResponse(undefined)
+                                                    setRegionNameParam(e.target.value)
+                                                }}
+                                                onFocus={() => {
+                                                    ++globalSearchId.current
+                                                    if (regionAerodromeResponse) {
+                                                        setSearchType("region aerodromes")
+                                                    } else {
+                                                        setSearchType("region")
+                                                    }
+
+                                                    setSearchOpen(true)
+                                                }} />
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        )}
                 <Expand
                     isOpen={searchOpen}
                     rows={1}>
@@ -500,6 +521,8 @@ const AerodromeSearchForm = () => {
                             </div>
                         )}
 
+                    </div>
+                </Expand>
                     </div>
                 </Expand>
             </div>

@@ -1116,10 +1116,11 @@ h2 {
 }
 
 .aerodrome-render-container .aerodrome-header-container .aerodrome-header-buttons.search-header-buttons {
+  grid-column: 1 / -1;
   display: grid;
   gap: 10px;
-  padding: 18px;
-  background: #102638;
+  padding: 0;
+  background: transparent;
 }
 
 .aerodrome-render-container .aerodrome-header-container .aerodrome-header-buttons.search-header-buttons form,
@@ -1179,6 +1180,10 @@ h2 {
   font-size: 1.15rem;
   line-height: 1;
   color: var(--accent);
+}
+
+.aerodrome-render-container .aerodrome-header-container>button.search-controls-toggle {
+  border-top: 1px solid #2a485b;
 }
 
 .aerodrome-render-container .aerodrome-header-container .aerodrome-header-search {
@@ -1335,6 +1340,7 @@ h2 {
   grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
+  margin: 0;
   padding: 14px;
   background: #102839;
 }
@@ -1582,10 +1588,6 @@ h2 {
 
   .empty-state {
     padding: 32px 22px;
-  }
-
-  .aerodrome-render-container .aerodrome-header-container .aerodrome-header-buttons.search-header-buttons {
-    padding: 12px;
   }
 
   .aerodrome-render-container .aerodrome-report-container,
