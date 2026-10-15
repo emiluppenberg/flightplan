@@ -1299,6 +1299,15 @@ h2 {
   font-weight: 500;
 }
 
+.search-container .aerodrome-header-search .search-results-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  flex: none;
+  margin-top: auto;
+  border-top: 1px solid #2a485b;
+}
+
 .search-container .aerodrome-header-search .sticky button {
   min-height: 38px;
   border: 0;
@@ -1306,6 +1315,10 @@ h2 {
   background: #17394a;
   color: #b8d3dc;
   font-size: .8rem;
+}
+
+.search-container .aerodrome-header-search .search-results-actions button + button {
+  border-left: 1px solid #2a485b;
 }
 
 .search-container .aerodrome-header-search .sticky button:hover {

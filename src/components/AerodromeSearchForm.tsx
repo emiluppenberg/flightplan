@@ -415,7 +415,7 @@ const AerodromeSearchForm = () => {
                                 </p>
                         )}
                         {searchType === "aerodrome" && (
-                            <div className="sticky">
+                            <div className="sticky search-results-actions">
                                 <button
                                     type="button"
                                     className="btn-sticky sibling"
@@ -443,7 +443,7 @@ const AerodromeSearchForm = () => {
                             </button>
                         ))}
                         {searchType === "region" && (
-                            <div className="sticky">
+                            <div className="sticky search-results-actions">
                                 <button
                                     type="button"
                                     className="btn-sticky sibling"
@@ -493,7 +493,7 @@ const AerodromeSearchForm = () => {
                                 </div>
                         )}
                         {searchType === "region aerodromes" && (
-                            <div className="sticky">
+                            <div className="sticky search-results-actions">
                                 <button
                                     type="button"
                                     className="btn-sticky sibling"
