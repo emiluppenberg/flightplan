@@ -19,9 +19,14 @@ const SignIn = () => {
         <>
             <Messages />
             <div className="sign-in-container">
-                <UserForm
-                    onSubmit={(values) => handleSignIn(values)}
-                    submitText="Sign in" />
+                <div className="auth-card">
+                    <span className="eyebrow">WELCOME BACK</span>
+                    <h1>Sign in to FlyRep</h1>
+                    <p>Pick up where your last briefing left off.</p>
+                    <UserForm
+                        onSubmit={(values) => handleSignIn(values)}
+                        submitText="Sign in" />
+                </div>
             </div>
         </>
     )

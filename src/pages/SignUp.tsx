@@ -19,9 +19,14 @@ const SignUp = () => {
         <>
             <Messages />
             <div className="sign-in-container">
-                <UserForm
-                    onSubmit={(values) => handleSignUp(values)}
-                    submitText="Sign up" />
+                <div className="auth-card">
+                    <span className="eyebrow">GET STARTED</span>
+                    <h1>Create your account</h1>
+                    <p>Keep your aerodromes and briefing preferences in one place.</p>
+                    <UserForm
+                        onSubmit={(values) => handleSignUp(values)}
+                        submitText="Sign up" />
+                </div>
             </div>
         </>
     )

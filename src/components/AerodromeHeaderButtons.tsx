@@ -41,8 +41,9 @@ const AerodromeHeaderButtons = (props: AerodromeHeaderButtonsProps) => {
                     <button
                         type="button"
                         className="btn-delete"
+                        aria-label={`Delete ${props.aerodrome.formValues.icaoId}`}
                         onClick={handleDelete}>
-                        <img src={SVG_URLS.trash} width="20" />
+                        <img src={SVG_URLS.trash} width="20" alt="" />
                     </button>
                     <div className="aerodrome-header-icao">
                         <h4>{props.aerodrome.formValues.icaoId}</h4>
@@ -50,8 +51,9 @@ const AerodromeHeaderButtons = (props: AerodromeHeaderButtonsProps) => {
                     <button
                         type="button"
                         className={`btn-refetch ${props.aerodrome.isLoading ? "loading" : ""}`}
+                        aria-label={`Refresh ${props.aerodrome.formValues.icaoId}`}
                         onClick={handleSubmit}>
-                        <img src={SVG_URLS.reload} width="20" />
+                        <img src={SVG_URLS.reload} width="20" alt="" />
                     </button>
                 </div>
             )}
@@ -60,6 +62,7 @@ const AerodromeHeaderButtons = (props: AerodromeHeaderButtonsProps) => {
                     type="button"
                     disabled={props.tafMetarDisabled}
                     className={`btn-taf-metar ${props.tafMetarOpen ? "open" : ""}`}
+                    aria-pressed={props.tafMetarOpen}
                     onClick={() => props.setTafMetarOpen(value => !value)}>
                     <h4>TAF/METAR</h4>
                 </button>
@@ -67,6 +70,7 @@ const AerodromeHeaderButtons = (props: AerodromeHeaderButtonsProps) => {
                     type="button"
                     disabled={props.notamsDisabled}
                     className={`btn-notam ${props.notamsOpen ? "open" : ""}`}
+                    aria-pressed={props.notamsOpen}
                     onClick={() => props.setNotamsOpen(value => !value)}>
                     <h4>NOTAM</h4>
                 </button>
@@ -74,6 +78,7 @@ const AerodromeHeaderButtons = (props: AerodromeHeaderButtonsProps) => {
                     type="button"
                     disabled={props.dateDisabled}
                     className={`btn-date ${props.dateOpen ? "open" : ""}`}
+                    aria-pressed={props.dateOpen}
                     onClick={() => props.setDateOpen(value => !value)}>
                     <h4>DATE</h4>
                 </button>
@@ -81,6 +86,7 @@ const AerodromeHeaderButtons = (props: AerodromeHeaderButtonsProps) => {
                     type="button"
                     disabled={props.operationalHoursDisabled}
                     className={`btn-operational-hours ${props.operationalHoursOpen ? "open" : ""}`}
+                    aria-pressed={props.operationalHoursOpen}
                     onClick={() => props.setOperationalHoursOpen(value => !value)}>
                     <h4>O. HOURS</h4>
                 </button>

@@ -286,7 +286,7 @@ const AerodromeSearchForm = () => {
                     <button
                         type="button"
                         onClick={() => setAerodromeTypeFiltersOpen(true)}
-                    >Filter aerodrome types</button>
+                    ><span>Filter aerodrome types</span><span aria-hidden="true">＋</span></button>
                 )}
                 <Expand
                     isOpen={aerodromeTypeFiltersOpen}
@@ -309,7 +309,7 @@ const AerodromeSearchForm = () => {
                                     ref={searchAerodromeCodeRef}
                                     type="text"
                                     className="input-search"
-                                    placeholder="Search aerodrome by code"
+                                    placeholder="ICAO code (e.g. EDDB)"
                                     value={searchAerodrome.formValues.icaoId}
                                     onChange={(e) => {
                                         const icaoId = e.target.value.trim().toUpperCase()
@@ -330,7 +330,7 @@ const AerodromeSearchForm = () => {
                             ref={searchAerodromeNameRef}
                             type="text"
                             className="input-search"
-                            placeholder="Search aerodromes by name"
+                            placeholder="Aerodrome name"
                             value={aerodromeNameParam}
                             onChange={(e) => {
                                 ++globalSearchId.current
@@ -347,7 +347,7 @@ const AerodromeSearchForm = () => {
                             ref={searchRegionNameRef}
                             type="text"
                             className="input-search"
-                            placeholder="Search aerodromes by region"
+                            placeholder="Region or country"
                             value={regionNameParam}
                             onChange={(e) => {
                                 ++globalSearchId.current

@@ -17,18 +17,20 @@ const AppHeader = () => {
                     <button
                         type="button"
                         className={`btn-highlight ${showHighlights && "open"}`}
+                        aria-label="Highlight settings"
+                        title="Highlight settings"
                         onClick={() => setShowHighlights(value => !value)}>
-                        <img src={SVG_URLS.highlight} width="20" />
+                        <img src={SVG_URLS.highlight} width="18" alt="" />
                     </button>
                     <NavLink
                         to="/search"
                         className={({ isActive }) => `btn-search ${isActive && "open"}`}>
-                        <img src={SVG_URLS.search} width="20" />
+                        <img src={SVG_URLS.search} width="18" alt="" /><span>Search</span>
                     </NavLink>
                     <NavLink
                         to="/"
                         className={({ isActive }) => `btn-aerodromes ${isActive && "open"}`}>
-                        <img src={SVG_URLS.aerodromes} width="20" />
+                        <img src={SVG_URLS.aerodromes} width="18" alt="" /><span>My briefings</span>
                     </NavLink>
                 </div>
                 <AppLogo />
