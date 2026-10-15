@@ -1001,6 +1001,10 @@ h2 {
   flex: none;
 }
 
+.section-heading > div {
+  min-width: 0;
+}
+
 .section-title {
   display: flex;
   align-items: center;
@@ -1042,12 +1046,14 @@ h2 {
   line-height: 1.12;
   font-weight: 700;
   letter-spacing: -.04em;
+  transition: font-size 250ms ease;
 }
 
 .section-heading p {
   margin-top: 8px;
   color: var(--muted);
   font-size: .92rem;
+  transition: font-size 250ms ease;
 }
 
 .search-heading {
@@ -1078,6 +1084,10 @@ h2 {
   background: #a0eeee !important;
   border-color: #a0eeee !important;
   transform: translateY(-1px);
+}
+
+.add-aerodrome-action {
+  gap: 4px;
 }
 
 .aerodromes-container,
@@ -1692,6 +1702,40 @@ h2 {
     padding: 14px 18px 19px;
   }
 
+  .section-heading p {
+    font-size: .78rem;
+  }
+
+  .section-heading > div {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 8px;
+  }
+
+  .section-heading .section-title {
+    display: contents;
+  }
+
+  .section-heading .section-title h1 {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .section-heading .loading-spinner {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: center;
+    margin-right: 8px;
+  }
+
+  .section-heading p {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+    min-width: 0;
+    margin-top: 0;
+  }
+
   .search-heading {
     width: 100%;
   }
@@ -1704,6 +1748,43 @@ h2 {
   .section-heading .primary-action {
     padding: 9px 12px;
     font-size: .78rem;
+  }
+
+  .section-heading .add-aerodrome-action {
+    flex: 0 0 auto;
+    width: 8.5rem;
+    overflow: hidden;
+    transition: width 250ms ease, min-height 250ms ease, padding 250ms ease, font-size 250ms ease, gap 250ms ease;
+  }
+
+  .add-aerodrome-label {
+    display: inline-block;
+    max-width: 7rem;
+    overflow: hidden;
+    opacity: 1;
+    transition: max-width 250ms ease, opacity 250ms ease;
+  }
+
+  .page-workspace.highlights-open .section-heading .add-aerodrome-action {
+    width: 40px;
+    min-height: 40px;
+    padding: 0;
+    font-size: 1.25rem;
+    gap: 0;
+  }
+
+  .page-workspace.highlights-open .add-aerodrome-label {
+    max-width: 0;
+    opacity: 0;
+  }
+
+  .page-workspace.highlights-open .section-heading h1 {
+    font-size: clamp(1rem, 4vw, 1.35rem);
+  }
+
+  .page-workspace.highlights-open .section-heading p {
+    font-size: clamp(.68rem, 2.5vw, .75rem);
+    overflow-wrap: anywhere;
   }
 
   .empty-state {
@@ -1771,16 +1852,11 @@ h2 {
 
   .section-heading {
     align-items: start;
-    flex-direction: column;
-    gap: 15px;
+    gap: 12px;
   }
 
   .section-heading h1 {
     font-size: 1.75rem;
-  }
-
-  .section-heading p {
-    font-size: .84rem;
   }
 
   .section-heading,
@@ -1830,6 +1906,13 @@ h2 {
 
   .loading-spinner {
     animation: none;
+  }
+
+  .section-heading h1,
+  .section-heading p,
+  .section-heading .add-aerodrome-action,
+  .add-aerodrome-label {
+    transition: none;
   }
 }
 

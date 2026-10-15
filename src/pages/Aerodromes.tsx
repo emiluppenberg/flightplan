@@ -34,7 +34,10 @@ const Aerodromes = () => {
             Saved aerodromes and live conditions.
           </p>
         </div>
-        <Link className="primary-action" to="/search">+ Add aerodrome</Link>
+        <Link className="primary-action add-aerodrome-action" to="/search" aria-label="Add aerodrome">
+          <span aria-hidden="true">+</span>
+          <span className="add-aerodrome-label">Add aerodrome</span>
+        </Link>
       </div>
       <div className={`aerodromes-container ${splitRender && "split"}`}>
         {aerodromes.length === 0 && (
