@@ -534,8 +534,10 @@ const AerodromeSearchForm = () => {
                 {hasSearched
                     ? (<button
                         type="button"
+                        className="primary-action"
                         onClick={() => context.handleAddAerodrome(searchAerodrome.icaoId)}>
-                        Save {searchAerodrome.icaoId}
+                        <span aria-hidden="true">+</span>
+                        <span>Save {searchAerodrome.icaoId}</span>
                     </button>)
                     : (<p className="message info">Search aerodrome to display data</p>)}
             </div>

@@ -1402,17 +1402,13 @@ h2 {
 }
 
 .search-container>.aerodrome-render-container>.sticky {
-  padding: 16px;
+  padding: 0;
   border-top: 1px solid #2a485b;
 }
 
-.search-container>.aerodrome-render-container>.sticky button {
+.search-container>.aerodrome-render-container>.sticky .primary-action {
   width: 100%;
-  padding: 12px 18px;
-  color: #062934;
-  background: #61d5db;
-  border-color: #61d5db;
-  font-weight: 800;
+  border-radius: 0 0 10px 10px;
 }
 
 .search-container .sticky .message.info {
@@ -1789,6 +1785,36 @@ h2 {
 
   .empty-state {
     min-height: 430px;
+    padding: 32px clamp(12px, 3vw, 24px);
+  }
+
+  .empty-state .app-logo {
+    width: min(128px, 100%);
+    margin-bottom: 18px;
+  }
+
+  .empty-state h2 {
+    max-width: 100%;
+    margin: 6px 0 8px;
+    font-size: clamp(1.125rem, 3.2vw, 1.5rem);
+    overflow-wrap: anywhere;
+  }
+
+  .empty-state p {
+    max-width: 100%;
+    font-size: .82rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .empty-state .primary-action {
+    display: inline-block;
+    max-width: 100%;
+    margin-top: 18px;
+    padding: 9px 12px;
+    font-size: .8rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -1866,7 +1892,7 @@ h2 {
   }
 
   .empty-state {
-    padding: 32px 22px;
+    padding: 28px clamp(8px, 3vw, 18px);
   }
 
   .aerodrome-render-container .aerodrome-report-container,
