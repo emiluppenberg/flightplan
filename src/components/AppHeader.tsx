@@ -43,7 +43,7 @@ const AppHeader = ({ showHighlights, onToggleHighlights }: AppHeaderProps) => {
                     {!context.user && (
                         <NavLink
                             to="/account"
-                            className={({ isActive }) => `${isActive && "open"}`}>
+                            className={({ isActive }) => `primary-action${isActive ? " open" : ""}`}>
                             Sign in
                         </NavLink>
                     )}

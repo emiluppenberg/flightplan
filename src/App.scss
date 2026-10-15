@@ -867,14 +867,15 @@ h2 {
   border-color: #356071;
 }
 
-.app-header .app-header-row.top .top-buttons.right a:last-child {
+.app-header .app-header-row.top .top-buttons.right .primary-action {
   background: #61d5db;
   color: #062431;
   border-color: #61d5db;
+  font-weight: 800;
 }
 
-.app-header .app-header-row.top .top-buttons.right a:last-child:hover {
-  background: #9be9e9;
+.app-header .app-header-row.top .top-buttons.right .primary-action:hover {
+  color: #06212c;
 }
 
 .page-workspace {
