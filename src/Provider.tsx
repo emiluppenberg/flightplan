@@ -107,6 +107,10 @@ export const FlightPathProvider = () => {
             if (confirmationLink) {
                 const confirmedResult = await capture(() => consumeSupabaseConfirmationLink())
 
+                if (pathname.current === "/") {
+                    navigate(`/${ROUTES.myBriefings}`, { replace: true })
+                }
+
                 if (confirmedResult.data) {
                     setMessages([...messages, { message: "Welcome to FlyRep" }])
                     setUser(confirmedResult.data)
@@ -169,20 +173,26 @@ export const FlightPathProvider = () => {
                     setErrors(userData.errors.map(message => ({ message, time: Date.now() })))
                 }
             }
-
-            setInitialized(true);
-            setIsLoading(false)
-
-            if (confirmationLink && pathname.current === "/") {
-                navigate(`/${ROUTES.myBriefings}`, { replace: true })
-            }
         }
 
         if (!preventRestoreSession.current) {
             preventRestoreSession.current = true
-            void restoreSession().finally(() => {
-                preventRestoreSession.current = false
-            });
+            void restoreSession()
+                .catch(error => {
+                    setErrors(current => [...current, {
+                        message: error instanceof Error ? error.message : "There was an unexpected error while initializing your session",
+                        time: Date.now()
+                    }])
+
+                    if (pathname.current === "/") {
+                        navigate(`/${ROUTES.myBriefings}`, { replace: true })
+                    }
+                })
+                .finally(() => {
+                    preventRestoreSession.current = false
+                    setInitialized(true)
+                    setIsLoading(false)
+                });
         }
     }, [location.pathname])
 
