@@ -24,6 +24,7 @@ const AppHeader = ({ showHighlights, onToggleHighlights }: AppHeaderProps) => {
                         title="Highlight settings"
                         onClick={onToggleHighlights}>
                         <img src={SVG_URLS.highlight} width="18" alt="" />
+                        <span>Highlights</span>
                     </button>
                     <NavLink
                         to="/search"

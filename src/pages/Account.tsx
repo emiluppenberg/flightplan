@@ -3,6 +3,7 @@ import UserForm from "../components/UserForm"
 import { useFlightPathContext } from "../Context"
 import type { UserFormValues } from "../types"
 import Messages from "../components/Messages"
+import LoadingSpinner from "../components/LoadingSpinner"
 
 const Account = () => {
     const context = useFlightPathContext()
@@ -51,6 +52,7 @@ const Account = () => {
                         key={isSignUp ? "sign-up" : "sign-in"}
                         onSubmit={handleSubmit}
                         submitText={isSignUp ? "Sign up" : "Sign in"} />
+                    <LoadingSpinner />
                 </div>
             </div>
         </>

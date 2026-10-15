@@ -804,7 +804,7 @@ h2 {
 }
 
 .app-header .app-header-row.top {
-  min-height: 78px;
+  min-height: 64px;
   padding: 0 3.5vw;
   background: rgba(9, 25, 39, .96);
   border-bottom: 1px solid #294759;
@@ -846,12 +846,12 @@ h2 {
 }
 
 .app-header .app-header-row.top .top-buttons .btn-highlight {
-  width: 40px;
+  width: auto;
   margin-right: 0;
 }
 
 .app-header .app-header-row.top .top-buttons.left .btn-highlight {
-  padding: 8px;
+  padding: 8px 12px;
 }
 
 .app-header .app-header-row.top .top-buttons.right .open {
@@ -1673,6 +1673,11 @@ h2 {
   font-weight: 800;
 }
 
+.sign-in-container .auth-card > .loading-spinner {
+  display: block;
+  margin: 16px auto 0;
+}
+
 @media (min-width: 800px) {
   .aerodrome-render-container .aerodrome-header-container .aerodrome-header-buttons.search-header-buttons {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1689,7 +1694,7 @@ h2 {
   }
 
   .app-header .app-header-row.top {
-    min-height: 68px;
+    min-height: 56px;
     padding: 0 16px;
     gap: 10px;
   }
@@ -1857,7 +1862,7 @@ h2 {
   }
 
   .app-header .app-header-row.top {
-    padding: 8px 12px 0;
+    padding: 4px 12px 0;
   }
 
   .app-header .app-header-row.top .top-buttons.right a,
@@ -1870,6 +1875,14 @@ h2 {
   .app-header .app-header-row.top .top-buttons .btn-highlight {
     width: 36px;
     margin-right: 0;
+  }
+
+  .app-header .app-header-row.top .top-buttons.left .btn-highlight {
+    padding: 8px;
+  }
+
+  .app-header .app-header-row.top .top-buttons.left .btn-highlight span {
+    display: none;
   }
 
   .app-logo {
