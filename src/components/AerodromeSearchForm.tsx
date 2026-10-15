@@ -7,6 +7,7 @@ import Expand from "./Expand"
 import AerodromeRender from "./AerodromeRender"
 import { fetchAerodromesName, fetchPage, fetchAerodromeIcaoId, fetchRegionsName, fetchAerodromesRegionId, fetchLocation } from "../api/resources"
 import AerodromeTypeFiltersField from "./AerodromeTypeFiltersField"
+import Messages from "./Messages"
 
 const AerodromeSearchForm = () => {
     const context = useFlightPathContext()
@@ -409,11 +410,9 @@ const AerodromeSearchForm = () => {
                                         <span className="search-item-name">{aerodrome.attributes.name}</span>
                                     </button>
                                 ))
-                                : <p className="message">
-                                    {aerodromeTypeFilters.length > 0
+                                : <Messages message={aerodromeTypeFilters.length > 0
                                         ? `No aerodromes found matching types: ${aerodromeTypeFilters.map(filter => filter.replaceAll("_", " ")).join(", ")}`
-                                        : "Select at least one aerodrome type"}
-                                </p>
+                                        : "Select at least one aerodrome type"} />
                         )}
                         {searchType === "aerodrome" && (
                             <div className="sticky search-results-actions">
@@ -474,24 +473,11 @@ const AerodromeSearchForm = () => {
                                         <span className="search-item-name">{aerodrome.attributes.name}</span>
                                     </button>
                                 ))
-                                : <div>
-                                    <p className="message">
-                                        {regionAerodromeResponse.data.length > 0
+                                : <Messages message={regionAerodromeResponse.data.length > 0
                                             ? aerodromeTypeFilters.length > 0
                                                 ? `No aerodromes found matching types: ${aerodromeTypeFilters.map(filter => filter.replaceAll("_", " ")).join(", ")}`
                                                 : "Select at least one aerodrome type"
-                                            : "No airports for selected region"}
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            ++globalSearchId.current
-                                            setRegionAerodromeResponse(undefined)
-                                            setSearchType("region")
-                                        }}>
-                                        OK
-                                    </button>
-                                </div>
+                                            : "No airports for selected region"} />
                         )}
                         {searchType === "region aerodromes" && (
                             <div className="sticky search-results-actions">
@@ -529,7 +515,7 @@ const AerodromeSearchForm = () => {
             </div>
             {aerodromeRender && (aerodromeRender)}
             {error.length > 0 && (
-                <p className="message warning">{error}</p>
+                <Messages message={error} tone="warning" />
             )}
             <div className="sticky">
                 {hasSearched
@@ -540,7 +526,7 @@ const AerodromeSearchForm = () => {
                         <span aria-hidden="true">+</span>
                         <span>Save {searchAerodrome.icaoId}</span>
                     </button>)
-                    : (<p className="message info">Search aerodrome to display data</p>)}
+                    : (<Messages message="Search aerodrome to display data" tone="info" />)}
             </div>
         </div>
     )
