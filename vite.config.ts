@@ -28,31 +28,31 @@ export default defineConfig({
       devOptions: {
         enabled: true
       },
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "maskable-icon.png", "pwa-64.png", "pwa-192.png", "pwa-512.png"],
+      includeAssets: ["favicon.ico", "flyrep-icon.svg", "apple-touch-icon-180x180.png", "maskable-icon-512x512.png", "pwa-64x64.png", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
         name: "FlyRep",
         short_name: "FlyRep",
-        description: "For efficient reading of flight reports",
-        background_color: "#090913",
-        theme_color: "#090913",
+        description: "Search aerodromes, review TAFs, METARs, NOTAMs and operational hours, and save your briefings.",
+        background_color: "#07121e",
+        theme_color: "#0a1b2a",
         icons: [
           {
-            "src": "pwa-64.png",
+            "src": "pwa-64x64.png",
             "sizes": "64x64",
             "type": "image/png"
           },
           {
-            "src": "pwa-192.png",
+            "src": "pwa-192x192.png",
             "sizes": "192x192",
             "type": "image/png"
           },
           {
-            "src": "pwa-512.png",
+            "src": "pwa-512x512.png",
             "sizes": "512x512",
             "type": "image/png"
           },
           {
-            "src": "maskable-icon.png",
+            "src": "maskable-icon-512x512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
