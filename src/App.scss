@@ -1824,6 +1824,63 @@ h2 {
 }
 
 @media (max-width: 520px) {
+  .page-workspace.highlights-open .sign-in-container {
+    padding: 6px;
+  }
+
+  .page-workspace.highlights-open .auth-card {
+    margin: 12px auto;
+    padding: 10px;
+  }
+
+  .page-workspace.highlights-open .auth-mode-switch {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    margin-bottom: 16px;
+    padding: 2px;
+  }
+
+  .page-workspace.highlights-open .auth-mode-switch button {
+    min-height: 36px;
+    padding: 5px 4px;
+    font-size: .7rem;
+    white-space: normal;
+  }
+
+  .page-workspace.highlights-open .auth-card .eyebrow {
+    font-size: .6rem;
+    letter-spacing: .08em;
+  }
+
+  .page-workspace.highlights-open .auth-card h1 {
+    font-size: clamp(1rem, 4vw, 1.25rem);
+    overflow-wrap: anywhere;
+  }
+
+  .page-workspace.highlights-open .auth-card p {
+    margin-bottom: 16px;
+    font-size: .73rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .page-workspace.highlights-open .auth-field {
+    gap: 4px;
+    font-size: .7rem;
+  }
+
+  .page-workspace.highlights-open .sign-in-container .form {
+    gap: 10px;
+  }
+
+  .page-workspace.highlights-open .sign-in-container input,
+  .page-workspace.highlights-open .sign-in-container button[type="submit"] {
+    min-width: 0;
+    min-height: 40px;
+    padding: 7px;
+    font-size: .75rem;
+  }
+
   .page-workspace.highlights-open .search-container .checkbox-options {
     grid-template-columns: minmax(0, 1fr);
   }
