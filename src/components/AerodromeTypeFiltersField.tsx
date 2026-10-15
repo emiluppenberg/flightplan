@@ -12,12 +12,13 @@ const AerodromeTypeFiltersField = (props: AerodromeTypeFiltersFieldProps) => {
         <div className="form">
             <div className="form-row">
                 <fieldset ref={props.aerodromeTypeFiltersRef}>
+                    <span className="filter-heading">Aerodrome types</span>
                     <button
                         type="button"
                         className="title"
                         onClick={props.onClose}
-                    >Close</button>
-                    <div className="options">
+                    >Done</button>
+                    <div className="options checkbox-options">
                         <label className="config">
                             closed
                             <input

@@ -1,15 +1,25 @@
-import { useEffect, useState } from "react"
+import { useLayoutEffect, useState, type RefObject } from "react"
 
-export const useWindowWidth = () => {
+export const useWorkspaceWidth = (containerRef: RefObject<HTMLElement | null>) => {
     const [width, setWidth] = useState(() => window.innerWidth)
 
-    useEffect(() => {
-        const updateWidth = () => setWidth(window.innerWidth)
+    useLayoutEffect(() => {
+        const container = containerRef.current
+        if (!container) return
 
+        const updateWidth = () => setWidth(container.getBoundingClientRect().width)
+        const observer = new ResizeObserver(updateWidth)
+        observer.observe(container)
         window.addEventListener("resize", updateWidth)
+        document.addEventListener("visibilitychange", updateWidth)
+        updateWidth()
 
-        return () => window.removeEventListener("resize", updateWidth)
-    }, [])
+        return () => {
+            observer.disconnect()
+            window.removeEventListener("resize", updateWidth)
+            document.removeEventListener("visibilitychange", updateWidth)
+        }
+    }, [containerRef])
 
     return width
 }
