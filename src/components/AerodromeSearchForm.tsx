@@ -19,6 +19,8 @@ const AerodromeSearchForm = () => {
 
     const [error, setError] = useState("")
     const [message, setMessage] = useState("")
+    const [isSaving, setIsSaving] = useState(false)
+    const saveInProgressRef = useRef(false)
     const [searchControlsOpen, setSearchControlsOpen] = useState(false)
     const [searchOpen, setSearchOpen] = useState(false)
     const aerodromeTypeFiltersRef = useRef<HTMLFieldSetElement>(null)
@@ -234,6 +236,25 @@ const AerodromeSearchForm = () => {
         [searchAerodrome])
 
     const hasSearched = searchAerodrome && searchAerodrome.icaoId
+
+    const handleSaveAerodrome = async () => {
+        const icaoId = searchAerodrome?.icaoId
+        if (!icaoId || saveInProgressRef.current) return
+
+        saveInProgressRef.current = true
+        setIsSaving(true)
+        setMessage("")
+
+        try {
+            const added = await context.handleAddAerodrome(icaoId)
+            if (added) setMessage(`${icaoId} added to briefings`)
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "There was an unexpected error while saving aerodrome")
+        } finally {
+            saveInProgressRef.current = false
+            setIsSaving(false)
+        }
+    }
 
     const [initialized, setInitialized] = useState(false)
     useEffect(() => {
@@ -526,10 +547,8 @@ const AerodromeSearchForm = () => {
                     ? (<button
                         type="button"
                         className="primary-action"
-                        onClick={() => {
-                            context.handleAddAerodrome(searchAerodrome.icaoId)
-                            setMessage(`${searchAerodrome.icaoId} added to briefings`)
-                        }}>
+                        disabled={isSaving}
+                        onClick={handleSaveAerodrome}>
                         <span aria-hidden="true">+</span>
                         <span>Save {searchAerodrome.icaoId}</span>
                     </button>)

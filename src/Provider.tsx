@@ -389,8 +389,8 @@ export const FlightPathProvider = () => {
         }
     }
 
-    const handleAddAerodrome = async (icaoId: string | null) => {
-        if (!icaoId) return
+    const handleAddAerodrome = async (icaoId: string | null): Promise<boolean> => {
+        if (!icaoId) return false
 
         let supabaseAerodrome: SupabaseAerodrome | undefined = undefined
         let nextPollSNOWTAM = Date.now()
@@ -402,7 +402,7 @@ export const FlightPathProvider = () => {
 
         if (isDuplicate) {
             window.alert(`You have already saved ${icaoId}`)
-            return;
+            return false;
         }
 
         if (user) {
@@ -455,6 +455,7 @@ export const FlightPathProvider = () => {
             isLoading: false,
             supabaseId: supabaseAerodrome?.id
         }])
+        return true
     }
 
     const handleDeleteAerodrome = async (id: string) => {
