@@ -28,7 +28,9 @@ const Account = () => {
 
     return (
         <>
-            <Messages />
+            <div className="page-messages">
+                <Messages />
+            </div>
             <div className="sign-in-container">
                 <div className="auth-card">
                     <div className="auth-mode-switch" role="group" aria-label="Account access">

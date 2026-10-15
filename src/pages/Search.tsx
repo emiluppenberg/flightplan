@@ -6,7 +6,9 @@ const Search = () => {
 
     return (
         <>
-            <Messages />
+            <div className="page-messages search-messages">
+                <Messages />
+            </div>
             <div className="section-heading search-heading">
                 <div>
                     <div className="section-title">

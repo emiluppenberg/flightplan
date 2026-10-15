@@ -23,7 +23,9 @@ const Aerodromes = () => {
 
   return (
     <>
-      <Messages />
+      <div className="page-messages">
+        <Messages />
+      </div>
       <div className="section-heading">
         <div>
           <div className="section-title">

@@ -1001,6 +1001,22 @@ h2 {
   flex: none;
 }
 
+.page-messages {
+  width: min(100%, 1440px);
+  margin: 0 auto;
+  padding-inline: 3.5vw;
+  flex: none;
+}
+
+.page-messages .message-row {
+  max-width: none;
+}
+
+.page-messages.search-messages {
+  width: min(calc(100% - 7vw), 920px);
+  padding-inline: 0;
+}
+
 .section-heading > div {
   min-width: 0;
 }
@@ -1702,6 +1718,15 @@ h2 {
     padding: 14px 18px 19px;
   }
 
+  .page-messages {
+    padding-inline: 18px;
+  }
+
+  .page-messages.search-messages {
+    width: 100%;
+    padding-inline: 18px;
+  }
+
   .section-heading p {
     font-size: .78rem;
   }
@@ -1957,6 +1982,11 @@ h2 {
   .section-heading,
   .aerodromes-container,
   .search-container {
+    padding-inline: 12px;
+  }
+
+  .page-messages,
+  .page-messages.search-messages {
     padding-inline: 12px;
   }
 
