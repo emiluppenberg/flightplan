@@ -515,7 +515,7 @@ const AerodromeSearchForm = () => {
             </div>
             {aerodromeRender && (aerodromeRender)}
             {error.length > 0 && (
-                <Messages message={error} tone="warning" />
+                <Messages message={error} warning />
             )}
             <div className="sticky">
                 {hasSearched
@@ -526,7 +526,7 @@ const AerodromeSearchForm = () => {
                         <span aria-hidden="true">+</span>
                         <span>Save {searchAerodrome.icaoId}</span>
                     </button>)
-                    : (<Messages message="Search aerodrome to display data" tone="info" />)}
+                    : (<Messages message="Search aerodrome to display data" />)}
             </div>
         </div>
     )

@@ -2,16 +2,16 @@ import { useFlightPathContext } from "../Context"
 
 export interface MessagesProps {
     message?: string
-    tone?: "info" | "warning"
+    warning?: boolean
 }
 
-const MessageRow = ({ message, tone, onDismiss }: {
+const MessageRow = ({ message, warning, onDismiss }: {
     message: string
-    tone?: MessagesProps["tone"]
+    warning?: boolean
     onDismiss?: () => void
 }) => (
     <div className="message-row">
-        <p className={`message${tone ? ` ${tone}` : ""}`}>{message}</p>
+        <p className={`message ${warning ? "warning" : "info"}`}>{message}</p>
         {onDismiss && (<button type="button" onClick={onDismiss}>OK</button>)}
     </div>
 )
@@ -24,7 +24,7 @@ const Messages = (props: MessagesProps) => {
         return (
             <MessageRow
                 message={message}
-                tone={props.tone} />
+                warning={props.warning} />
         )
     }
 
@@ -40,7 +40,7 @@ const Messages = (props: MessagesProps) => {
                 <MessageRow
                     key={`error-${index}`}
                     message={`${error.message}${error.time ? " - " + new Date(error.time).toLocaleTimeString("sv-SE") : ""}`}
-                    tone="warning"
+                    warning
                     onDismiss={() => context.handleDiscardError(index)} />
             ))}
         </div>
