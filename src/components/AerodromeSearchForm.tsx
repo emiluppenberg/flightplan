@@ -251,6 +251,7 @@ const AerodromeSearchForm = () => {
 
                 for (const regionId of regionIds) {
                     if (await runNetworkRequest(() => handleSelectRegion(regionId))) {
+                        setSearchControlsOpen(true)
                         setSearchOpen(true)
                         break
                     }
