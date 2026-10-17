@@ -72,7 +72,14 @@ export const captureSyncSNOWTAM = async (
   ].filter(error => error !== undefined)
 }
 
-export const captureUserData = async (accessToken: string): Promise<UserAppData> => {
+export const captureUserData = async (
+  accessToken: string,
+  waitBeforeFetch: boolean = false
+): Promise<UserAppData> => {
+  if (waitBeforeFetch) {
+    await new Promise(resolve => setTimeout(resolve, 2000))
+  }
+
   const [aerodromesResult, configResult] = await Promise.all([
     capture(() => fetchSelectAllAerodromes({ accessToken: accessToken })),
     capture(() => fetchSelectConfig({ accessToken: accessToken }))
