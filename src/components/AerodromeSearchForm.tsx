@@ -290,7 +290,7 @@ const AerodromeSearchForm = () => {
     }, [initialized])
 
     const [aerodromeTypeFiltersOpen, setAerodromeTypeFiltersOpen] = useState(false)
-    const [aerodromeTypeFilters, setAerodromeTypeFilters] = useState<("large_airport" | "medium_airport" | "small_airport" | "seaplane_base" | "heliport" | "balloonport" | "closed")[]>(["large_airport", "medium_airport", "small_airport"])
+    const [aerodromeTypeFilters, setAerodromeTypeFilters] = useState<("large_airport" | "medium_airport" | "small_airport" | "seaplane_base" | "heliport" | "balloonport" | "closed")[]>(["large_airport", "medium_airport"])
     const filteredAerodromes = useMemo(() =>
         aerodromeResponse?.data.filter(aerodrome =>
             aerodromeTypeFilters.some(filter => filter === aerodrome.attributes.type))
