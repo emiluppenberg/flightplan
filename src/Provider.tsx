@@ -114,7 +114,7 @@ export const FlightPathProvider = () => {
                 if (confirmedResult.data) {
                     setMessages([...messages, { message: "Welcome to FlyRep" }])
                     setUser(confirmedResult.data)
-                    await new Promise(resolve => setTimeout(resolve, 1000))
+                    await new Promise(resolve => setTimeout(resolve, 2000))
                     userData = await captureUserData(confirmedResult.data.session.access_token)
 
                     if (userData.errors) {
@@ -139,7 +139,7 @@ export const FlightPathProvider = () => {
 
                 if (initializeResult.data) {
                     setUser(initializeResult.data)
-                    await new Promise(resolve => setTimeout(resolve, 1000))
+                    await new Promise(resolve => setTimeout(resolve, 2000))
                     userData = await captureUserData(initializeResult.data.session.access_token)
 
                     if (userData.errors) {
@@ -509,7 +509,7 @@ export const FlightPathProvider = () => {
 
             if (signInResult.data) {
                 setUser(signInResult.data)
-                await new Promise(resolve => setTimeout(resolve, 1000))
+                await new Promise(resolve => setTimeout(resolve, 2000))
                 let userData = await captureUserData(signInResult.data.session.access_token)
 
                 if (userData.errors) {
